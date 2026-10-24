@@ -1,0 +1,20 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "type": "object",
+  "additionalProperties": false,
+  "required": ["status", "summary", "next_actions", "artifacts"],
+  "properties": {
+    "status": {"enum": ["success", "warning", "error"]},
+    "summary": {"type": "string", "minLength": 1},
+    "next_actions": {"type": "array", "items": {"type": "string"}},
+    "artifacts": {"type": "array", "items": {"type": "string"}},
+    "root_cause_hint": {"type": "string"},
+    "safe_retry": {"type": "string"},
+    "stop_condition": {"type": "string"}
+  },
+  "allOf": [{
+    "if": {"properties": {"status": {"const": "error"}}},
+    "then": {"required": ["root_cause_hint", "safe_retry", "stop_condition"]}
+  }]
+}
+

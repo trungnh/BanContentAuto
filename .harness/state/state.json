@@ -1,0 +1,15 @@
+{
+  "schema_version": 1,
+  "intent_id": null,
+  "lifecycle_scope": null,
+  "status": "uninitialized",
+  "current_stage": null,
+  "current_unit": null,
+  "awaiting": null,
+  "stage_selection": {},
+  "stage_status": {},
+  "approved_gates": [],
+  "last_evidence": null,
+  "parked_reason": null,
+  "updated_at": null
+}

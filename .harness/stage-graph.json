@@ -1,0 +1,167 @@
+{
+  "schema_version": 1,
+  "stages": [
+    {
+      "id": "discover",
+      "phase": "inception",
+      "lead": "aidlc-product-engineer",
+      "support": ["aidlc-architect"],
+      "mode": "inline",
+      "mandatory": true,
+      "requires": [],
+      "consumes": ["project/brief.md", "project/specification-analysis.md"],
+      "produces": ["project/context.md"],
+      "gate": "human",
+      "done_when": [
+        "intent and non-goals are explicit",
+        "greenfield status and constraints are verified",
+        "success measures and principal risks are recorded"
+      ]
+    },
+    {
+      "id": "elaborate",
+      "phase": "inception",
+      "lead": "aidlc-product-engineer",
+      "support": ["aidlc-quality-engineer"],
+      "mode": "inline",
+      "mandatory": false,
+      "condition": "intent lacks testable requirements or multiple user workflows exist",
+      "requires": ["discover"],
+      "consumes": ["project/brief.md", "project/context.md", "project/specification-analysis.md"],
+      "produces": ["project/requirements.md"],
+      "gate": "human",
+      "done_when": [
+        "requirements have stable identifiers",
+        "every requirement has observable acceptance criteria",
+        "material ambiguity is resolved or explicitly deferred"
+      ]
+    },
+    {
+      "id": "ui-design",
+      "phase": "inception",
+      "lead": "aidlc-frontend-designer",
+      "support": ["aidlc-product-engineer", "aidlc-quality-engineer"],
+      "mode": "subagent",
+      "mandatory": false,
+      "condition": "approved scope introduces or materially changes a user-facing web or mobile interface, workflow, navigation, design system, responsive behavior, or accessibility behavior",
+      "requires": ["discover"],
+      "consumes": ["project/context.md", "project/requirements.md", "project/specification-analysis.md", "project/idea-notes.md"],
+      "produces": ["project/ui-design.md"],
+      "gate": "human",
+      "done_when": [
+        "users flows navigation screen inventory and content hierarchy are explicit",
+        "visual direction tokens components edge states responsive behavior and accessibility are defined",
+        "visual acceptance criteria map screens states viewports fixtures and evidence targets",
+        "material source conflicts are resolved or explicitly blocking"
+      ]
+    },
+    {
+      "id": "design",
+      "phase": "inception",
+      "lead": "aidlc-architect",
+      "support": ["aidlc-quality-engineer", "aidlc-operator"],
+      "mode": "subagent",
+      "mandatory": false,
+      "condition": "new boundaries data contracts integrations or material NFRs exist",
+      "requires": ["discover"],
+      "consumes": ["project/context.md", "project/requirements.md", "project/ui-design.md"],
+      "produces": ["project/architecture.md", "project/decisions.md"],
+      "gate": "human",
+      "done_when": [
+        "boundaries contracts data flow and failure modes are defined",
+        "security privacy cost and operability are addressed",
+        "tradeoffs and rejected alternatives are recorded"
+      ]
+    },
+    {
+      "id": "plan",
+      "phase": "inception",
+      "lead": "aidlc-delivery-engineer",
+      "support": ["aidlc-architect", "aidlc-quality-engineer"],
+      "mode": "inline",
+      "mandatory": true,
+      "requires": ["discover"],
+      "consumes": ["project/context.md", "project/requirements.md", "project/ui-design.md", "project/architecture.md"],
+      "produces": ["project/work-plan.md"],
+      "gate": "human",
+      "done_when": [
+        "units are independently verifiable",
+        "every unit has one dominant risk and a done condition",
+        "dependencies critical path and requirement coverage are explicit"
+      ]
+    },
+    {
+      "id": "implement",
+      "phase": "construction",
+      "lead": "aidlc-developer",
+      "support": ["aidlc-quality-engineer"],
+      "mode": "subagent",
+      "mandatory": true,
+      "requires": ["plan"],
+      "consumes": ["project/work-plan.md", "project/requirements.md", "project/ui-design.md", "project/architecture.md"],
+      "produces": ["application-code", "targeted-tests", "project/evidence/unit-result.md"],
+      "gate": "none",
+      "done_when": [
+        "all approved units satisfy their done conditions",
+        "every unit has a recorded test strategy",
+        "units with business logic have passing unit tests or an explicit technical exception",
+        "targeted tests pass with actual evidence",
+        "changes remain within approved units"
+      ]
+    },
+    {
+      "id": "verify",
+      "phase": "construction",
+      "lead": "aidlc-quality-engineer",
+      "support": ["aidlc-developer", "aidlc-security-engineer"],
+      "mode": "subagent",
+      "mandatory": true,
+      "requires": ["implement"],
+      "consumes": ["project/requirements.md", "project/ui-design.md", "project/work-plan.md", "application-code"],
+      "produces": ["project/evidence/verification.md", "project/evidence/visual-verification.md", "project/traceability.md"],
+      "gate": "human",
+      "done_when": [
+        "required build lint test and security checks pass",
+        "acceptance criteria trace to actual evidence",
+        "skipped checks failures and residual risks are explicit",
+        "when approved scope affects UI, required screen states and viewports have actual visual and accessibility evidence or are explicitly FAIL or BLOCKED"
+      ]
+    },
+    {
+      "id": "release",
+      "phase": "operations",
+      "lead": "aidlc-operator",
+      "support": ["aidlc-quality-engineer", "aidlc-security-engineer"],
+      "mode": "inline",
+      "mandatory": false,
+      "condition": "an external environment will be changed",
+      "requires": ["verify"],
+      "consumes": ["project/evidence/verification.md", "project/operations.md"],
+      "produces": ["project/evidence/release.md"],
+      "gate": "human",
+      "done_when": [
+        "target owner rollback and smoke tests are explicit",
+        "no release-blocking risk remains",
+        "production approval is separate and current"
+      ]
+    },
+    {
+      "id": "operate",
+      "phase": "operations",
+      "lead": "aidlc-operator",
+      "support": ["aidlc-developer"],
+      "mode": "inline",
+      "mandatory": false,
+      "condition": "a deployed system needs ongoing ownership",
+      "requires": ["release"],
+      "consumes": ["project/operations.md", "project/evidence/release.md"],
+      "produces": ["project/evidence/operational-review.md"],
+      "gate": "none",
+      "done_when": [
+        "health is measured against defined SLOs",
+        "alerts incidents and feedback have owners",
+        "learnings feed requirements evals or runbooks"
+      ]
+    }
+  ]
+}

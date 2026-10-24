@@ -1,0 +1,25 @@
+{
+  "schema_version": 1,
+  "project": {
+    "name": "unset",
+    "lifecycle_scope": "greenfield",
+    "risk": "unset",
+    "baseline_status": "not-applicable"
+  },
+  "commands": {
+    "bootstrap": "unset",
+    "format": "unset",
+    "lint": "unset",
+    "typecheck": "unset",
+    "unit_test": "unset",
+    "integration_test": "unset",
+    "security_check": "unset",
+    "build": "unset"
+  },
+  "policy": {
+    "max_automatic_fix_attempts": 2,
+    "require_human_for_production": true,
+    "require_human_for_destructive_data_change": true,
+    "allow_skipped_checks": false
+  }
+}

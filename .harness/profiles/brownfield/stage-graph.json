@@ -1,0 +1,188 @@
+{
+  "schema_version": 1,
+  "profile": "brownfield",
+  "stages": [
+    {
+      "id": "baseline",
+      "phase": "onboarding",
+      "lead": "aidlc-architect",
+      "support": ["aidlc-developer", "aidlc-quality-engineer"],
+      "mode": "inline",
+      "mandatory": true,
+      "requires": [],
+      "consumes": ["project/brief.md", "project/specification-analysis.md", ".harness/project.json", "repository-evidence"],
+      "produces": ["project/baseline.md", "project/context.md", "project/architecture.md", "project/operations.md", ".agents/rules/project-*.md"],
+      "gate": "human",
+      "done_when": [
+        "technology modules commands contracts and operating constraints are evidence-backed",
+        "conclusions are classified as confirmed inferred inconsistent or unknown",
+        "only confirmed conventions become mandatory project rules",
+        "application code and runtime behavior are unchanged"
+      ]
+    },
+    {
+      "id": "classify",
+      "phase": "change-inception",
+      "lead": "aidlc-product-engineer",
+      "support": ["aidlc-architect", "aidlc-quality-engineer"],
+      "mode": "inline",
+      "mandatory": true,
+      "requires": ["baseline"],
+      "consumes": ["project/baseline.md", "project/change.md", "project/specification-analysis.md", "repository-evidence"],
+      "produces": ["project/change.md"],
+      "gate": "human",
+      "done_when": [
+        "current and expected behavior scope and non-goals are explicit",
+        "change is classified as maintenance feature or major-evolution with evidence",
+        "compatibility security data operational and cross-team triggers are recorded",
+        "the required optional stages are recommended without silently expanding scope"
+      ]
+    },
+    {
+      "id": "explore",
+      "phase": "change-inception",
+      "lead": "aidlc-product-engineer",
+      "support": ["aidlc-architect"],
+      "mode": "inline",
+      "mandatory": false,
+      "condition": "major-evolution has unresolved problem framing or materially different business directions",
+      "requires": ["classify"],
+      "consumes": ["project/baseline.md", "project/change.md"],
+      "produces": ["project/change-exploration.md"],
+      "gate": "human",
+      "done_when": [
+        "business problem users outcomes non-goals assumptions and alternatives are explicit",
+        "exploration does not overwrite the approved as-is baseline",
+        "a selected direction or a blocking decision is recorded"
+      ]
+    },
+    {
+      "id": "requirements-delta",
+      "phase": "change-inception",
+      "lead": "aidlc-product-engineer",
+      "support": ["aidlc-quality-engineer"],
+      "mode": "inline",
+      "mandatory": false,
+      "condition": "feature or major-evolution introduces new behavior multiple workflows or material acceptance ambiguity",
+      "requires": ["classify"],
+      "consumes": ["project/baseline.md", "project/change.md", "project/change-exploration.md", "project/specification-analysis.md"],
+      "produces": ["project/requirements-delta.md"],
+      "gate": "human",
+      "done_when": [
+        "requirements describe the approved delta rather than restating the whole system",
+        "every requirement has observable acceptance criteria and a source",
+        "preserved behavior compatibility and deferred ambiguity are explicit"
+      ]
+    },
+    {
+      "id": "ui-design-delta",
+      "phase": "change-inception",
+      "lead": "aidlc-frontend-designer",
+      "support": ["aidlc-product-engineer", "aidlc-quality-engineer"],
+      "mode": "subagent",
+      "mandatory": false,
+      "condition": "change materially affects a user-facing screen flow navigation component state responsive behavior accessibility or design-system contract",
+      "requires": ["classify"],
+      "consumes": ["project/baseline.md", "project/change.md", "project/requirements-delta.md", "project/specification-analysis.md", "repository-ui-evidence"],
+      "produces": ["project/ui-design-delta.md"],
+      "gate": "human",
+      "done_when": [
+        "existing UI conventions preserved behavior and out-of-scope screens are evidence-backed",
+        "changed flows screens components edge states responsive behavior and accessibility are explicit",
+        "visual acceptance criteria map changed states viewports fixtures and evidence targets",
+        "unrelated redesign and unapproved design-system replacement remain out of scope"
+      ]
+    },
+    {
+      "id": "design-delta",
+      "phase": "change-inception",
+      "lead": "aidlc-architect",
+      "support": ["aidlc-quality-engineer", "aidlc-security-engineer", "aidlc-operator"],
+      "mode": "subagent",
+      "mandatory": false,
+      "condition": "change affects boundaries core domain contracts data ownership migrations trust boundaries material NFRs or operations",
+      "requires": ["classify"],
+      "consumes": ["project/baseline.md", "project/change.md", "project/requirements-delta.md", "project/ui-design-delta.md", "project/architecture.md"],
+      "produces": ["project/architecture-delta.md", "project/decisions.md"],
+      "gate": "human",
+      "done_when": [
+        "current to target delta boundaries contracts data flow migration and failure modes are defined",
+        "compatibility rollout rollback security operations and cross-team effects are addressed",
+        "tradeoffs rejected alternatives and unresolved authority decisions are recorded",
+        "the as-is architecture is not overwritten before the change is accepted"
+      ]
+    },
+    {
+      "id": "plan",
+      "phase": "change-inception",
+      "lead": "aidlc-delivery-engineer",
+      "support": ["aidlc-architect", "aidlc-quality-engineer"],
+      "mode": "inline",
+      "mandatory": true,
+      "requires": ["classify"],
+      "consumes": ["project/baseline.md", "project/change.md", "project/requirements-delta.md", "project/ui-design-delta.md", "project/architecture-delta.md"],
+      "produces": ["project/work-plan.md"],
+      "gate": "human",
+      "done_when": [
+        "the smallest safe change covers approved outcomes without unrelated cleanup",
+        "units have scope dependencies dominant risk test strategy and done conditions",
+        "regression characterization integration and compatibility checks are selected by risk",
+        "baseline failures and unavailable checks are explicit"
+      ]
+    },
+    {
+      "id": "implement",
+      "phase": "construction",
+      "lead": "aidlc-developer",
+      "support": ["aidlc-quality-engineer"],
+      "mode": "subagent",
+      "mandatory": true,
+      "requires": ["plan"],
+      "consumes": ["project/baseline.md", "project/change.md", "project/work-plan.md", "project/requirements-delta.md", "project/ui-design-delta.md", "project/architecture-delta.md"],
+      "produces": ["application-code", "targeted-tests", "project/evidence/unit-result.md"],
+      "gate": "none",
+      "done_when": [
+        "all approved units satisfy their done conditions",
+        "bug fixes have a reproducing regression test when practical",
+        "existing behavior outside the approved delta is preserved",
+        "targeted checks pass with actual evidence and no out-of-scope refactor"
+      ]
+    },
+    {
+      "id": "verify",
+      "phase": "construction",
+      "lead": "aidlc-quality-engineer",
+      "support": ["aidlc-developer", "aidlc-security-engineer"],
+      "mode": "subagent",
+      "mandatory": true,
+      "requires": ["implement"],
+      "consumes": ["project/baseline.md", "project/change.md", "project/ui-design-delta.md", "project/work-plan.md", "application-code"],
+      "produces": ["project/evidence/verification.md", "project/evidence/visual-verification.md", "project/traceability.md"],
+      "gate": "human",
+      "done_when": [
+        "required build test static security and compatibility checks pass",
+        "approved outcomes trace to code and actual evidence",
+        "baseline failures skipped checks regressions and residual risks are explicit",
+        "PASS FAIL and BLOCKED remain distinct",
+        "when the approved delta affects UI, changed states and regression-sensitive viewports have actual visual and accessibility evidence or are explicitly FAIL or BLOCKED"
+      ]
+    },
+    {
+      "id": "handoff",
+      "phase": "handoff",
+      "lead": "aidlc-delivery-engineer",
+      "support": ["aidlc-quality-engineer"],
+      "mode": "inline",
+      "mandatory": true,
+      "requires": ["verify"],
+      "consumes": ["project/change.md", "project/evidence/verification.md", "project/traceability.md"],
+      "produces": ["project/evidence/handoff.md"],
+      "gate": "none",
+      "done_when": [
+        "scope behavior compatibility verification and residual risk are summarized",
+        "review release and operational actions remain assigned to their human owners",
+        "project baseline is updated only after the accepted change becomes as-is"
+      ]
+    }
+  ]
+}

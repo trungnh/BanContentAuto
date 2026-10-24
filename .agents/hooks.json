@@ -1,0 +1,39 @@
+{
+  "aidlc-session-context": {
+    "PreInvocation": [
+      {
+        "type": "command",
+        "command": "node scripts/session-context.mjs",
+        "timeout": 10
+      }
+    ]
+  },
+  "aidlc-post-write-guard": {
+    "PostToolUse": [
+      {
+        "matcher": "replace_file_content|multi_replace_file_content|write_to_file",
+        "hooks": [
+          {
+            "type": "command",
+            "command": "node scripts/post-write-guard.mjs",
+            "timeout": 10
+          }
+        ]
+      }
+    ]
+  },
+  "aidlc-risk-gate": {
+    "PreToolUse": [
+      {
+        "matcher": "run_command",
+        "hooks": [
+          {
+            "type": "command",
+            "command": "node scripts/risk-gate.mjs",
+            "timeout": 10
+          }
+        ]
+      }
+    ]
+  }
+}
