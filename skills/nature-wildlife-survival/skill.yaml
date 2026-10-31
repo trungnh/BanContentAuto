@@ -1,0 +1,41 @@
+schema_version: 1
+id: nature-wildlife-survival
+name: Nature & Wildlife Survival Documentary
+style_name: Phóng sự hoang dã & bi kịch sinh tồn động vật · 4K cinematic macro & aerial nature documentary
+badge: Thiên Nhiên · Sinh Tồn & Sách Đỏ
+version: 1.0.0
+description: Phóng sự tài liệu điện ảnh về cuộc chiến sinh tồn khốc liệt của các loài động vật hoang dã, số phận của những sinh vật trong Sách Đỏ hoặc đã tuyệt chủng (Hổ Tasmania, Dodo, Voi Mamut), cùng hành trình giải mã ADN hồi sinh loài của khoa học hiện đại.
+hooks:
+  script.plan: prompts/script.md
+  script.rewrite: prompts/script.md
+  scene.split: prompts/scenes.md
+  prompt.image: prompts/scenes.md
+  prompt.video: prompts/video.md
+  prompt.thumbnail: prompts/thumbnails.md
+  prompt.seo: prompts/seo.md
+  voice.direction: prompts/voice.md
+languages:
+  - vi
+  - en
+permissions: []
+thematic_plates: []
+preferred_categories:
+  - "Pets & Animals"
+  - "Science & Technology"
+  - "Education"
+discouraged_categories:
+  - "Howto & Style"
+  - "Entertainment"
+fallback_search_templates:
+  - '"{subject_anchor}" in the wild'
+  - '"{subject_anchor}" wildlife documentary'
+  - '"{subject_anchor}" animal behavior'
+trusted_channels:
+  - "safari"
+  - "wild earth"
+  - "kruger"
+  - "wildlife sightings"
+  - "nature footage"
+  - "african wildlife"
+  - "field guide"
+  - "nature b-roll"

@@ -1,0 +1,33 @@
+schema_version: 1
+id: historical-mysteries
+name: Ancient & Historical Mysteries Documentary
+style_name: Phóng sự giải mã bí ẩn cổ đại & kỳ quan lịch sử · CD Media & Bách khoa thực chiến style
+badge: Lịch Sử · Bí Ẩn & Kỳ Quan Cổ Đại
+version: 1.0.0
+description: Phóng sự tài liệu lịch sử chuyên sâu giải mã cuộc đời các bậc đế vương, đại án cung đình, kỳ tích kiến trúc cổ xưa (Kim Tự Tháp, Angkor Wat, Lăng mộ Tần Thủy Hoàng) và những bí ẩn chưa có lời giải.
+hooks:
+  script.plan: prompts/script.md
+  script.rewrite: prompts/script.md
+  scene.split: prompts/scenes.md
+  prompt.image: prompts/scenes.md
+  prompt.video: prompts/video.md
+  prompt.thumbnail: prompts/thumbnails.md
+  prompt.seo: prompts/seo.md
+languages:
+  - vi
+  - en
+permissions: []
+thematic_plates: []
+preferred_categories:
+  - "Education"
+  - "History"
+  - "Documentary"
+discouraged_categories:
+  - "Howto & Style"
+  - "Gaming"
+  - "Comedy"
+fallback_search_templates:
+  - '"{subject_anchor}" historical documentary'
+  - '"{subject_anchor}" ancient history archive'
+  - '"{subject_anchor}" archaeological discovery'
+trusted_channels: []

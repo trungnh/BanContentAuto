@@ -1,0 +1,34 @@
+schema_version: 1
+id: warehouse-fails
+name: Warehouse Fails & Industrial Safety Breakdown
+style_name: Phân tích sự cố kho bãi & an toàn lao động · CCTV forensic investigation & mechanical breakdown
+badge: Sự Cố · Kho Bãi & An Toàn Lao Động
+version: 1.0.0
+description: Phân tích điều tra nguyên nhân kỹ thuật đằng sau các vụ tai nạn kho vận, sập giàn kệ pallet, sự cố xe nâng và bài học an toàn lao động thực tế.
+hooks:
+  script.plan: prompts/script.md
+  script.rewrite: prompts/script.md
+  scene.split: prompts/scenes.md
+  prompt.image: prompts/scenes.md
+  prompt.video: prompts/video.md
+  prompt.thumbnail: prompts/thumbnails.md
+  prompt.seo: prompts/seo.md
+languages:
+  - vi
+  - en
+permissions: []
+thematic_plates: []
+preferred_categories:
+  - "News & Politics"
+  - "Education"
+  - "Science & Technology"
+discouraged_categories:
+  - "Film & Animation"
+  - "Music"
+  - "Howto & Style"
+  - "Gaming"
+fallback_search_templates:
+  - '"{subject_anchor}" cctv footage'
+  - '"{subject_anchor}" warehouse accident'
+  - '"{subject_anchor}" industrial safety breakdown'
+trusted_channels: []

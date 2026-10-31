@@ -1,0 +1,4252 @@
+<!DOCTYPE html>
+<html lang="vi">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>BanContentAuto Studio Dashboard v2.0</title>
+  <style>
+    :root {
+      --bg-obsidian: #0B0F17;
+      --bg-slate: #131A26;
+      --bg-card: #1C2536;
+      --bg-card-hover: #222E42;
+      --accent-cyan: #00E5FF;
+      --accent-cyan-glow: rgba(0, 229, 255, 0.25);
+      --success-mint: #00E676;
+      --success-mint-glow: rgba(0, 230, 118, 0.2);
+      --alert-crimson: #FF3B30;
+      --alert-crimson-glow: rgba(255, 59, 48, 0.2);
+      --warning-amber: #FFD600;
+      --text-primary: #F0F4F8;
+      --text-secondary: #8F9CAE;
+      --text-muted: #576579;
+      --border-dark: #26334D;
+      --border-focus: #00E5FF;
+      --font-main: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
+      --font-mono: "JetBrains Mono", Consolas, "Courier New", monospace;
+    }
+
+    * {
+      box-sizing: border-box;
+      margin: 0;
+      padding: 0;
+    }
+
+    body {
+      background-color: var(--bg-obsidian);
+      color: var(--text-primary);
+      font-family: var(--font-main);
+      display: flex;
+      flex-direction: column;
+      height: 100vh;
+      overflow: hidden;
+    }
+
+    /* TOP HEADER */
+    header {
+      background-color: var(--bg-slate);
+      border-bottom: 1px solid var(--border-dark);
+      padding: 10px 24px;
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      z-index: 10;
+    }
+
+    .brand-title {
+      display: flex;
+      align-items: center;
+      gap: 12px;
+    }
+
+    .logo-badge {
+      background: linear-gradient(135deg, #00E5FF, #0072FF);
+      color: #000;
+      font-weight: 800;
+      padding: 4px 8px;
+      border-radius: 6px;
+      font-size: 13px;
+      letter-spacing: 0.5px;
+    }
+
+    .brand-name {
+      font-size: 16px;
+      font-weight: 700;
+      letter-spacing: 0.5px;
+      color: #FFF;
+    }
+
+    .top-meta {
+      display: flex;
+      align-items: center;
+      gap: 16px;
+      font-size: 13px;
+    }
+
+    .project-pill {
+      background-color: var(--bg-card);
+      border: 1px solid var(--border-dark);
+      padding: 4px 12px;
+      border-radius: 20px;
+      color: var(--accent-cyan);
+      font-family: var(--font-mono);
+      font-weight: 600;
+    }
+
+    .health-pill {
+      background-color: rgba(255, 255, 255, 0.05);
+      border: 1px solid var(--border-dark);
+      padding: 4px 12px;
+      border-radius: 20px;
+      display: flex;
+      gap: 12px;
+      color: var(--text-secondary);
+      font-family: var(--font-mono);
+      font-size: 12px;
+    }
+
+    .health-val {
+      color: var(--text-primary);
+      font-weight: 600;
+    }
+
+    /* MAIN LAYOUT */
+    .app-container {
+      display: flex;
+      flex: 1;
+      overflow: hidden;
+    }
+
+    /* SIDEBAR */
+    nav.sidebar {
+      width: 250px;
+      background-color: var(--bg-slate);
+      border-right: 1px solid var(--border-dark);
+      display: flex;
+      flex-direction: column;
+      padding: 16px 12px;
+      gap: 8px;
+    }
+
+    .nav-btn {
+      background: transparent;
+      border: 1px solid transparent;
+      color: var(--text-secondary);
+      padding: 12px 14px;
+      border-radius: 8px;
+      font-size: 13px;
+      font-weight: 600;
+      text-align: left;
+      cursor: pointer;
+      display: flex;
+      align-items: center;
+      gap: 10px;
+      transition: all 0.2s ease;
+    }
+
+    .nav-btn:hover {
+      background-color: var(--bg-card);
+      color: var(--text-primary);
+    }
+
+    .nav-btn.active {
+      background-color: var(--bg-card);
+      border-color: var(--accent-cyan);
+      color: var(--accent-cyan);
+      box-shadow: 0 0 12px var(--accent-cyan-glow);
+    }
+
+    .sidebar-footer {
+      margin-top: auto;
+      padding: 12px;
+      background-color: var(--bg-card);
+      border-radius: 8px;
+      border: 1px solid var(--border-dark);
+      font-size: 11px;
+      color: var(--text-secondary);
+      line-height: 1.5;
+    }
+
+    /* WORKSPACE */
+    main.workspace {
+      flex: 1;
+      padding: 24px;
+      overflow-y: auto;
+      background-color: var(--bg-obsidian);
+      display: flex;
+      flex-direction: column;
+      gap: 20px;
+    }
+
+    /* E2E PROGRESS TRACKER */
+    .pipeline-tracker-card {
+      background-color: var(--bg-slate);
+      border: 1px solid var(--border-dark);
+      border-radius: 10px;
+      padding: 16px 20px;
+    }
+
+    .tracker-header {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      margin-bottom: 12px;
+    }
+
+    .tracker-title {
+      font-size: 14px;
+      font-weight: 700;
+      text-transform: uppercase;
+      letter-spacing: 0.8px;
+      color: var(--text-primary);
+    }
+
+    .tracker-status-text {
+      font-size: 13px;
+      color: var(--accent-cyan);
+      font-family: var(--font-mono);
+      font-weight: 600;
+    }
+
+    .steps-container {
+      display: grid;
+      grid-template-columns: repeat(4, 1fr);
+      gap: 12px;
+      position: relative;
+    }
+
+    .step-node {
+      background-color: var(--bg-card);
+      border: 1px solid var(--border-dark);
+      border-radius: 8px;
+      padding: 12px;
+      position: relative;
+      display: flex;
+      flex-direction: column;
+      gap: 4px;
+      transition: all 0.3s;
+    }
+
+    .step-node.completed {
+      border-color: var(--success-mint);
+      background-color: rgba(0, 230, 118, 0.05);
+    }
+
+    .step-node.active {
+      border-color: var(--accent-cyan);
+      box-shadow: 0 0 10px var(--accent-cyan-glow);
+      background-color: rgba(0, 229, 255, 0.05);
+    }
+
+    .step-node.error {
+      border-color: var(--alert-crimson);
+      background-color: rgba(255, 59, 48, 0.08);
+    }
+
+    .step-badge {
+      font-size: 10px;
+      font-weight: 800;
+      padding: 2px 6px;
+      border-radius: 4px;
+      width: fit-content;
+      text-transform: uppercase;
+      background-color: rgba(255, 255, 255, 0.1);
+      color: var(--text-secondary);
+    }
+
+    .step-node.active .step-badge {
+      background-color: var(--accent-cyan);
+      color: #000;
+    }
+
+    .step-node.completed .step-badge {
+      background-color: var(--success-mint);
+      color: #000;
+    }
+
+    .step-name {
+      font-size: 12px;
+      font-weight: 700;
+      color: #FFF;
+    }
+
+    .step-desc {
+      font-size: 11px;
+      color: var(--text-secondary);
+    }
+
+    .progress-bar-container {
+      margin-top: 14px;
+      height: 6px;
+      background-color: var(--bg-card);
+      border-radius: 3px;
+      overflow: hidden;
+    }
+
+    .progress-bar-fill {
+      height: 100%;
+      width: 0%;
+      background: linear-gradient(90deg, #0072FF, #00E5FF, #00E676);
+      transition: width 0.4s ease;
+    }
+
+    /* SCREEN CONTAINERS */
+    .screen-view {
+      display: none;
+      flex-direction: column;
+      gap: 20px;
+    }
+
+    .screen-view.active {
+      display: flex;
+    }
+
+    /* SCREEN 1: WIZARD */
+    .wizard-card {
+      background-color: var(--bg-slate);
+      border: 1px solid var(--border-dark);
+      border-radius: 12px;
+      padding: 24px;
+      max-width: 800px;
+      margin: 0 auto;
+      width: 100%;
+    }
+
+    .card-title {
+      font-size: 18px;
+      font-weight: 700;
+      margin-bottom: 8px;
+      color: #FFF;
+    }
+
+    .card-subtitle {
+      font-size: 13px;
+      color: var(--text-secondary);
+      margin-bottom: 24px;
+    }
+
+    .form-group {
+      display: flex;
+      flex-direction: column;
+      gap: 8px;
+      margin-bottom: 20px;
+    }
+
+    .form-label {
+      font-size: 13px;
+      font-weight: 600;
+      color: var(--text-primary);
+    }
+
+    .form-input, .form-select {
+      background-color: var(--bg-card);
+      border: 1px solid var(--border-dark);
+      border-radius: 8px;
+      padding: 12px 14px;
+      color: #FFF;
+      font-size: 14px;
+      outline: none;
+      transition: border-color 0.2s;
+    }
+
+    .form-input:focus, .form-select:focus {
+      border-color: var(--border-focus);
+    }
+
+    .duration-pills {
+      display: flex;
+      gap: 10px;
+    }
+
+    .pill-opt {
+      background-color: var(--bg-card);
+      border: 1px solid var(--border-dark);
+      color: var(--text-secondary);
+      padding: 8px 18px;
+      border-radius: 6px;
+      cursor: pointer;
+      font-size: 13px;
+      font-weight: 600;
+      transition: all 0.2s;
+    }
+
+    .pill-opt.selected {
+      background-color: rgba(0, 229, 255, 0.15);
+      border-color: var(--accent-cyan);
+      color: var(--accent-cyan);
+    }
+
+    .btn-primary {
+      background: linear-gradient(135deg, #00E5FF, #0088FF);
+      color: #0B0F17;
+      border: none;
+      border-radius: 8px;
+      padding: 14px 24px;
+      font-size: 15px;
+      font-weight: 800;
+      cursor: pointer;
+      display: flex;
+      justify-content: center;
+      align-items: center;
+      gap: 10px;
+      transition: all 0.2s ease;
+      box-shadow: 0 4px 16px var(--accent-cyan-glow);
+    }
+
+    .btn-primary:hover {
+      transform: translateY(-2px);
+      box-shadow: 0 6px 20px var(--accent-cyan-glow);
+    }
+
+    .btn-primary:disabled {
+      opacity: 0.5;
+      cursor: not-allowed;
+      transform: none;
+    }
+
+    /* SCREEN 2: SCENE INSPECTOR */
+    .inspector-header {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      background-color: var(--bg-slate);
+      padding: 14px 20px;
+      border-radius: 10px;
+      border: 1px solid var(--border-dark);
+    }
+
+    .anti-ai-badge {
+      background-color: rgba(0, 230, 118, 0.15);
+      border: 1px solid var(--success-mint);
+      color: var(--success-mint);
+      padding: 6px 14px;
+      border-radius: 20px;
+      font-size: 12px;
+      font-weight: 700;
+      display: flex;
+      align-items: center;
+      gap: 6px;
+    }
+
+    .scenes-table-container {
+      background-color: var(--bg-slate);
+      border: 1px solid var(--border-dark);
+      border-radius: 10px;
+      overflow-x: auto;
+    }
+
+    table.scenes-table {
+      width: 100%;
+      border-collapse: collapse;
+      text-align: left;
+      font-size: 13px;
+    }
+
+    table.scenes-table th {
+      background-color: var(--bg-card);
+      padding: 12px 16px;
+      font-weight: 700;
+      color: var(--text-secondary);
+      border-bottom: 1px solid var(--border-dark);
+    }
+
+    table.scenes-table td {
+      padding: 14px 16px;
+      border-bottom: 1px solid var(--border-dark);
+      vertical-align: top;
+    }
+
+    table.scenes-table tr:hover {
+      background-color: rgba(255, 255, 255, 0.02);
+    }
+
+    .word-pill {
+      display: inline-block;
+      padding: 2px 8px;
+      border-radius: 12px;
+      font-size: 11px;
+      font-weight: 700;
+      font-family: var(--font-mono);
+    }
+
+    .word-pill.optimal {
+      background-color: rgba(0, 230, 118, 0.15);
+      color: var(--success-mint);
+      border: 1px solid var(--success-mint);
+    }
+
+    .word-pill.too_long {
+      background-color: rgba(255, 59, 48, 0.15);
+      color: var(--alert-crimson);
+      border: 1px solid var(--alert-crimson);
+    }
+
+    .word-pill.too_short {
+      background-color: rgba(255, 214, 0, 0.15);
+      color: var(--warning-amber);
+      border: 1px solid var(--warning-amber);
+    }
+
+    .tag-kw {
+      background-color: rgba(255, 255, 255, 0.06);
+      padding: 2px 6px;
+      border-radius: 4px;
+      font-size: 11px;
+      margin-right: 4px;
+      color: var(--text-secondary);
+      font-family: var(--font-mono);
+    }
+
+    /* FOOTAGE SOURCE ATTRIBUTION BADGES */
+    .source-badge {
+      display: inline-flex;
+      align-items: center;
+      gap: 5px;
+      padding: 3px 8px;
+      border-radius: 4px;
+      font-size: 11px;
+      font-weight: 600;
+      white-space: nowrap;
+      max-width: 150px;
+    }
+    .source-youtube {
+      background: rgba(255, 68, 68, 0.15);
+      color: #ff5252;
+      border: 1px solid rgba(255, 68, 68, 0.35);
+    }
+    .source-douyin {
+      background: rgba(0, 229, 255, 0.15);
+      color: var(--accent-cyan);
+      border: 1px solid rgba(0, 229, 255, 0.35);
+    }
+    .source-bilibili {
+      background: rgba(0, 161, 214, 0.15);
+      color: #00a1d6;
+      border: 1px solid rgba(0, 161, 214, 0.35);
+    }
+    .source-stock {
+      background: rgba(0, 230, 118, 0.15);
+      color: var(--success-mint);
+      border: 1px solid rgba(0, 230, 118, 0.35);
+    }
+    .source-pending {
+      background: rgba(255, 255, 255, 0.05);
+      color: var(--text-muted);
+      border: 1px solid var(--border-dark);
+    }
+    .source-link {
+      color: inherit;
+      text-decoration: none;
+      display: inline-flex;
+      align-items: center;
+      gap: 3px;
+      transition: opacity 0.15s ease;
+      overflow: hidden;
+      text-overflow: ellipsis;
+    }
+    .source-link:hover {
+      text-decoration: underline;
+      opacity: 0.85;
+    }
+
+    /* SCENE ACCORDION & VIDEO EXPANSION (SCREEN 3) */
+    .scene-row {
+      cursor: pointer;
+      transition: background-color 0.15s ease;
+    }
+    .scene-row:hover {
+      background-color: rgba(0, 229, 255, 0.04) !important;
+    }
+    .scene-row.expanded {
+      background-color: rgba(0, 229, 255, 0.08) !important;
+    }
+    .toggle-arrow {
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      width: 20px;
+      height: 20px;
+      border-radius: 4px;
+      background: var(--bg-card);
+      border: 1px solid var(--border-dark);
+      color: var(--accent-cyan);
+      font-size: 10px;
+      transition: transform 0.2s ease, background 0.2s;
+      margin-right: 8px;
+    }
+    .scene-row.expanded .toggle-arrow {
+      transform: rotate(90deg);
+      background: var(--accent-cyan);
+      color: #000;
+      font-weight: bold;
+    }
+    .btn-scene-video {
+      background: rgba(0, 229, 255, 0.12);
+      border: 1px solid var(--accent-cyan);
+      color: var(--accent-cyan);
+      padding: 5px 12px;
+      border-radius: 6px;
+      font-size: 12px;
+      font-weight: 700;
+      cursor: pointer;
+      display: inline-flex;
+      align-items: center;
+      gap: 6px;
+      transition: all 0.2s ease;
+      white-space: nowrap;
+    }
+    .btn-scene-video:hover {
+      background: var(--accent-cyan);
+      color: #000;
+      box-shadow: 0 0 10px rgba(0, 229, 255, 0.4);
+    }
+    .scene-detail-row {
+      background: #090e17;
+      border-bottom: 2px solid var(--border-dark);
+    }
+    .scene-detail-content {
+      display: grid;
+      grid-template-columns: 460px 1fr;
+      gap: 20px;
+      padding: 18px 24px;
+      border-left: 4px solid var(--accent-cyan);
+    }
+    @media (max-width: 1024px) {
+      .scene-detail-content {
+        grid-template-columns: 1fr;
+      }
+    }
+    .scene-video-wrapper {
+      position: relative;
+      background: #000;
+      border-radius: 8px;
+      overflow: hidden;
+      border: 1px solid var(--border-dark);
+      aspect-ratio: 16 / 9;
+      box-shadow: 0 4px 16px rgba(0, 0, 0, 0.5);
+    }
+    .scene-video-wrapper video {
+      width: 100%;
+      height: 100%;
+      display: block;
+      object-fit: contain;
+    }
+    .scene-meta-box {
+      display: flex;
+      flex-direction: column;
+      gap: 10px;
+    }
+    .scene-meta-section {
+      background: var(--bg-slate);
+      border: 1px solid var(--border-dark);
+      border-radius: 6px;
+      padding: 10px 14px;
+    }
+    .scene-meta-title {
+      font-size: 11px;
+      text-transform: uppercase;
+      letter-spacing: 0.5px;
+      color: var(--accent-cyan);
+      font-weight: 700;
+      margin-bottom: 4px;
+      display: flex;
+      align-items: center;
+      gap: 6px;
+    }
+    .scene-meta-val {
+      font-size: 13px;
+      color: var(--text-primary);
+      line-height: 1.5;
+    }
+
+    /* MODAL POPUP */
+    .scene-modal-backdrop {
+      position: fixed;
+      inset: 0;
+      background: rgba(0, 0, 0, 0.85);
+      z-index: 9999;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      backdrop-filter: blur(4px);
+    }
+    .scene-modal-dialog {
+      background: var(--bg-slate);
+      border: 1px solid var(--border-dark);
+      border-radius: 12px;
+      width: 90%;
+      max-width: 900px;
+      padding: 20px;
+      box-shadow: 0 10px 40px rgba(0,0,0,0.8);
+      position: relative;
+    }
+
+    /* SCREEN 3: LIVE MONITOR */
+    .monitor-grid {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 20px;
+    }
+
+    .player-card {
+      background-color: var(--bg-slate);
+      border: 1px solid var(--border-dark);
+      border-radius: 10px;
+      padding: 16px;
+      display: flex;
+      flex-direction: column;
+      gap: 12px;
+    }
+
+    .video-viewport {
+      background-color: #000;
+      border-radius: 8px;
+      aspect-ratio: 16 / 9;
+      width: 100%;
+      overflow: hidden;
+      display: flex;
+      justify-content: center;
+      align-items: center;
+      border: 1px solid var(--border-dark);
+    }
+
+    .video-viewport video {
+      width: 100%;
+      height: 100%;
+      object-fit: contain;
+    }
+
+    .empty-video-placeholder {
+      color: var(--text-muted);
+      font-size: 13px;
+      text-align: center;
+      padding: 20px;
+    }
+
+    .waveform-box {
+      background-color: var(--bg-card);
+      border: 1px solid var(--border-dark);
+      border-radius: 6px;
+      padding: 10px;
+      height: 60px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      gap: 3px;
+    }
+
+    .wave-bar {
+      width: 4px;
+      background-color: var(--accent-cyan);
+      border-radius: 2px;
+      animation: wave-pulse 1.2s infinite ease-in-out alternate;
+    }
+
+    @keyframes wave-pulse {
+      0% { height: 10%; opacity: 0.3; }
+      100% { height: 90%; opacity: 1; }
+    }
+
+    .terminal-card {
+      background-color: #080C12;
+      border: 1px solid var(--border-dark);
+      border-radius: 10px;
+      padding: 16px;
+      display: flex;
+      flex-direction: column;
+      gap: 10px;
+      font-family: var(--font-mono);
+    }
+
+    .terminal-header {
+      display: flex;
+      justify-content: space-between;
+      color: var(--text-secondary);
+      font-size: 12px;
+      border-bottom: 1px solid var(--border-dark);
+      padding-bottom: 8px;
+    }
+
+    .terminal-logs {
+      height: 300px;
+      overflow-y: auto;
+      font-size: 12px;
+      line-height: 1.6;
+      display: flex;
+      flex-direction: column;
+      gap: 4px;
+      color: #A0B2C6;
+    }
+
+    .log-line {
+      word-break: break-all;
+    }
+
+    .log-line.cyan { color: var(--accent-cyan); }
+    .log-line.green { color: var(--success-mint); }
+    .log-line.red { color: var(--alert-crimson); }
+
+    /* SCREEN 4: OUTPUT & PUBLISHING HUB */
+    .output-grid {
+      display: grid;
+      grid-template-columns: 1.2fr 1fr;
+      gap: 20px;
+    }
+
+    .thumb-preview-box {
+      position: relative;
+      background-color: #000;
+      border-radius: 8px;
+      overflow: hidden;
+      aspect-ratio: 16 / 9;
+      border: 1px solid var(--border-dark);
+    }
+
+    .thumb-preview-box img {
+      width: 100%;
+      height: 100%;
+      object-fit: cover;
+    }
+
+    .safe-zone-guide-tag {
+      position: absolute;
+      bottom: 8px;
+      right: 8px;
+      background-color: rgba(255, 59, 48, 0.85);
+      color: #FFF;
+      font-size: 10px;
+      font-weight: 700;
+      padding: 4px 8px;
+      border-radius: 4px;
+      letter-spacing: 0.5px;
+    }
+
+    .seo-card {
+      background-color: var(--bg-slate);
+      border: 1px solid var(--border-dark);
+      border-radius: 10px;
+      padding: 18px;
+      display: flex;
+      flex-direction: column;
+      gap: 12px;
+    }
+
+    .title-opt {
+      background-color: var(--bg-card);
+      border: 1px solid var(--border-dark);
+      padding: 10px 14px;
+      border-radius: 6px;
+      font-size: 13px;
+      color: var(--text-primary);
+      cursor: pointer;
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+    }
+
+    .title-opt:hover {
+      border-color: var(--accent-cyan);
+    }
+
+    .copy-btn {
+      background-color: rgba(255, 255, 255, 0.08);
+      border: 1px solid var(--border-dark);
+      color: var(--accent-cyan);
+      padding: 4px 8px;
+      border-radius: 4px;
+      font-size: 11px;
+      cursor: pointer;
+    }
+
+    .copy-btn:hover {
+      background-color: var(--accent-cyan);
+      color: #000;
+    }
+
+    .desc-box {
+      background-color: var(--bg-card);
+      border: 1px solid var(--border-dark);
+      border-radius: 6px;
+      padding: 12px;
+      font-size: 12px;
+      color: #B5C4D4;
+      line-height: 1.5;
+      max-height: 140px;
+      overflow-y: auto;
+      white-space: pre-wrap;
+    }
+
+    .upload-btn {
+      background: linear-gradient(135deg, #FF0000, #CC0000);
+      color: #FFF;
+      border: none;
+      border-radius: 8px;
+      padding: 14px;
+      font-size: 14px;
+      font-weight: 700;
+      cursor: pointer;
+      display: flex;
+      justify-content: center;
+      align-items: center;
+      gap: 8px;
+      box-shadow: 0 4px 12px rgba(255, 0, 0, 0.3);
+      transition: all 0.2s;
+    }
+
+    .upload-btn:hover {
+      opacity: 0.9;
+      transform: translateY(-2px);
+    }
+
+    /* SCREEN 5: SETTINGS & CONFIGURATION */
+    .settings-grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(420px, 1fr));
+      gap: 18px;
+    }
+
+    .settings-card {
+      background-color: var(--bg-slate);
+      border: 1px solid var(--border-dark);
+      border-radius: 10px;
+      padding: 18px;
+      display: flex;
+      flex-direction: column;
+      gap: 14px;
+    }
+
+    .settings-card-header {
+      display: flex;
+      align-items: center;
+      gap: 12px;
+      border-bottom: 1px solid var(--border-dark);
+      padding-bottom: 12px;
+    }
+
+    .settings-card-icon {
+      font-size: 20px;
+      background-color: var(--bg-card);
+      width: 38px;
+      height: 38px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      border-radius: 8px;
+      border: 1px solid var(--border-dark);
+    }
+
+    .settings-card-title {
+      font-size: 14px;
+      font-weight: 700;
+      color: #FFF;
+    }
+
+    .settings-card-subtitle {
+      font-size: 11px;
+      color: var(--text-secondary);
+      margin-top: 2px;
+    }
+
+    .btn-secondary {
+      background-color: var(--bg-card);
+      border: 1px solid var(--border-dark);
+      color: var(--text-primary);
+      border-radius: 6px;
+      padding: 8px 14px;
+      font-size: 12px;
+      font-weight: 600;
+      cursor: pointer;
+      display: flex;
+      align-items: center;
+      gap: 6px;
+      transition: all 0.2s;
+      white-space: nowrap;
+    }
+
+    .btn-secondary:hover {
+      border-color: var(--accent-cyan);
+      color: var(--accent-cyan);
+    }
+
+    .btn-danger {
+      background-color: rgba(255, 59, 48, 0.15);
+      border: 1px solid var(--alert-crimson);
+      color: var(--alert-crimson);
+      border-radius: 6px;
+      padding: 8px 14px;
+      font-size: 12px;
+      font-weight: 600;
+      cursor: pointer;
+      display: flex;
+      align-items: center;
+      gap: 6px;
+      transition: all 0.2s;
+      white-space: nowrap;
+    }
+
+    .btn-danger:hover {
+      background-color: var(--alert-crimson);
+      color: #FFF;
+    }
+
+    .badge-tag {
+      font-size: 10px;
+      font-weight: 700;
+      padding: 3px 8px;
+      border-radius: 12px;
+      font-family: var(--font-mono);
+      display: inline-flex;
+      align-items: center;
+      gap: 4px;
+      background-color: rgba(255, 255, 255, 0.08);
+      color: var(--text-secondary);
+      border: 1px solid var(--border-dark);
+    }
+
+    .badge-tag.success {
+      background-color: rgba(0, 230, 118, 0.15);
+      border-color: var(--success-mint);
+      color: var(--success-mint);
+    }
+
+    .badge-tag.error {
+      background-color: rgba(255, 59, 48, 0.15);
+      border-color: var(--alert-crimson);
+      color: var(--alert-crimson);
+    }
+
+    .badge-tag.warning {
+      background-color: rgba(255, 214, 0, 0.15);
+      border-color: var(--warning-amber);
+      color: var(--warning-amber);
+    }
+
+    .binary-box {
+      background-color: var(--bg-card);
+      border: 1px solid var(--border-dark);
+      border-radius: 8px;
+      padding: 12px;
+      display: flex;
+      flex-direction: column;
+      gap: 4px;
+    }
+
+    .binary-name {
+      font-size: 12px;
+      font-weight: 700;
+      color: #FFF;
+      font-family: var(--font-mono);
+    }
+
+    .binary-version {
+      font-size: 11px;
+      color: var(--text-secondary);
+      word-break: break-all;
+    }
+
+    .binary-status {
+      font-size: 10px;
+      font-weight: 700;
+      margin-top: 4px;
+      padding: 2px 6px;
+      border-radius: 4px;
+      width: fit-content;
+      background: rgba(255, 255, 255, 0.08);
+      color: var(--text-secondary);
+      border: 1px solid var(--border-dark);
+    }
+
+    .binary-status.ready {
+      background-color: rgba(0, 230, 118, 0.15);
+      color: var(--success-mint);
+      border-color: var(--success-mint);
+    }
+
+    .binary-status.missing {
+      background-color: rgba(255, 59, 48, 0.15);
+      color: var(--alert-crimson);
+      border-color: var(--alert-crimson);
+    }
+
+    /* TTS SUB-TABS NAVIGATION */
+    .tts-tab-btn {
+      background: var(--bg-card);
+      border: 1px solid var(--border-dark);
+      color: var(--text-secondary);
+      cursor: pointer;
+      font-weight: 500;
+      transition: all 0.2s ease;
+      display: inline-flex;
+      align-items: center;
+      gap: 6px;
+    }
+    .tts-tab-btn:hover {
+      border-color: var(--accent-cyan);
+      color: #FFF;
+      background: rgba(255, 255, 255, 0.05);
+    }
+    .tts-tab-btn.active {
+      background: rgba(0, 229, 255, 0.12);
+      border-color: var(--accent-cyan);
+      color: var(--accent-cyan);
+      font-weight: 700;
+      box-shadow: 0 0 10px rgba(0, 229, 255, 0.2);
+    }
+    .tts-subpage {
+      display: none !important;
+    }
+    .tts-subpage.active {
+      display: flex !important;
+    }
+
+    /* Projects Management & Queue Styles */
+    .proj-filter-btn.active {
+      background-color: var(--bg-card) !important;
+      border-color: var(--accent-cyan) !important;
+      color: var(--accent-cyan) !important;
+    }
+    .status-badge-running {
+      background: rgba(0, 229, 255, 0.12);
+      color: var(--accent-cyan);
+      border: 1px solid rgba(0, 229, 255, 0.3);
+      padding: 3px 8px;
+      border-radius: 4px;
+      font-weight: 700;
+      font-size: 11px;
+      display: inline-flex;
+      align-items: center;
+      gap: 5px;
+    }
+    .status-badge-queued {
+      background: rgba(255, 214, 0, 0.12);
+      color: var(--warning-amber);
+      border: 1px solid rgba(255, 214, 0, 0.3);
+      padding: 3px 8px;
+      border-radius: 4px;
+      font-weight: 700;
+      font-size: 11px;
+      display: inline-flex;
+      align-items: center;
+      gap: 5px;
+    }
+    .status-badge-complete {
+      background: rgba(0, 230, 118, 0.12);
+      color: var(--success-mint);
+      border: 1px solid rgba(0, 230, 118, 0.3);
+      padding: 3px 8px;
+      border-radius: 4px;
+      font-weight: 700;
+      font-size: 11px;
+    }
+    .status-badge-error {
+      background: rgba(255, 59, 48, 0.12);
+      color: var(--alert-crimson);
+      border: 1px solid rgba(255, 59, 48, 0.3);
+      padding: 3px 8px;
+      border-radius: 4px;
+      font-weight: 700;
+      font-size: 11px;
+    }
+    .status-badge-cancelled {
+      background: rgba(143, 156, 174, 0.12);
+      color: var(--text-secondary);
+      border: 1px solid rgba(143, 156, 174, 0.3);
+      padding: 3px 8px;
+      border-radius: 4px;
+      font-weight: 700;
+      font-size: 11px;
+    }
+    .pulse-dot {
+      width: 6px;
+      height: 6px;
+      border-radius: 50%;
+      background: currentColor;
+      box-shadow: 0 0 6px currentColor;
+      animation: pulseAnim 1.5s infinite;
+    }
+    @keyframes pulseAnim {
+      0% { opacity: 1; transform: scale(1); }
+      50% { opacity: 0.4; transform: scale(1.3); }
+      100% { opacity: 1; transform: scale(1); }
+    }
+    .btn-action-small {
+      padding: 4px 8px;
+      border-radius: 4px;
+      font-size: 11px;
+      font-weight: 600;
+      cursor: pointer;
+      display: inline-flex;
+      align-items: center;
+      gap: 4px;
+      transition: all 0.2s;
+    }
+    .btn-action-small:hover {
+      filter: brightness(1.2);
+    }
+  </style>
+</head>
+<body>
+
+  <!-- HEADER -->
+  <header>
+    <div class="brand-title">
+      <span class="logo-badge">PRO v2.0</span>
+      <span class="brand-name">BANCONTENT AUTO STUDIO</span>
+    </div>
+
+    <div class="top-meta">
+      <div class="queue-pill" id="headerQueuePill" style="cursor: pointer; background: var(--bg-card); border: 1px solid var(--border-dark); padding: 4px 12px; border-radius: 20px; font-size: 12px; font-weight: 600; color: var(--warning-amber); display: flex; align-items: center; gap: 6px;" title="Xem hàng đợi sản xuất">
+        <span>⏳</span> <span id="queueCountText">Hàng đợi: 0</span>
+      </div>
+      <div class="project-pill" id="headerProjectId" style="cursor: pointer;" title="Dự án đang theo dõi">Project: Chưa tạo</div>
+      <div class="health-pill">
+        <span>CPU: <span class="health-val" id="cpuLoad">--%</span></span>
+        <span>RAM: <span class="health-val" id="ramLoad">--%</span></span>
+        <span>Buffer: <span class="health-val" id="bufferUsage">0.0 GB / 5.0 GB</span></span>
+      </div>
+    </div>
+  </header>
+
+  <!-- APP CONTAINER -->
+  <div class="app-container">
+
+    <!-- SIDEBAR -->
+    <nav class="sidebar">
+      <button class="nav-btn active" data-screen="wizard">
+        <span>⚡</span> 1. Khởi Tạo Dự Án
+      </button>
+      <button class="nav-btn" data-screen="projects">
+        <span>📁</span> 2. Quản Lý Dự Án
+        <span id="navProjectsBadge" style="margin-left:auto; background:var(--bg-card); padding:2px 8px; border-radius:12px; font-size:11px; font-family:var(--font-mono); color:var(--accent-cyan); border:1px solid var(--border-dark);">0</span>
+      </button>
+      <button class="nav-btn" data-screen="script">
+        <span>📝</span> 3. Kịch Bản Studio
+      </button>
+      <button class="nav-btn" data-screen="monitor">
+        <span>📡</span> 4. Giám Sát Pipeline
+      </button>
+      <button class="nav-btn" data-screen="output">
+        <span>🚀</span> 5. Kết Quả & Xuất Bản
+      </button>
+      <button class="nav-btn" data-screen="settings">
+        <span>⚙️</span> 6. Cài Đặt Hệ Thống
+      </button>
+
+      <div class="sidebar-footer">
+        <div><strong>Hạ Tầng Sạch Watermark</strong></div>
+        <div style="margin-top: 4px; color: var(--success-mint);">● Douyin A_Bogus Engine</div>
+        <div style="color: var(--accent-cyan);">● ZeroTTS Sub-ms Audio</div>
+        <div style="color: var(--text-secondary);">● Rolling Disk Buffer Safe</div>
+      </div>
+    </nav>
+
+    <!-- WORKSPACE -->
+    <main class="workspace">
+
+      <!-- END-TO-END PIPELINE TRACKER -->
+      <section class="pipeline-tracker-card">
+        <div class="tracker-header">
+          <div style="display: flex; align-items: center; gap: 14px;">
+            <div class="tracker-title">Tiến Độ Quy Trình Sản Xuất Video (B1 ➔ B4)</div>
+            <button id="btnStopPipeline" style="display: none; background: rgba(255, 59, 48, 0.15); border: 1px solid var(--alert-crimson); color: #ff6b6b; padding: 4px 12px; border-radius: 6px; font-size: 12px; font-weight: 700; cursor: pointer; align-items: center; gap: 6px; transition: all 0.2s;" title="Dừng ngay lập tức quy trình sản xuất">
+              <span>⛔</span> DỪNG SẢN XUẤT
+            </button>
+            <button id="btnResumePipeline" style="display: none; background: rgba(0, 229, 255, 0.15); border: 1px solid var(--accent-cyan); color: var(--accent-cyan); padding: 4px 12px; border-radius: 6px; font-size: 12px; font-weight: 700; cursor: pointer; align-items: center; gap: 6px; transition: all 0.2s;" title="Tiếp tục sản xuất dự án này">
+              <span>▶</span> TIẾP TỤC CHẠY
+            </button>
+          </div>
+          <div class="tracker-status-text" id="trackerStatus">Sẵn sàng khởi chạy</div>
+        </div>
+
+        <div class="steps-container">
+          <div class="step-node" id="stepNode1">
+            <span class="step-badge">Bước 1</span>
+            <div class="step-name">Kịch Bản & SEO</div>
+            <div class="step-desc">Anti-AI 35 rules + Word Budget</div>
+          </div>
+          <div class="step-node" id="stepNode2">
+            <span class="step-badge">Bước 2</span>
+            <div class="step-name">Footage & ZeroTTS</div>
+            <div class="step-desc">Douyin sạch + Lắp ráp 16:9</div>
+          </div>
+          <div class="step-node" id="stepNode3">
+            <span class="step-badge">Bước 3</span>
+            <div class="step-name">Render Chapter MP4</div>
+            <div class="step-desc">Rolling Buffer & Concat Demuxer</div>
+          </div>
+          <div class="step-node" id="stepNode4">
+            <span class="step-badge">Bước 4</span>
+            <div class="step-name">Thumbnails & SEO</div>
+            <div class="step-desc">Safe-Zone 20% & 1-Click Upload</div>
+          </div>
+        </div>
+
+        <div class="progress-bar-container">
+          <div class="progress-bar-fill" id="progressBarFill"></div>
+        </div>
+      </section>
+
+      <!-- SCREEN 1: QUICK LAUNCH WIZARD -->
+      <section class="screen-view active" id="screenWizard">
+        <div class="wizard-card">
+          <div class="card-title">Quick Launch Wizard 1-Click</div>
+          <div class="card-subtitle">Khởi tạo và sản xuất tự động toàn bộ video dài mà không cần cào clip thủ công.</div>
+
+          <div class="form-group">
+            <label class="form-label" for="inputTopic">Tên Đề Tài / Chủ Đề Điều Tra</label>
+            <input class="form-input" id="inputTopic" type="text"
+                   value="Khoảnh khắc suýt chết khó tin P340: Bài học sập kệ kho 15 triệu USD"
+                   placeholder="Nhập chủ đề video...">
+          </div>
+
+          <div class="form-group">
+            <label class="form-label" for="selectSkill">Skill Niche Phù Hợp Kênh</label>
+            <select class="form-select" id="selectSkill">
+              <option value="nature-wildlife-survival" selected>🌿 [Thiên Nhiên · Sinh Tồn & Sách Đỏ] Nature & Wildlife Survival</option>
+              <option value="historical-mysteries">🏛️ [Lịch Sử · Bí Ẩn & Kỳ Quan] Ancient & Historical Mysteries</option>
+              <option value="warehouse-fails">🏭 [Sự Cố · An Toàn Lao Động] Warehouse Fails & Industrial Safety</option>
+              <option value="military-microhistory">⚔️ [Quân Sự · Kỷ Vật Chiến Hào] Military Micro-History</option>
+              <option value="extreme-weather">🌪️ [Thiên Tai · Bão Lũ Cực Đoan] Extreme Weather & Disasters</option>
+            </select>
+            <div id="skillDescription" style="font-size: 12px; color: var(--text-secondary); margin-top: 6px; line-height: 1.4;">Phóng sự hoang dã & bi kịch sinh tồn động vật · 4K cinematic macro & aerial nature documentary</div>
+          </div>
+
+          <div class="form-group">
+            <label class="form-label">Thời Lượng Dự Kiến</label>
+            <div class="duration-pills">
+              <div class="pill-opt" data-duration="3">3 Phút (~22 scenes - Tóm Tắt)</div>
+              <div class="pill-opt selected" data-duration="5">5 Phút (~37 scenes - Chuẩn CCTV)</div>
+              <div class="pill-opt" data-duration="10">10 Phút (~75 scenes - Phóng Sự)</div>
+              <div class="pill-opt" data-duration="15">15 Phút (~110 scenes - Tài Liệu Chuyên Sâu)</div>
+            </div>
+          </div>
+
+          <button class="btn-primary" id="btnLaunchPipeline">
+            <span>⚡</span> BẮT ĐẦU SẢN XUẤT TỰ ĐỘNG (FULL PIPELINE)
+          </button>
+        </div>
+      </section>
+
+      <!-- SCREEN 2: PROJECTS MANAGEMENT & QUEUE -->
+      <section class="screen-view" id="screenProjects">
+        <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 16px;">
+          <div>
+            <h2 style="font-size: 20px; font-weight: 700; color: #fff;">Quản Lý Dự Án & Hàng Đợi Sản Xuất</h2>
+            <p style="color: var(--text-secondary); font-size: 13px; margin-top: 4px;">Theo dõi danh sách toàn bộ video, điều khiển hàng đợi tự động và dừng/tiếp tục tiến trình.</p>
+          </div>
+          <div style="display: flex; gap: 10px;">
+            <button class="action-btn" id="btnRefreshProjects" style="background: var(--bg-card); border: 1px solid var(--border-dark); color: var(--text-primary); padding: 8px 16px; border-radius: 6px; cursor: pointer; display: flex; align-items: center; gap: 6px; font-weight: 600;">
+              <span>🔄</span> Làm Mới
+            </button>
+            <button class="action-btn" id="btnNewProjectFromList" style="background: var(--accent-cyan); color: #000; border: none; padding: 8px 16px; border-radius: 6px; cursor: pointer; display: flex; align-items: center; gap: 6px; font-weight: 700;">
+              <span>⚡</span> Tạo Dự Án Mới
+            </button>
+          </div>
+        </div>
+
+        <!-- ACTIVE & QUEUE SUMMARY CARDS -->
+        <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 16px; margin-bottom: 20px;">
+          <!-- Card Đang Chạy -->
+          <div style="background: var(--bg-slate); border: 1px solid var(--border-dark); border-radius: 8px; padding: 16px;" id="runningProjectCard">
+            <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 8px;">
+              <span style="font-size: 12px; font-weight: 700; color: var(--accent-cyan); text-transform: uppercase; letter-spacing: 0.5px;">● ĐANG SẢN XUẤT</span>
+              <span id="runningProjStageBadge" style="font-size: 11px; font-family: var(--font-mono); background: rgba(0, 229, 255, 0.1); color: var(--accent-cyan); padding: 2px 8px; border-radius: 4px;">IDLE</span>
+            </div>
+            <div id="runningProjTopic" style="font-size: 15px; font-weight: 600; color: #fff; margin-bottom: 10px; overflow: hidden; text-overflow: ellipsis; white-space: nowrap;">Không có video nào đang chạy</div>
+            <div style="background: var(--bg-card); border-radius: 4px; height: 8px; overflow: hidden; margin-bottom: 12px;">
+              <div id="runningProjProgressBar" style="height: 100%; width: 0%; background: var(--accent-cyan); transition: width 0.3s;"></div>
+            </div>
+            <div style="display: flex; justify-content: space-between; align-items: center;">
+              <span id="runningProjStatusText" style="font-size: 12px; color: var(--text-secondary); font-family: var(--font-mono);">Sẵn sàng khởi tạo</span>
+              <div style="display: flex; gap: 8px;">
+                <button id="btnFocusRunningProj" style="display: none; background: var(--bg-card); border: 1px solid var(--accent-cyan); color: var(--accent-cyan); padding: 4px 10px; border-radius: 4px; font-size: 12px; cursor: pointer; font-weight: 600;">📡 Mở Giám Sát</button>
+                <button id="btnStopRunningProj" style="display: none; background: rgba(255, 59, 48, 0.15); border: 1px solid var(--alert-crimson); color: #ff6b6b; padding: 4px 10px; border-radius: 4px; font-size: 12px; cursor: pointer; font-weight: 600;">⛔ Dừng</button>
+              </div>
+            </div>
+          </div>
+
+          <!-- Card Hàng Đợi -->
+          <div style="background: var(--bg-slate); border: 1px solid var(--border-dark); border-radius: 8px; padding: 16px;">
+            <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 8px;">
+              <span style="font-size: 12px; font-weight: 700; color: var(--warning-amber); text-transform: uppercase; letter-spacing: 0.5px;">⏳ HÀNG ĐỢI SẢN XUẤT</span>
+              <span id="queueCountBadge" style="font-size: 11px; font-family: var(--font-mono); background: rgba(255, 214, 0, 0.1); color: var(--warning-amber); padding: 2px 8px; border-radius: 4px;">0 video chờ</span>
+            </div>
+            <div id="queueListContainer" style="max-height: 90px; overflow-y: auto; font-size: 13px; color: var(--text-secondary);">
+              <div style="padding: 10px 0; text-align: center; color: var(--text-muted);">Hàng đợi trống. Video tiếp theo sẽ được xử lý ngay lập tức.</div>
+            </div>
+          </div>
+        </div>
+
+        <!-- FILTER & SEARCH BAR -->
+        <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 12px; gap: 12px; flex-wrap: wrap;">
+          <div style="display: flex; gap: 8px;" id="projectFilterTabs">
+            <button class="proj-filter-btn active" data-filter="all" style="background: var(--bg-card); border: 1px solid var(--border-dark); color: var(--text-primary); padding: 6px 12px; border-radius: 6px; font-size: 12px; cursor: pointer; font-weight: 600;">Tất Cả (<span id="countAll">0</span>)</button>
+            <button class="proj-filter-btn" data-filter="running" style="background: transparent; border: 1px solid var(--border-dark); color: var(--text-secondary); padding: 6px 12px; border-radius: 6px; font-size: 12px; cursor: pointer; font-weight: 600;">Đang Chạy / Chờ (<span id="countRunning">0</span>)</button>
+            <button class="proj-filter-btn" data-filter="completed" style="background: transparent; border: 1px solid var(--border-dark); color: var(--text-secondary); padding: 6px 12px; border-radius: 6px; font-size: 12px; cursor: pointer; font-weight: 600;">Hoàn Tất (<span id="countCompleted">0</span>)</button>
+            <button class="proj-filter-btn" data-filter="error" style="background: transparent; border: 1px solid var(--border-dark); color: var(--text-secondary); padding: 6px 12px; border-radius: 6px; font-size: 12px; cursor: pointer; font-weight: 600;">Lỗi / Đã Dừng (<span id="countError">0</span>)</button>
+          </div>
+          <input type="text" id="projectSearchInput" placeholder="Tìm kiếm theo tên đề tài hoặc mã ID..." style="background: var(--bg-card); border: 1px solid var(--border-dark); color: #fff; padding: 6px 14px; border-radius: 6px; font-size: 12px; width: 280px; outline: none;">
+        </div>
+
+        <!-- PROJECTS TABLE -->
+        <div style="background: var(--bg-slate); border: 1px solid var(--border-dark); border-radius: 8px; overflow-x: auto;">
+          <table style="width: 100%; border-collapse: collapse; text-align: left; font-size: 13px; min-width: 800px;">
+            <thead>
+              <tr style="background: var(--bg-card); color: var(--text-secondary); font-size: 12px; border-bottom: 1px solid var(--border-dark);">
+                <th style="padding: 12px 16px;">Mã Dự Án</th>
+                <th style="padding: 12px 16px;">Đề Tài / Chủ Đề</th>
+                <th style="padding: 12px 16px;">Thể Loại</th>
+                <th style="padding: 12px 16px;">Trạng Thái</th>
+                <th style="padding: 12px 16px; width: 150px;">Tiến Độ</th>
+                <th style="padding: 12px 16px;">Thời Gian</th>
+                <th style="padding: 12px 16px; text-align: right;">Thao Tác</th>
+              </tr>
+            </thead>
+            <tbody id="projectsTableBody">
+              <tr>
+                <td colspan="7" style="padding: 30px; text-align: center; color: var(--text-muted);">Đang nạp danh sách dự án...</td>
+              </tr>
+            </tbody>
+          </table>
+        </div>
+      </section>
+
+      <!-- SCREEN 2: SCRIPT STUDIO & SCENE INSPECTOR -->
+      <section class="screen-view" id="screenScript">
+        <div class="inspector-header">
+          <div>
+            <div style="font-weight: 700; font-size: 15px;">Bảng Phân Cảnh Nguyên Tử (Scene Inspector & Video Tracking)</div>
+            <div style="font-size: 12px; color: var(--text-secondary); margin-top: 2px;">
+              Từng cảnh được định thời chuẩn xác 4.0s - 8.0s khớp với nhịp đọc. Bấm vào cảnh hoặc nút 'Xem Video' để theo dõi clip thực tế.
+            </div>
+          </div>
+          <div style="display: flex; align-items: center; gap: 10px; flex-wrap: wrap;">
+            <button onclick="expandAllScenes()" style="background: var(--bg-card); border: 1px solid var(--accent-cyan); color: var(--accent-cyan); padding: 6px 12px; border-radius: 6px; font-size: 12px; font-weight: 700; cursor: pointer; display: flex; align-items: center; gap: 6px;" title="Mở rộng trình phát video cho toàn bộ các phân cảnh">
+              <span>⊞</span> Mở Rộng Tất Cả Clip
+            </button>
+            <button onclick="collapseAllScenes()" style="background: var(--bg-card); border: 1px solid var(--border-dark); color: var(--text-secondary); padding: 6px 12px; border-radius: 6px; font-size: 12px; font-weight: 600; cursor: pointer; display: flex; align-items: center; gap: 6px;" title="Thu gọn toàn bộ trình phát video">
+              <span>⊟</span> Thu Gọn Tất Cả
+            </button>
+            <button onclick="refreshProjectState(true)" style="background: var(--bg-card); border: 1px solid var(--border-dark); color: var(--text-primary); padding: 6px 12px; border-radius: 6px; font-size: 12px; font-weight: 600; cursor: pointer; display: flex; align-items: center; gap: 6px;" title="Nạp lại dữ liệu kịch bản mới nhất">
+              <span>🔄</span> Làm Mới
+            </button>
+            <div class="anti-ai-badge">
+              <span>✔</span> Anti-AI Filter: 0/35 Patterns (Cv ≥ 0.40)
+            </div>
+          </div>
+        </div>
+
+        <div class="scenes-table-container">
+          <table class="scenes-table">
+            <thead>
+              <tr>
+                <th style="width: 110px;">Cảnh</th>
+                <th style="width: 95px;">Thời lượng</th>
+                <th>Lời Thoại Thuyết Minh</th>
+                <th style="width: 130px;">Ngân Sách Từ</th>
+                <th>Từ Khóa Cào Ngầm</th>
+                <th style="width: 175px;">Nguồn & Đoạn Cắt Stock</th>
+                <th style="width: 125px; text-align: center;">Thao Tác</th>
+              </tr>
+            </thead>
+            <tbody id="scenesTableBody">
+              <tr>
+                <td colspan="7" style="text-align: center; color: var(--text-muted); padding: 30px;">
+                  Chưa có kịch bản. Hãy bấm 'Bắt đầu sản xuất' ở Bước 1 để tự động biên soạn.
+                </td>
+              </tr>
+            </tbody>
+          </table>
+        </div>
+      </section>
+
+      <!-- SCREEN 3: PIPELINE LIVE MONITOR -->
+      <section class="screen-view" id="screenMonitor">
+        <div class="monitor-grid">
+          <!-- MINI PLAYER -->
+          <div class="player-card">
+            <div style="font-weight: 700; font-size: 14px; display: flex; justify-content: space-between;">
+              <span>Scene Live Preview (16:9 Nền Mờ)</span>
+              <span style="color: var(--accent-cyan); font-family: var(--font-mono); font-size: 12px;" id="currentSceneBadge">SCENE_001</span>
+            </div>
+
+            <div class="video-viewport">
+              <video id="miniSceneVideoPlayer" controls playsinline>
+                <source src="" type="video/mp4">
+              </video>
+              <div class="empty-video-placeholder" id="videoEmptyNotice">
+                Khung xem trước scene 16:9<br>(Sẽ phát ngay khi Scene đầu tiên hoàn tất)
+              </div>
+            </div>
+
+            <div>
+              <div style="font-size: 11px; color: var(--text-secondary); margin-bottom: 4px;">Audio Waveform (ZeroTTS)</div>
+              <div class="waveform-box" id="waveformBox">
+                <!-- animated bars -->
+                <div class="wave-bar" style="height: 40%;"></div>
+                <div class="wave-bar" style="height: 70%;"></div>
+                <div class="wave-bar" style="height: 30%;"></div>
+                <div class="wave-bar" style="height: 90%;"></div>
+                <div class="wave-bar" style="height: 50%;"></div>
+                <div class="wave-bar" style="height: 80%;"></div>
+                <div class="wave-bar" style="height: 60%;"></div>
+                <div class="wave-bar" style="height: 35%;"></div>
+                <div class="wave-bar" style="height: 75%;"></div>
+                <div class="wave-bar" style="height: 45%;"></div>
+                <div class="wave-bar" style="height: 85%;"></div>
+                <div class="wave-bar" style="height: 65%;"></div>
+              </div>
+            </div>
+          </div>
+
+          <!-- LIVE TERMINAL -->
+          <div class="terminal-card">
+            <div class="terminal-header">
+              <span>NHẬT KÝ VẬN HÀNH THỜI GIAN THỰC (LIVE LOGS)</span>
+              <span id="logCounter">0 sự kiện</span>
+            </div>
+            <div class="terminal-logs" id="terminalLogs">
+              <div class="log-line cyan">[SYSTEM] BanContentAuto Studio Dashboard v2.0 sẵn sàng.</div>
+            </div>
+          </div>
+        </div>
+      </section>
+
+      <!-- SCREEN 4: OUTPUT & PUBLISHING HUB -->
+      <section class="screen-view" id="screenOutput">
+        <div class="output-grid">
+          <!-- VIDEO + THUMBNAIL -->
+          <div style="display: flex; flex-direction: column; gap: 16px;">
+            <div class="player-card">
+              <div style="font-weight: 700; font-size: 14px;">Trình Phát Video 1080p Thành Phẩm</div>
+              <div class="video-viewport">
+                <video id="finalVideoPlayer" controls playsinline>
+                  <source src="" type="video/mp4">
+                </video>
+                <div class="empty-video-placeholder" id="finalVideoNotice">
+                  Video hoàn chỉnh 1080p sẽ sẵn sàng sau Bước 3.
+                </div>
+              </div>
+            </div>
+
+            <div class="player-card">
+              <div style="font-weight: 700; font-size: 14px; display: flex; justify-content: space-between; align-items: center;">
+                <span>Thumbnail Đối Nghịch & Safe Zone</span>
+                <div style="display: flex; gap: 8px; align-items: center;">
+                  <span style="color: var(--success-mint); font-size: 12px;">Góc phải dưới sạch 100%</span>
+                  <button class="btn btn-outline" id="btnRegenerateThumb" onclick="regenerateThumbnailAI()" style="padding: 4px 10px; font-size: 12px;" title="Vẽ lại ảnh bìa Thumbnail bằng AI (9Router)">
+                    <span>🎨</span> Tạo Lại Thumbnail AI
+                  </button>
+                </div>
+              </div>
+              <div class="thumb-preview-box">
+                <img id="thumbPreviewImg" src="" alt="Thumbnail Safe-Zone Preview" style="display: none;">
+                <div class="safe-zone-guide-tag">YouTube 20% Safe Zone</div>
+                <div class="empty-video-placeholder" id="thumbEmptyNotice">
+                  Ảnh Thumbnail 16:9 sẽ hiển thị kèm lưới Safe-Zone ở Bước 4.
+                </div>
+              </div>
+            </div>
+          </div>
+
+          <!-- SEO PACKAGE -->
+          <div class="seo-card">
+            <div style="font-weight: 700; font-size: 15px;">Gói Siêu Dữ Liệu SEO YouTube</div>
+
+            <div>
+              <div style="font-size: 12px; color: var(--text-secondary); margin-bottom: 6px;">
+                Phương Án Tiêu Đề (Dồn từ khóa vào 35 ký tự đầu):
+              </div>
+              <div id="titlesContainer" style="display: flex; flex-direction: column; gap: 6px;">
+                <div class="title-opt">
+                  <span>Chưa có tiêu đề</span>
+                </div>
+              </div>
+            </div>
+
+            <div>
+              <div style="font-size: 12px; color: var(--text-secondary); margin-bottom: 6px;">
+                Mô Tả & Mốc Phân Đoạn (Chapters Timestamps):
+              </div>
+              <div class="desc-box" id="seoDescBox">Nội dung mô tả video chuẩn SEO sẽ xuất hiện tại đây...</div>
+            </div>
+
+            <div>
+              <div style="font-size: 12px; color: var(--text-secondary); margin-bottom: 6px;">Hashtags Tối Ưu:</div>
+              <div id="hashtagsContainer" style="font-family: var(--font-mono); font-size: 12px; color: var(--accent-cyan);">
+                #BanContent #DieuTra
+              </div>
+            </div>
+
+            <button class="upload-btn" id="btnPublishYoutube">
+              <span>▶</span> 1-CLICK ĐĂNG LÊN YOUTUBE (DATA API v3)
+            </button>
+            <div id="publishStatusMsg" style="font-size: 12px; text-align: center; color: var(--text-secondary);"></div>
+          </div>
+        </div>
+      </section>
+
+      <!-- SCREEN 5: SYSTEM HEALTH & CONFIGURATION HUB -->
+      <section class="screen-view" id="screenSettings">
+        <div style="display: flex; justify-content: space-between; align-items: center; background-color: var(--bg-slate); border: 1px solid var(--border-dark); border-radius: 10px; padding: 16px 20px;">
+          <div>
+            <div style="font-size: 16px; font-weight: 700; color: #FFF;">Cấu Hình Hệ Thống & Tham Số Vận Hành (Settings)</div>
+            <div style="font-size: 12px; color: var(--text-secondary); margin-top: 2px;">
+              Quản lý Gemini API Key, tài nguyên bộ đệm đĩa cứng, hạ tầng footage sạch Douyin/Bilibili và giọng đọc ZeroTTS.
+            </div>
+          </div>
+          <button class="btn-primary" id="btnSaveSettingsTop" style="padding: 10px 20px; font-size: 13px;">
+            <span>💾</span> Lưu Cấu Hình
+          </button>
+        </div>
+
+        <div class="settings-grid">
+          <!-- CARD 1: 9ROUTER GATEWAY & LLM PROVIDER -->
+          <div class="settings-card">
+            <div class="settings-card-header">
+              <span class="settings-card-icon">🧠</span>
+              <div>
+                <div class="settings-card-title">1. Trí Tuệ Nhân Tạo & 9Router Gateway (B1)</div>
+                <div class="settings-card-subtitle">Kết nối đa Provider (OpenAI Codex, Antigravity, Claude, Gemini) qua 9Router</div>
+              </div>
+            </div>
+
+            <!-- 9Router Base URL -->
+            <div class="form-group">
+              <label class="form-label" for="settingNineRouterBaseUrl">9Router API Base URL</label>
+              <input class="form-input" id="settingNineRouterBaseUrl" type="text"
+                     value="http://localhost:20128/v1" placeholder="http://localhost:20128/v1"
+                     style="font-family: var(--font-mono); font-size: 13px;">
+              <div style="font-size: 11px; color: var(--text-muted); margin-top: 2px;">
+                Cổng kết nối chuẩn OpenAI-compatible của 9Router cục bộ hoặc server từ xa.
+              </div>
+            </div>
+
+            <!-- 9Router API Key -->
+            <div class="form-group">
+              <label class="form-label" for="settingNineRouterApiKey">9Router Master API Key</label>
+              <div style="display: flex; gap: 8px;">
+                <input class="form-input" id="settingNineRouterApiKey" type="password" placeholder="Nhập 9Router API Key (ví dụ: nr_live_... hoặc sk-...)" style="flex: 1;">
+                <button type="button" class="btn-secondary" id="btnToggleNineRouterKey" title="Ẩn/Hiện khóa API">👁️</button>
+                <button type="button" class="btn-secondary" id="btnTestNineRouter">Kiểm Tra</button>
+                <button type="button" class="btn-secondary" id="btnFetchNineRouterModels" style="background-color: rgba(0, 229, 255, 0.1); border-color: var(--accent-cyan); color: var(--accent-cyan);">
+                  <span>🔄</span> Tải Models
+                </button>
+              </div>
+              <div style="font-size: 11px; color: var(--text-muted); display: flex; justify-content: space-between; align-items: center; margin-top: 4px;">
+                <span>Hỗ trợ định tuyến tự động đến Codex, Antigravity, Gemini. Nếu để trống, chạy Mock Offline.</span>
+                <span id="nineRouterStatusBadge" class="badge-tag">Chưa kết nối</span>
+              </div>
+            </div>
+
+            <!-- Model Selection from 9Router -->
+            <div class="form-group">
+              <div style="display: flex; justify-content: space-between; align-items: center;">
+                <label class="form-label" for="settingLlmModel">Lựa Chọn Model Thực Thi (Từ 9Router)</label>
+                <span id="modelCountBadge" style="font-size: 11px; color: var(--accent-cyan); font-family: var(--font-mono);">5 models khả dụng</span>
+              </div>
+              <select class="form-select" id="settingLlmModel">
+                <option value="antigravity/claude-3-5-sonnet" selected>antigravity/claude-3-5-sonnet (Antigravity Provider - Sắc sảo, Văn phong tự nhiên)</option>
+                <option value="codex/gpt-4o">codex/gpt-4o (OpenAI Codex Provider - Khả năng phân tích sâu)</option>
+                <option value="codex/o3-mini">codex/o3-mini (OpenAI Codex - Lập luận logic nhịp câu)</option>
+                <option value="gemini-2.0-flash">gemini-2.0-flash (Gemini Provider - Tốc độ cao $0)</option>
+                <option value="gemini-1.5-pro">gemini-1.5-pro (Gemini Provider - Ngữ cảnh siêu dài)</option>
+              </select>
+              <div style="font-size: 11px; color: var(--text-muted); margin-top: 2px;">
+                Bấm nút <strong>'🔄 Tải Models'</strong> để quét và nạp toàn bộ danh sách mô hình thực tế đang bật trên 9Router của bạn.
+              </div>
+            </div>
+
+            <!-- Model Vẽ Ảnh Thumbnail 9Router Text-to-Image -->
+            <div class="form-group" style="margin-top: 10px;">
+              <label class="form-label" for="settingImageModel">Mô Hình Vẽ Thumbnail AI (9Router Text-to-Image)</label>
+              <input class="form-input" id="settingImageModel" type="text" placeholder="ag/gemini-3.8-flash" value="ag/gemini-3.8-flash" style="font-family: var(--font-mono); font-size: 12px;">
+              <div style="font-size: 11px; color: var(--text-muted); margin-top: 2px;">
+                Hỗ trợ các model vẽ ảnh qua 9Router (mặc định: <code>ag/gemini-3.8-flash</code>, <code>ag/gemini-3.7-flash</code>, <code>ag/claude-sonnet-4-6</code>).
+              </div>
+            </div>
+
+            <!-- Direct Gemini API Key (Fallback) -->
+            <div class="form-group" style="margin-top: 4px; padding-top: 10px; border-top: 1px dashed var(--border-dark);">
+              <label class="form-label" for="settingGeminiApiKey" style="font-size: 12px; color: var(--text-secondary);">
+                Khóa Google Gemini API Key Trực Tiếp (Dự phòng khi không dùng 9Router)
+              </label>
+              <div style="display: flex; gap: 8px;">
+                <input class="form-input" id="settingGeminiApiKey" type="password" placeholder="Nhập Gemini API Key dự phòng (AIzaSy...)" style="flex: 1; font-size: 12px; padding: 8px 12px;">
+                <button type="button" class="btn-secondary" id="btnTestGemini" style="padding: 6px 12px; font-size: 11px;">Test Gemini</button>
+              </div>
+            </div>
+          </div>
+
+          <!-- CARD 2: DOUYIN & SOURCING INFRASTRUCTURE -->
+          <div class="settings-card">
+            <div class="settings-card-header">
+              <span class="settings-card-icon">🌐</span>
+              <div>
+                <div class="settings-card-title">2. Hạ Tầng Footage Sạch & Douyin (B2)</div>
+                <div class="settings-card-subtitle">A_Bogus Pure-Python Signer & Tránh Rate Limit IP</div>
+              </div>
+            </div>
+
+            <div class="form-group">
+              <label class="form-label" for="settingDouyinCookie">Douyin Cookie String (Tùy chọn)</label>
+              <textarea class="form-input" id="settingDouyinCookie" rows="3" placeholder="Dán cookie Douyin (odin_tt, sessionid, msToken...) nếu có" style="font-family: var(--font-mono); font-size: 11px;"></textarea>
+              <div style="font-size: 11px; color: var(--text-muted); display: flex; justify-content: space-between; align-items: center; margin-top: 4px;">
+                <span>Thuật toán A_Bogus ký số độc lập tải video sạch 100% không dính logo watermark.</span>
+                <span id="douyinCookieBadge" class="badge-tag success">A_Bogus Sẵn Sàng</span>
+              </div>
+            </div>
+
+            <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 12px;">
+              <div class="form-group">
+                <label class="form-label" for="settingJitterMin">Độ trễ tối thiểu (Min Jitter, s)</label>
+                <input class="form-input" id="settingJitterMin" type="number" step="0.5" min="0.5" max="10.0" value="2.0">
+              </div>
+              <div class="form-group">
+                <label class="form-label" for="settingJitterMax">Độ trễ tối đa (Max Jitter, s)</label>
+                <input class="form-input" id="settingJitterMax" type="number" step="0.5" min="1.0" max="20.0" value="5.0">
+              </div>
+            </div>
+          </div>
+
+          <!-- CARD 3: AUDIO & TTS PROVIDERS ENGINE (SUB-PAGES) -->
+          <div class="settings-card">
+            <div class="settings-card-header">
+              <span class="settings-card-icon">🎙️</span>
+              <div>
+                <div class="settings-card-title">3. Quản Lý Đa Nhà Cung Cấp Giọng Đọc (TTS Engine Studio)</div>
+                <div class="settings-card-subtitle">ZeroTTS (Offline $0, Clone giọng), Maziao Cloud API (Voice Cloning), Edge-TTS Miễn Phí</div>
+              </div>
+            </div>
+
+            <!-- SUB-PAGE TABS NAVIGATION -->
+            <div class="tts-subnav" style="display: flex; gap: 8px; margin-bottom: 14px; border-bottom: 1px solid var(--border-dark); padding-bottom: 10px; overflow-x: auto;">
+              <button type="button" class="tts-tab-btn active" data-subtab="zerotts" style="padding: 7px 14px; font-size: 12px; border-radius: 6px;">
+                <span>⚡</span> ZeroTTS Offline ($0)
+              </button>
+              <button type="button" class="tts-tab-btn" data-subtab="maziao" style="padding: 7px 14px; font-size: 12px; border-radius: 6px;">
+                <span>☁️</span> Maziao Cloud TTS
+              </button>
+              <button type="button" class="tts-tab-btn" data-subtab="edge" style="padding: 7px 14px; font-size: 12px; border-radius: 6px;">
+                <span>🌐</span> Edge-TTS (Microsoft)
+              </button>
+              <button type="button" class="tts-tab-btn" data-subtab="general" style="padding: 7px 14px; font-size: 12px; border-radius: 6px;">
+                <span>⚙️</span> Engine Chính & Âm Thanh
+              </button>
+            </div>
+
+            <!-- SUB-PAGE 1: ZEROTTS (OFFLINE & VOICE CLONING) -->
+            <div class="tts-subpage active" id="ttsPageZerotts" style="flex-direction: column; gap: 12px;">
+              <div style="display: flex; justify-content: space-between; align-items: center;">
+                <div style="font-size: 13px; font-weight: 700; color: var(--accent-cyan);">⚡ Cấu Hình ZeroTTS (Offline Sub-ms CPU - $0 Chi Phí)</div>
+                <span id="zeroTtsVoiceCountBadge" class="badge-tag success">8 giọng chuẩn</span>
+              </div>
+
+              <div class="form-group" style="margin-bottom: 0;">
+                <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 6px;">
+                  <label class="form-label" for="settingZeroTtsVoice" style="margin-bottom: 0;">Giọng Đọc ZeroTTS</label>
+                  <button type="button" class="btn-secondary" id="btnRefreshZeroVoices" style="padding: 3px 8px; font-size: 11px;">🔄 Quét Lại Giọng</button>
+                </div>
+                <select class="form-select" id="settingZeroTtsVoice">
+                  <!-- Dynamically loaded via /api/system/tts/zerotts/voices -->
+                  <option value="maichi" selected>Mai Chi (Nữ - Kể chuyện nhẹ nhàng, truyền cảm)</option>
+                  <option value="baotrang">Bảo Trang (Nữ - Tin tức rõ ràng, trung tính)</option>
+                  <option value="kimoanh">Kim Oanh (Nữ - Kể chuyện ấm áp, sâu lắng)</option>
+                  <option value="giahuy">Gia Huy (Nam - Kể chuyện trầm ấm, tâm tình)</option>
+                  <option value="huuduc">Hữu Đức (Nam - Lớn tuổi, điềm đạm)</option>
+                  <option value="quangminh">Quang Minh (Nam - Tin tức rõ ràng, dứt khoát)</option>
+                  <option value="tiendat">Tiến Đạt (Nam - Sôi nổi, bình luận cuốn hút)</option>
+                  <option value="hamy">Hà My (Nữ - Hoạt hình, biểu cảm cao)</option>
+                </select>
+              </div>
+
+              <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 10px;">
+                <div class="form-group" style="margin-bottom: 0;">
+                  <label class="form-label" for="settingZeroTtsCommaPause" style="font-size: 11px;">Dấu phẩy nghỉ (ms)</label>
+                  <input class="form-input" id="settingZeroTtsCommaPause" type="number" min="50" max="1000" step="50" value="200" style="padding: 6px 10px; font-size: 12px;">
+                </div>
+                <div class="form-group" style="margin-bottom: 0;">
+                  <label class="form-label" for="settingZeroTtsPeriodPause" style="font-size: 11px;">Dấu chấm nghỉ (ms)</label>
+                  <input class="form-input" id="settingZeroTtsPeriodPause" type="number" min="100" max="2000" step="50" value="400" style="padding: 6px 10px; font-size: 12px;">
+                </div>
+              </div>
+
+              <!-- ZERO TTS VOICE CLONING SUB-BOX -->
+              <div style="background-color: var(--bg-card); border: 1px dashed var(--accent-cyan); border-radius: 8px; padding: 12px; margin-top: 4px;">
+                <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 6px;">
+                  <div style="font-size: 12px; font-weight: 700; color: #FFF;">🎙️ Cài Đặt Gói Giọng Clone (Voice Cloning Pack)</div>
+                  <span style="font-size: 10px; color: var(--accent-cyan); background: rgba(0, 229, 255, 0.1); padding: 2px 6px; border-radius: 4px;">Zero-Shot Latent Pack</span>
+                </div>
+                <div style="font-size: 11px; color: var(--text-secondary); margin-bottom: 10px; line-height: 1.4;">
+                  Cài đặt tệp gói giọng <code>.zip</code> chứa <code>voice.npz</code> (hoặc file <code>.npz</code>) từ zeroweight.ai hoặc cộng đồng vào thư mục <code>~/.zerotts/voices/</code>.
+                </div>
+                <div style="display: flex; gap: 8px; align-items: center;">
+                  <input type="file" id="inputZeroCloneFile" accept=".zip,.npz" style="display: none;">
+                  <button type="button" class="btn-secondary" id="btnChooseZeroCloneFile" style="font-size: 11px; padding: 6px 12px;">
+                    <span>📁</span> Chọn Gói Zip / NPZ
+                  </button>
+                  <span id="labelZeroCloneFileName" style="font-size: 11px; color: var(--text-muted); flex: 1; overflow: hidden; text-overflow: ellipsis; white-space: nowrap;">Chưa chọn tệp...</span>
+                  <button type="button" class="btn-primary" id="btnUploadZeroClone" style="font-size: 11px; padding: 6px 14px; background: linear-gradient(135deg, var(--accent-cyan), #00B0FF);" disabled>
+                    <span>📥</span> Cài Đặt Vào ZeroTTS
+                  </button>
+                </div>
+              </div>
+            </div>
+
+            <!-- SUB-PAGE 2: MAZIAO CLOUD TTS -->
+            <div class="tts-subpage" id="ttsPageMaziao" style="flex-direction: column; gap: 12px;">
+              <div style="display: flex; justify-content: space-between; align-items: center;">
+                <div style="font-size: 13px; font-weight: 700; color: #FFF;">☁️ Cấu Hình Maziao Cloud TTS (docs/maziao.md)</div>
+                <span id="maziaoStatusBadge" class="badge-tag">Chưa kiểm tra</span>
+              </div>
+              <div class="form-group" style="margin-bottom: 0;">
+                <label class="form-label" for="settingMaziaoApiKey">Maziao API Key</label>
+                <div style="display: flex; gap: 8px;">
+                  <input class="form-input" id="settingMaziaoApiKey" type="password" placeholder="Nhập Maziao API Key" style="flex: 1; padding: 8px 12px; font-size: 12px;">
+                  <button type="button" class="btn-secondary" id="btnToggleMaziaoKey" style="padding: 6px 10px;">👁️</button>
+                  <button type="button" class="btn-secondary" id="btnTestMaziao" style="padding: 6px 12px; font-size: 11px;">Kiểm Tra</button>
+                </div>
+              </div>
+
+              <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 10px;">
+                <div class="form-group" style="margin-bottom: 0;">
+                  <label class="form-label" for="settingMaziaoBaseUrl" style="font-size: 11px;">API Base URL</label>
+                  <input class="form-input" id="settingMaziaoBaseUrl" type="text" value="https://app.maziao.com" placeholder="https://app.maziao.com" style="padding: 6px 10px; font-size: 12px; font-family: var(--font-mono);">
+                </div>
+                <div class="form-group" style="margin-bottom: 0;">
+                  <label class="form-label" for="settingMaziaoModel" style="font-size: 11px;">Model ID</label>
+                  <select class="form-select" id="settingMaziaoModel" style="padding: 6px 10px; font-size: 12px;">
+                    <option value="lingual_speech_v2" selected>lingual_speech_v2 (Tiêu chuẩn)</option>
+                    <option value="vieten_speech">vieten_speech (Voice Cloning ✨)</option>
+                  </select>
+                </div>
+              </div>
+
+              <!-- DYNAMIC MAZIAO VOICE SELECTION -->
+              <div class="form-group" style="margin-bottom: 0;">
+                <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 6px;">
+                  <label class="form-label" for="settingMaziaoVoiceId" style="margin-bottom: 0; font-size: 12px;">Giọng Đọc Maziao (Hệ Thống & Cloned)</label>
+                  <div style="display: flex; gap: 6px; align-items: center;">
+                    <span id="maziaoVoiceCountBadge" class="badge-tag" style="font-size: 10px;">Chưa tải</span>
+                    <button type="button" class="btn-secondary" id="btnFetchMaziaoVoices" style="padding: 3px 8px; font-size: 11px;">
+                      <span>🔄</span> Tải Giọng Maziao
+                    </button>
+                  </div>
+                </div>
+                <select class="form-select" id="settingMaziaoVoiceId" style="font-family: var(--font-mono); font-size: 12px;">
+                  <option value="zv_vi_sg_male_thien_tam" selected>🇻🇳 Thiện Tâm (Nam Nam - Đĩnh đạc)</option>
+                  <option value="zv_vi_hn_female_ngoc_huyen">🇻🇳 Ngọc Huyền (Nữ Bắc - Tự nhiên)</option>
+                  <option value="zv_vi_hn_male_duc_manh">🇻🇳 Đức Mạnh (Nam Bắc - Trầm ấm)</option>
+                  <option value="0KdW9bPh6HNMCxJV1GXF0">🌐 Ethan (English - Professional)</option>
+                </select>
+              </div>
+            </div>
+
+            <!-- SUB-PAGE 3: EDGE-TTS (MICROSOFT NEURAL) -->
+            <div class="tts-subpage" id="ttsPageEdge" style="flex-direction: column; gap: 12px;">
+              <div style="font-size: 13px; font-weight: 700; color: var(--success-mint);">🌐 Cấu Hình Edge-TTS (Microsoft Neural Cloud - Miễn Phí Không Giới Hạn)</div>
+              <div class="form-group" style="margin-bottom: 0;">
+                <label class="form-label" for="settingEdgeVoice">Giọng Đọc Microsoft Neural</label>
+                <select class="form-select" id="settingEdgeVoice">
+                  <option value="vi-VN-HoaiMyNeural" selected>vi-VN-HoaiMyNeural (Nữ miền Bắc - Tự nhiên, Truyền cảm)</option>
+                  <option value="vi-VN-NamMinhNeural">vi-VN-NamMinhNeural (Nam miền Bắc - Trầm ấm, Kịch tính)</option>
+                </select>
+              </div>
+            </div>
+
+            <!-- SUB-PAGE 4: COMMON SETTINGS & FALLBACK -->
+            <div class="tts-subpage" id="ttsPageGeneral" style="flex-direction: column; gap: 12px;">
+              <div style="font-size: 13px; font-weight: 700; color: #FFF;">⚙️ Cấu Hình Động Cơ Chính, Fallback & Chuẩn Âm Thanh</div>
+              <div class="form-group" style="margin-bottom: 0;">
+                <label class="form-label" for="settingTtsProvider">Nhà Cung Cấp TTS Mặc Định (Primary Engine)</label>
+                <select class="form-select" id="settingTtsProvider">
+                  <option value="zerotts" selected>ZeroTTS Offline CPU ($0 Chi Phí - 100% Offline Không Cần Mạng)</option>
+                  <option value="maziao">Maziao Cloud TTS (API Đa Dạng Giọng & Voice Cloning)</option>
+                  <option value="edge_tts">Edge-TTS (Microsoft Neural Cloud - Miễn Phí Không Giới Hạn)</option>
+                </select>
+              </div>
+
+              <!-- Auto Fallback Checkbox -->
+              <div class="form-group" style="margin-bottom: 4px;">
+                <label style="display: flex; align-items: center; gap: 8px; font-size: 12px; cursor: pointer;">
+                  <input type="checkbox" id="settingTtsFallback" checked style="accent-color: var(--accent-cyan); width: 16px; height: 16px;">
+                  <span>Tự động kích hoạt Fallback (Nếu engine chính bị lỗi/mất mạng, tự chuyển sang ZeroTTS)</span>
+                </label>
+              </div>
+
+              <!-- Common Speed & LUFS Tuning -->
+              <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 12px; padding-top: 8px; border-top: 1px dashed var(--border-dark);">
+                <div class="form-group" style="margin-bottom: 0;">
+                  <label class="form-label" for="settingSpeechRate">Tốc độ đọc: <span id="labelSpeechRate" style="color:var(--accent-cyan); font-weight:700;">1.00x</span></label>
+                  <input class="form-input" id="settingSpeechRate" type="range" min="0.8" max="1.3" step="0.05" value="1.0" style="padding: 4px;">
+                </div>
+                <div class="form-group" style="margin-bottom: 0;">
+                  <label class="form-label" for="settingTargetLufs">Chuẩn LUFS (YouTube Compliance)</label>
+                  <input class="form-input" id="settingTargetLufs" type="number" step="0.5" min="-24.0" max="-10.0" value="-14.0">
+                </div>
+              </div>
+            </div>
+          </div>
+
+          <!-- CARD 4: DISK & ROLLING BUFFER MANAGEMENT -->
+          <div class="settings-card">
+            <div class="settings-card-header">
+              <span class="settings-card-icon">💾</span>
+              <div>
+                <div class="settings-card-title">4. Bộ Đệm Cuốn Chiếu & Dọn Dẹp Đĩa Cứng (B3)</div>
+                <div class="settings-card-subtitle">Bảo đảm an toàn dung lượng ổ đĩa SSD & Giới hạn Rolling Buffer 5.0 GB</div>
+              </div>
+            </div>
+
+            <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 12px;">
+              <div class="form-group">
+                <label class="form-label" for="settingBufferLimit">Giới hạn Rolling Buffer (GB)</label>
+                <input class="form-input" id="settingBufferLimit" type="number" step="1.0" min="2.0" max="30.0" value="5.0">
+              </div>
+              <div class="form-group">
+                <label class="form-label" for="settingRenderConcurrency">Số luồng render đồng thời</label>
+                <select class="form-select" id="settingRenderConcurrency">
+                  <option value="1">1 luồng (Tiết kiệm CPU & RAM cho máy yếu)</option>
+                  <option value="2" selected>2 luồng (Tối ưu cho PC tiêu chuẩn - Khuyên dùng)</option>
+                  <option value="4">4 luồng (Máy trạm cao cấp đa nhân)</option>
+                </select>
+              </div>
+            </div>
+
+            <div class="form-group" style="margin-bottom: 12px;">
+              <label style="display: flex; align-items: center; gap: 8px; font-size: 13px; cursor: pointer;">
+                <input type="checkbox" id="settingCleanParts" checked style="accent-color: var(--accent-cyan); width: 16px; height: 16px;">
+                <span>Tự động dọn dẹp các part chapter sau khi hoàn thành nối video cuối cùng</span>
+              </label>
+            </div>
+
+            <!-- CACHE CLEANUP BOX -->
+            <div style="background-color: var(--bg-card); border: 1px solid var(--border-dark); border-radius: 8px; padding: 12px; display: flex; justify-content: space-between; align-items: center;">
+              <div>
+                <div style="font-size: 12px; font-weight: 700; color: #FFF;">Dung Lượng Bộ Đệm Cache Hiện Tại</div>
+                <div style="font-size: 11px; color: var(--text-secondary); margin-top: 2px;" id="cacheBreakdownText">
+                  Audio: 0.0 MB | Footage: 0.0 MB | Scenes: 0.0 MB (Tổng: 0.0 MB)
+                </div>
+              </div>
+              <button type="button" class="btn-danger" id="btnClearCache">
+                <span>🧹</span> Dọn Dẹp Cache Ngay
+              </button>
+            </div>
+          </div>
+        </div>
+
+        <!-- CARD 5: EXTERNAL BINARIES STATUS -->
+        <div class="settings-card" style="margin-top: 10px;">
+          <div class="settings-card-header" style="justify-content: space-between;">
+            <div style="display: flex; gap: 12px; align-items: center;">
+              <span class="settings-card-icon">⚙️</span>
+              <div>
+                <div class="settings-card-title">5. Tình Trạng Công Cụ Ngoại Vi (Binaries & System PATH)</div>
+                <div class="settings-card-subtitle">Nhận diện tự động trong thư mục bin/ cục bộ hoặc biến môi trường PATH hệ thống</div>
+              </div>
+            </div>
+            <div style="display: flex; gap: 8px;">
+              <button type="button" class="btn-primary" id="btnSetupBinaries" style="padding: 8px 16px; font-size: 12px; background: linear-gradient(135deg, #00E676, #00B0FF);">
+                <span>⬇️</span> Cài Đặt / Tải Tự Động Binaries
+              </button>
+              <button type="button" class="btn-secondary" id="btnRefreshBinaries">
+                <span>🔄</span> Quét Lại Công Cụ
+              </button>
+            </div>
+          </div>
+
+          <div style="display: grid; grid-template-columns: repeat(4, 1fr); gap: 12px; margin-top: 12px;">
+            <div class="binary-box" id="binaryBoxFfmpeg">
+              <div class="binary-name">FFMPEG</div>
+              <div class="binary-version" id="binVerFfmpeg">Đang kiểm tra...</div>
+              <div class="binary-status ready" id="binStatFfmpeg">SẴN SÀNG</div>
+            </div>
+            <div class="binary-box" id="binaryBoxFfprobe">
+              <div class="binary-name">FFPROBE</div>
+              <div class="binary-version" id="binVerFfprobe">Đang kiểm tra...</div>
+              <div class="binary-status ready" id="binStatFfprobe">SẴN SÀNG</div>
+            </div>
+            <div class="binary-box" id="binaryBoxYtdlp">
+              <div class="binary-name">YT-DLP</div>
+              <div class="binary-version" id="binVerYtdlp">Đang kiểm tra...</div>
+              <div class="binary-status ready" id="binStatYtdlp">SẴN SÀNG</div>
+            </div>
+            <div class="binary-box" id="binaryBoxBbdown">
+              <div class="binary-name">BBDOWN</div>
+              <div class="binary-version" id="binVerBbdown">Đang kiểm tra...</div>
+              <div class="binary-status ready" id="binStatBbdown">SẴN SÀNG</div>
+            </div>
+          </div>
+        </div>
+
+        <!-- SAVE BUTTON BOTTOM -->
+        <div style="display: flex; justify-content: flex-end; align-items: center; gap: 16px; margin-top: 8px;">
+          <span id="saveStatusToast" style="font-size: 13px; color: var(--success-mint); font-weight: 600;"></span>
+          <button class="btn-primary" id="btnSaveSettingsBottom" style="min-width: 220px;">
+            <span>💾</span> LƯU CẤU HÌNH HỆ THỐNG
+          </button>
+        </div>
+      </section>
+
+    </main>
+  </div>
+
+  <script>
+    // State management
+    let currentProjectId = null;
+    let currentDuration = 5;
+    let eventSource = null;
+
+    // Navigation switching
+    const navButtons = document.querySelectorAll('.nav-btn');
+    const screenViews = document.querySelectorAll('.screen-view');
+
+    function switchToScreen(targetScreen) {
+      navButtons.forEach(b => {
+        if (b.getAttribute('data-screen') === targetScreen) {
+          b.classList.add('active');
+        } else {
+          b.classList.remove('active');
+        }
+      });
+      screenViews.forEach(s => s.classList.remove('active'));
+
+      const view = document.getElementById('screen' + targetScreen.charAt(0).toUpperCase() + targetScreen.slice(1));
+      if (view) view.classList.add('active');
+
+      if (targetScreen === 'settings') {
+        loadSettings();
+        refreshBinaries();
+      } else if (targetScreen === 'projects') {
+        loadProjectsList();
+        loadQueueInfo();
+      } else if (targetScreen === 'script') {
+        if (currentProjectId) refreshProjectState();
+      }
+    }
+
+    navButtons.forEach(btn => {
+      btn.addEventListener('click', () => {
+        const targetScreen = btn.getAttribute('data-screen');
+        switchToScreen(targetScreen);
+      });
+    });
+
+    // Duration pills selection
+    const durationPills = document.querySelectorAll('.pill-opt');
+    durationPills.forEach(pill => {
+      pill.addEventListener('click', () => {
+        durationPills.forEach(p => p.classList.remove('selected'));
+        pill.classList.add('selected');
+        currentDuration = parseInt(pill.getAttribute('data-duration'), 10);
+      });
+    });
+
+    // Log terminal helper
+    function appendLog(message, level = 'normal') {
+      const logs = document.getElementById('terminalLogs');
+      const counter = document.getElementById('logCounter');
+      const line = document.createElement('div');
+      line.className = 'log-line ' + (level === 'cyan' ? 'cyan' : level === 'green' ? 'green' : level === 'red' ? 'red' : '');
+      line.textContent = message;
+      logs.appendChild(line);
+      logs.scrollTop = logs.scrollHeight;
+      counter.textContent = logs.children.length + ' sự kiện';
+    }
+
+    // Update system health periodically
+    async function updateHealth() {
+      try {
+        const res = await fetch('/api/system/health');
+        if (res.ok) {
+          const data = await res.json();
+          document.getElementById('cpuLoad').textContent = data.cpu_load_pct + '%';
+          document.getElementById('ramLoad').textContent = data.ram_used_pct + '%';
+          document.getElementById('bufferUsage').textContent = (data.rolling_buffer_gb || 0.0) + ' GB / 5.0 GB';
+        }
+      } catch (e) {
+        console.warn('Health fetch error:', e);
+      }
+    }
+    setInterval(updateHealth, 4000);
+    updateHealth();
+
+    // Launch pipeline handler
+    document.getElementById('btnLaunchPipeline').addEventListener('click', async () => {
+      const topic = document.getElementById('inputTopic').value.trim();
+      const skill = document.getElementById('selectSkill').value;
+      const btn = document.getElementById('btnLaunchPipeline');
+
+      if (!topic) {
+        alert('Vui lòng nhập tên đề tài video!');
+        return;
+      }
+
+      btn.disabled = true;
+      btn.innerHTML = '<span>⏳</span> Đang khởi tạo dự án...';
+
+      try {
+        // 1. Create project
+        const createRes = await fetch('/api/projects/create', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({
+            topic: topic,
+            skill_id: skill,
+            target_duration_min: currentDuration
+          })
+        });
+
+        if (!createRes.ok) throw new Error('Không thể tạo dự án');
+        const project = await createRes.json();
+        currentProjectId = project.project_id;
+        localStorage.setItem('bancontent_active_project_id', currentProjectId);
+        document.getElementById('headerProjectId').textContent = 'Project: ' + currentProjectId;
+
+        appendLog('[INIT] Đã tạo dự án ' + currentProjectId + ' với đề tài: ' + topic, 'cyan');
+
+        // 2. Connect SSE
+        connectSSE(currentProjectId);
+
+        // 3. Start pipeline (enqueue)
+        const startRes = await fetch('/api/projects/' + currentProjectId + '/start', {
+          method: 'POST'
+        });
+        if (!startRes.ok) throw new Error('Không thể khởi chạy pipeline');
+        const startData = await startRes.json();
+
+        btn.disabled = false;
+        btn.innerHTML = '<span>⚡</span> BẮT ĐẦU SẢN XUẤT TỰ ĐỘNG (FULL PIPELINE)';
+
+        if (startData.status === 'queued') {
+          appendLog('[QUEUE] ' + (startData.message || 'Dự án đã được xếp vào hàng đợi'), 'cyan');
+          alert('⏳ Dự án đã được đưa vào hàng đợi sản xuất! Hệ thống sẽ tự động bắt đầu sản xuất ngay khi video hiện tại kết thúc.');
+          switchToScreen('projects');
+        } else {
+          appendLog('[START] ' + (startData.message || 'Bắt đầu sản xuất'), 'green');
+          const stopBtn = document.getElementById('btnStopPipeline');
+          if (stopBtn) stopBtn.style.display = 'inline-flex';
+          switchToScreen('monitor');
+        }
+
+        loadProjectsList();
+        loadQueueInfo();
+
+      } catch (err) {
+        alert('Lỗi: ' + err.message);
+        btn.disabled = false;
+        btn.innerHTML = '<span>⚡</span> BẮT ĐẦU SẢN XUẤT TỰ ĐỘNG (FULL PIPELINE)';
+      }
+    });
+
+    // Server-Sent Events (SSE) connector
+    function connectSSE(projectId) {
+      if (eventSource) {
+        eventSource.close();
+        eventSource = null;
+      }
+
+      eventSource = new EventSource('/api/projects/' + projectId + '/events');
+
+      eventSource.onmessage = (event) => {
+        try {
+          const payload = JSON.parse(event.data);
+          handlePipelineEvent(payload);
+
+          // If pipeline is in a finished state, immediately close SSE connection
+          // so browser won't auto-reconnect every 3 seconds and trigger re-renders!
+          if (payload.stage && ['COMPLETE', 'ERROR', 'CANCELLED'].includes(payload.stage)) {
+            if (eventSource) {
+              eventSource.close();
+              eventSource = null;
+            }
+          }
+        } catch (e) {
+          console.error('SSE parse error:', e);
+        }
+      };
+
+      eventSource.onerror = () => {
+        // If eventSource is already closed or closing, avoid spamming
+        if (eventSource && eventSource.readyState === EventSource.CLOSED) {
+          eventSource = null;
+        }
+      };
+    }
+
+    // Process pipeline event payload
+    function handlePipelineEvent(payload) {
+      const { stage, progress, message, details } = payload;
+
+      // Update progress bar & tracker message
+      document.getElementById('progressBarFill').style.width = progress + '%';
+      document.getElementById('trackerStatus').textContent = Math.round(progress) + '% - ' + message;
+
+      // Update Step Nodes
+      const s1 = document.getElementById('stepNode1');
+      const s2 = document.getElementById('stepNode2');
+      const s3 = document.getElementById('stepNode3');
+      const s4 = document.getElementById('stepNode4');
+      const stopBtn = document.getElementById('btnStopPipeline');
+
+      [s1, s2, s3, s4].forEach(n => n.classList.remove('active', 'completed', 'error'));
+
+      if (stage === 'QUEUED') {
+        if (stopBtn) stopBtn.style.display = 'inline-flex';
+        appendLog('⏳ ' + message, 'cyan');
+      } else if (stage === 'B1_SCRIPT') {
+        if (stopBtn) stopBtn.style.display = 'inline-flex';
+        s1.classList.add('active');
+        appendLog(message, 'cyan');
+      } else if (stage === 'B2_SOURCING_TTS') {
+        if (stopBtn) stopBtn.style.display = 'inline-flex';
+        s1.classList.add('completed');
+        s2.classList.add('active');
+        appendLog(message, 'normal');
+      } else if (stage === 'B3_RENDER') {
+        if (stopBtn) stopBtn.style.display = 'inline-flex';
+        s1.classList.add('completed');
+        s2.classList.add('completed');
+        s3.classList.add('active');
+        appendLog(message, 'cyan');
+      } else if (stage === 'B4_PACKAGING') {
+        if (stopBtn) stopBtn.style.display = 'inline-flex';
+        s1.classList.add('completed');
+        s2.classList.add('completed');
+        s3.classList.add('completed');
+        s4.classList.add('active');
+        appendLog(message, 'normal');
+      } else if (stage === 'COMPLETE') {
+        if (stopBtn) stopBtn.style.display = 'none';
+        [s1, s2, s3, s4].forEach(n => n.classList.add('completed'));
+        appendLog(message, 'green');
+        document.getElementById('btnLaunchPipeline').disabled = false;
+        document.getElementById('btnLaunchPipeline').innerHTML = '<span>⚡</span> BẮT ĐẦU SẢN XUẤT TỰ ĐỘNG (FULL PIPELINE)';
+        loadCompletedProjectAssets();
+      } else if (stage === 'CANCELLED') {
+        if (stopBtn) stopBtn.style.display = 'none';
+        appendLog('⛔ DỰ ÁN ĐÃ DỪNG: ' + message, 'red');
+        document.getElementById('btnLaunchPipeline').disabled = false;
+        document.getElementById('btnLaunchPipeline').innerHTML = '<span>⚡</span> BẮT ĐẦU SẢN XUẤT TỰ ĐỘNG (FULL PIPELINE)';
+      } else if (stage === 'ERROR') {
+        if (stopBtn) stopBtn.style.display = 'none';
+        s1.classList.add('error');
+        appendLog('LỖI: ' + message, 'red');
+        document.getElementById('btnLaunchPipeline').disabled = false;
+        document.getElementById('btnLaunchPipeline').innerHTML = '<span>⚡</span> THỬ LẠI SẢN XUẤT';
+      }
+
+      // Periodically refresh project state (scenes table & previews)
+      updateControlButtons(stage);
+      refreshProjectState();
+      loadProjectsList();
+      loadQueueInfo();
+    }
+
+    // Refresh full project state from REST API
+    async function refreshProjectState(force = false) {
+      if (!currentProjectId) return;
+      try {
+        const res = await fetch('/api/projects/' + currentProjectId + '/status');
+        if (!res.ok) return;
+        const project = await res.json();
+
+        // Build screenplay scenes lookup map
+        let screenplayScenesMap = {};
+        if (project.screenplay && project.screenplay.chapters) {
+          project.screenplay.chapters.forEach(ch => {
+            if (ch.scenes) {
+              ch.scenes.forEach(sc => {
+                screenplayScenesMap[sc.scene_id] = sc;
+              });
+            }
+          });
+        }
+
+        // Render scenes table
+        if (project.completed_scenes && project.completed_scenes.length > 0) {
+          const enrichedScenes = project.completed_scenes.map(sc => {
+            const spScene = screenplayScenesMap[sc.scene_id] || {};
+            return {
+              ...sc,
+              visual_prompt: spScene.visual_prompt || sc.visual_prompt || '',
+              camera_angle: spScene.camera_angle || sc.camera_angle || '',
+              sfx_cue: spScene.sfx_cue || sc.sfx_cue || '',
+              preferred_vault: sc.preferred_vault || spScene.preferred_vault || 'universal',
+              source_info: sc.source_info || spScene.source_info || null
+            };
+          });
+          renderScenesTable(enrichedScenes, force);
+
+          // Update mini preview player with latest scene
+          const latestScene = project.completed_scenes[project.completed_scenes.length - 1];
+          if (latestScene && latestScene.scene_id) {
+            document.getElementById('currentSceneBadge').textContent = latestScene.scene_id;
+            const videoElem = document.getElementById('miniSceneVideoPlayer');
+            const previewUrl = '/api/projects/' + currentProjectId + '/preview/scene/' + latestScene.scene_id;
+            if (videoElem.getAttribute('data-loaded-scene') !== latestScene.scene_id) {
+              videoElem.setAttribute('data-loaded-scene', latestScene.scene_id);
+              videoElem.src = previewUrl;
+              document.getElementById('videoEmptyNotice').style.display = 'none';
+            }
+          }
+        } else if (project.screenplay && project.screenplay.chapters) {
+          // Fallback to draft screenplay scenes if completed_scenes is empty
+          let draftScenes = [];
+          project.screenplay.chapters.forEach(ch => {
+            if (ch.scenes) draftScenes.push(...ch.scenes);
+          });
+          if (draftScenes.length > 0) {
+            renderScenesTable(draftScenes, force);
+          }
+        }
+
+        // Render final video & thumbnail when available
+        if (project.final_video_path) {
+          const finalVid = document.getElementById('finalVideoPlayer');
+          const finalVidUrl = '/api/projects/' + currentProjectId + '/preview/video';
+          if (!finalVid.src.includes(finalVidUrl)) {
+            finalVid.src = finalVidUrl;
+            document.getElementById('finalVideoNotice').style.display = 'none';
+          }
+        }
+
+        if (project.thumbnail_preview_path || project.thumbnail_path) {
+          const thumbImg = document.getElementById('thumbPreviewImg');
+          thumbImg.src = '/api/projects/' + currentProjectId + '/preview/thumbnail?t=' + Date.now();
+          thumbImg.style.display = 'block';
+          document.getElementById('thumbEmptyNotice').style.display = 'none';
+        }
+
+        // Render SEO Package
+        if (project.seo_package) {
+          renderSEOPackage(project.seo_package);
+        }
+
+      } catch (err) {
+        console.warn('Status refresh error:', err);
+      }
+    }
+
+    // Helper escape JS string
+    function escapeJsStr(str) {
+      if (!str) return '';
+      return String(str).replace(/\\/g, '\\\\').replace(/'/g, "\\'").replace(/"/g, '&quot;').replace(/\n/g, ' ');
+    }
+
+    // Global state tracking expanded scene IDs across re-renders
+    window._expandedSceneIds = window._expandedSceneIds || new Set();
+
+    // Toggle expand/collapse one scene row
+    function toggleSceneRow(sceneId) {
+      const detailRow = document.getElementById('expand-row-' + sceneId);
+      const mainRow = document.getElementById('scene-row-' + sceneId);
+      const btnText = document.getElementById('btn-text-' + sceneId);
+      const video = document.getElementById('video-player-' + sceneId);
+      if (!detailRow) return;
+
+      const isHidden = (detailRow.style.display === 'none' || !detailRow.style.display);
+      if (isHidden) {
+        detailRow.style.display = 'table-row';
+        if (mainRow) mainRow.classList.add('expanded');
+        if (btnText) btnText.textContent = 'Đóng Clip';
+        window._expandedSceneIds.add(sceneId);
+        if (video) {
+          const dataSrc = video.getAttribute('data-src');
+          if (!video.src || video.src === window.location.href || video.src.endsWith('/')) {
+            video.src = dataSrc;
+          }
+        }
+      } else {
+        detailRow.style.display = 'none';
+        if (mainRow) mainRow.classList.remove('expanded');
+        if (btnText) btnText.textContent = 'Xem Clip';
+        window._expandedSceneIds.delete(sceneId);
+        if (video) {
+          video.pause();
+        }
+      }
+    }
+
+    // Expand all scenes
+    function expandAllScenes() {
+      const detailRows = document.querySelectorAll('.scene-detail-row');
+      detailRows.forEach(row => {
+        row.style.display = 'table-row';
+        const sid = row.id.replace('expand-row-', '');
+        window._expandedSceneIds.add(sid);
+        const mainRow = document.getElementById('scene-row-' + sid);
+        const btnText = document.getElementById('btn-text-' + sid);
+        const video = document.getElementById('video-player-' + sid);
+        if (mainRow) mainRow.classList.add('expanded');
+        if (btnText) btnText.textContent = 'Đóng Clip';
+        if (video && (!video.src || video.src === window.location.href || video.src.endsWith('/'))) {
+          video.src = video.getAttribute('data-src');
+        }
+      });
+    }
+
+    // Collapse all scenes
+    function collapseAllScenes() {
+      window._expandedSceneIds.clear();
+      const detailRows = document.querySelectorAll('.scene-detail-row');
+      detailRows.forEach(row => {
+        row.style.display = 'none';
+        const sid = row.id.replace('expand-row-', '');
+        const mainRow = document.getElementById('scene-row-' + sid);
+        const btnText = document.getElementById('btn-text-' + sid);
+        const video = document.getElementById('video-player-' + sid);
+        if (mainRow) mainRow.classList.remove('expanded');
+        if (btnText) btnText.textContent = 'Xem Clip';
+        if (video) video.pause();
+      });
+    }
+
+    // Open Scene Modal Popup
+    function openSceneModal(projectId, sceneId, text, visualPrompt, duration, sourceInfo = null) {
+      const modal = document.getElementById('sceneVideoModal');
+      const titleElem = document.getElementById('modalSceneTitle');
+      const durationElem = document.getElementById('modalSceneDuration');
+      const narrationElem = document.getElementById('modalSceneNarration');
+      const promptElem = document.getElementById('modalScenePrompt');
+      const sourceElem = document.getElementById('modalSceneSource');
+      const downloadBtn = document.getElementById('modalDownloadBtn');
+      const videoPlayer = document.getElementById('modalVideoPlayer');
+
+      const videoUrl = `/api/projects/${projectId}/preview/scene/${sceneId}`;
+      titleElem.textContent = `${sceneId} - Clip Phân Cảnh`;
+      durationElem.textContent = duration || '--';
+      narrationElem.textContent = text || 'Chưa có lời thoại';
+      promptElem.textContent = visualPrompt || 'Chưa có kịch bản thị giác';
+      downloadBtn.href = videoUrl;
+      downloadBtn.download = `${sceneId}.mp4`;
+
+      if (sourceElem) {
+        if (sourceInfo && sourceInfo.url) {
+          const cutTxt = sourceInfo.cut_summary ? `<div style="margin-top: 4px; color: #ffcc00; font-weight: 600; font-family: var(--font-mono); font-size: 12px;">✂️ ${escapeJsStr(sourceInfo.cut_summary)}</div>` : '';
+          sourceElem.innerHTML = `<strong>Nguồn:</strong> <span style="color: var(--accent-cyan); font-weight: 600;">${sourceInfo.platform || 'Stock'}</span> · <a href="${sourceInfo.url_with_timestamp || sourceInfo.url}" target="_blank" rel="noopener noreferrer" style="color: var(--accent-cyan); text-decoration: underline;">Xem video gốc ↗</a> ${cutTxt}`;
+        } else if (sourceInfo && sourceInfo.cut_summary) {
+          sourceElem.innerHTML = `<strong>Nguồn:</strong> <span style="color: var(--accent-cyan); font-weight: 600;">${sourceInfo.platform || 'Stock Vault'}</span> <div style="margin-top: 4px; color: #ffcc00; font-weight: 600; font-family: var(--font-mono); font-size: 12px;">✂️ ${escapeJsStr(sourceInfo.cut_summary)}</div>`;
+        } else {
+          sourceElem.innerHTML = `<span style="color: var(--text-muted); font-style: italic;">Universal Clean Stock Vault</span>`;
+        }
+      }
+
+      videoPlayer.src = videoUrl;
+      modal.style.display = 'flex';
+      videoPlayer.play().catch(() => {});
+    }
+
+    // Close Scene Modal Popup
+    function closeSceneModal() {
+      const modal = document.getElementById('sceneVideoModal');
+      const videoPlayer = document.getElementById('modalVideoPlayer');
+      if (videoPlayer) {
+        videoPlayer.pause();
+        videoPlayer.src = '';
+      }
+      if (modal) {
+        modal.style.display = 'none';
+      }
+    }
+
+    // Render Scenes Table in Screen 3 (Script Studio)
+    function renderScenesTable(scenes, force = false) {
+      const tbody = document.getElementById('scenesTableBody');
+      if (!tbody) return;
+
+      if (!scenes || scenes.length === 0) {
+        tbody.innerHTML = `<tr><td colspan="7" style="text-align: center; color: var(--text-muted); padding: 30px;">Chưa có phân cảnh nào trong dự án này.</td></tr>`;
+        return;
+      }
+
+      // SMART DOM GUARD: If table is already rendered with the exact same scene list,
+      // do NOT destroy DOM to prevent collapsing or resetting loading/buffering video players!
+      const existingRows = tbody.querySelectorAll('.scene-row');
+      const existingIds = Array.from(existingRows).map(r => r.id.replace('scene-row-', ''));
+      const newIds = scenes.map(s => s.scene_id);
+      const isIdentical = existingIds.length === newIds.length && existingIds.every((id, idx) => id === newIds[idx]);
+
+      if (!force && isIdentical && existingRows.length > 0) {
+        // Sync any newly expanded/collapsed states if requested, without touching untouched nodes
+        scenes.forEach(sc => {
+          const isExp = window._expandedSceneIds && window._expandedSceneIds.has(sc.scene_id);
+          const detailRow = document.getElementById('expand-row-' + sc.scene_id);
+          const mainRow = document.getElementById('scene-row-' + sc.scene_id);
+          const btnText = document.getElementById('btn-text-' + sc.scene_id);
+          const video = document.getElementById('video-player-' + sc.scene_id);
+          if (detailRow && isExp) {
+            if (detailRow.style.display === 'none' || !detailRow.style.display) {
+              detailRow.style.display = 'table-row';
+              if (mainRow) mainRow.classList.add('expanded');
+              if (btnText) btnText.textContent = 'Đóng Clip';
+              if (video && (!video.src || video.src === window.location.href || video.src.endsWith('/'))) {
+                video.src = video.getAttribute('data-src');
+              }
+            }
+          }
+        });
+        return;
+      }
+
+      tbody.innerHTML = '';
+
+      scenes.forEach((sc, idx) => {
+        const isExp = window._expandedSceneIds && window._expandedSceneIds.has(sc.scene_id);
+
+        // Main row
+        const mainTr = document.createElement('tr');
+        mainTr.className = 'scene-row' + (isExp ? ' expanded' : '');
+        mainTr.id = `scene-row-${sc.scene_id}`;
+        mainTr.onclick = (e) => {
+          // If clicked a button or link inside, don't trigger row toggle
+          if (e.target.closest('button') || e.target.closest('a')) return;
+          toggleSceneRow(sc.scene_id);
+        };
+
+        const pillClass = sc.word_budget_status === 'optimal' ? 'optimal' :
+                          sc.word_budget_status === 'too_long' ? 'too_long' : 'too_short';
+        const pillText = sc.word_budget_status === 'optimal' ? 'Chuẩn (2.8 t/s)' :
+                         sc.word_budget_status === 'too_long' ? 'Quá dài' : 'Quá ngắn';
+
+        let kwHtml = '';
+        if (sc.keywords) {
+          if (sc.keywords.vi && Array.isArray(sc.keywords.vi)) {
+            sc.keywords.vi.forEach(k => { kwHtml += '<span class="tag-kw">' + k + '</span>'; });
+          } else if (Array.isArray(sc.keywords)) {
+            sc.keywords.forEach(k => { kwHtml += '<span class="tag-kw">' + k + '</span>'; });
+          }
+        }
+
+        // Detailed keywords for expand row
+        let allKwHtml = '';
+        if (sc.keywords && typeof sc.keywords === 'object' && !Array.isArray(sc.keywords)) {
+          if (sc.keywords.vi) {
+            allKwHtml += `<div style="margin-bottom: 4px;"><span style="color:var(--accent-cyan); font-weight:600;">VI:</span> ${sc.keywords.vi.map(k => '<span class="tag-kw">' + k + '</span>').join(' ')}</div>`;
+          }
+          if (sc.keywords.en) {
+            allKwHtml += `<div style="margin-bottom: 4px;"><span style="color:var(--warning-amber); font-weight:600;">EN:</span> ${sc.keywords.en.map(k => '<span class="tag-kw">' + k + '</span>').join(' ')}</div>`;
+          }
+          if (sc.keywords.zh) {
+            allKwHtml += `<div><span style="color:#ff6b6b; font-weight:600;">ZH:</span> ${sc.keywords.zh.map(k => '<span class="tag-kw">' + k + '</span>').join(' ')}</div>`;
+          }
+        } else {
+          allKwHtml = kwHtml || '<span style="color:var(--text-muted)">--</span>';
+        }
+
+        const durationFormatted = sc.duration_sec ? sc.duration_sec.toFixed(2) + 's' : '--';
+
+        // Source Attribution Badge & Cut Info (Main row)
+        window._scenesMap = window._scenesMap || {};
+        window._scenesMap[sc.scene_id] = sc;
+
+        let sourceCellHtml = '';
+        const sInfo = sc.source_info || {};
+        const platform = sInfo.platform || (sc.preferred_vault ? sc.preferred_vault.toUpperCase() : 'Stock');
+        const sourceUrl = sInfo.url || '';
+        const vidId = sInfo.video_id || '';
+        const rawFile = sInfo.raw_filename || '';
+        const cutSummary = sInfo.cut_summary || '';
+        const cutBadgeHtml = cutSummary ? `
+          <div style="font-size: 11px; color: #ffcc00; font-family: var(--font-mono); margin-top: 4px; font-weight: 600; white-space: nowrap;" title="${escapeJsStr(cutSummary)}">
+            ✂️ ${escapeJsStr(cutSummary.replace(' của video stock', ''))}
+          </div>
+        ` : (sc.duration_sec ? `
+          <div style="font-size: 11px; color: var(--text-muted); font-family: var(--font-mono); margin-top: 3px;">
+            ⏱️ ${(Math.round(sc.duration_sec * 10) / 10)}s
+          </div>` : '');
+
+        if (sourceUrl) {
+          let icon = '▶';
+          let cls = 'source-youtube';
+          if (platform.toLowerCase().includes('douyin')) { icon = '🎵'; cls = 'source-douyin'; }
+          else if (platform.toLowerCase().includes('bilibili')) { icon = '📺'; cls = 'source-bilibili'; }
+          else if (platform.toLowerCase().includes('stock')) { icon = '📦'; cls = 'source-stock'; }
+
+          sourceCellHtml = `
+            <div class="source-badge ${cls}" title="Nguồn: ${platform}">
+              <span>${icon}</span>
+              <a href="${sourceUrl}" target="_blank" rel="noopener noreferrer" class="source-link" onclick="event.stopPropagation();" title="Mở video gốc trên ${platform}">
+                <span>${platform}</span>
+                <span style="font-size: 10px; opacity: 0.8;">↗</span>
+              </a>
+            </div>
+            ${cutBadgeHtml}
+          `;
+        } else if (rawFile) {
+          sourceCellHtml = `
+            <div class="source-badge source-stock" title="File nguồn: ${rawFile}">
+              <span>🎬</span>
+              <span>${platform}</span>
+            </div>
+            ${cutBadgeHtml}
+          `;
+        } else if (sc.status === 'completed' || sc.video_path) {
+          sourceCellHtml = `
+            <div class="source-badge source-stock">
+              <span>✔</span>
+              <span>${platform}</span>
+            </div>
+            ${cutBadgeHtml}
+          `;
+        } else {
+          sourceCellHtml = `
+            <div class="source-badge source-pending">
+              <span>⏳</span>
+              <span>Chờ tải (${platform})</span>
+            </div>
+          `;
+        }
+
+        mainTr.innerHTML = `
+          <td>
+            <span class="toggle-arrow" id="arrow-${sc.scene_id}">▶</span>
+            <strong style="color: var(--accent-cyan);">${sc.scene_id}</strong>
+          </td>
+          <td style="font-family: var(--font-mono); font-weight: 600;">${durationFormatted}</td>
+          <td style="line-height: 1.45;">${sc.text || '--'}</td>
+          <td>
+            <span class="word-pill ${pillClass}">${sc.word_count || 0} từ (${pillText})</span>
+          </td>
+          <td>${kwHtml || '<span style="color:var(--text-muted)">--</span>'}</td>
+          <td>${sourceCellHtml}</td>
+          <td style="text-align: center;">
+            <button class="btn-scene-video" id="btn-scene-${sc.scene_id}" onclick="event.stopPropagation(); toggleSceneRow('${sc.scene_id}')" title="Bấm để mở trình phát video cho cảnh này">
+              <span>🎬</span> <span id="btn-text-${sc.scene_id}">${isExp ? 'Đóng Clip' : 'Xem Clip'}</span>
+            </button>
+          </td>
+        `;
+        tbody.appendChild(mainTr);
+
+        // Detail expandable row
+        const detailTr = document.createElement('tr');
+        detailTr.className = 'scene-detail-row';
+        detailTr.id = `expand-row-${sc.scene_id}`;
+        detailTr.style.display = isExp ? 'table-row' : 'none';
+        detailTr.onclick = (e) => { e.stopPropagation(); };
+
+        const safeText = escapeJsStr(sc.text);
+        const safePrompt = escapeJsStr(sc.visual_prompt);
+        const safeDur = sc.duration_sec ? sc.duration_sec.toFixed(1) + 's' : '--';
+        const videoSrcAttr = isExp ? `src="/api/projects/${currentProjectId}/preview/scene/${sc.scene_id}"` : '';
+
+        // Source details for expand row
+        let sourceDetailHtml = '';
+        if (sourceUrl) {
+          sourceDetailHtml = `
+            <div style="display: flex; flex-direction: column; gap: 8px; font-size: 13px;">
+              <div style="display: flex; align-items: center; gap: 8px; flex-wrap: wrap;">
+                <span style="color: var(--text-secondary);">Nguồn video stock:</span>
+                <strong style="color: var(--accent-cyan); font-weight: 700; text-transform: capitalize;">${platform}</strong>
+                <a href="${sourceUrl}" target="_blank" rel="noopener noreferrer" style="color: var(--accent-cyan); text-decoration: underline; font-size: 12px;">Mở video gốc ↗</a>
+                ${sInfo.uploader ? `<span style="color: var(--text-muted); font-size: 12px;">(Kênh: ${escapeJsStr(sInfo.uploader)})</span>` : ''}
+              </div>
+              <div style="color: #ffcc00; font-weight: 600; font-family: var(--font-mono); font-size: 13px;">
+                <span>✂️</span> ${cutSummary || (sc.duration_sec ? `${Math.round(sc.duration_sec)}s clip` : 'Toàn bộ đoạn clip')}
+              </div>
+              ${sInfo.url_with_timestamp ? `
+                <div style="font-size: 12px;">
+                  <a href="${sInfo.url_with_timestamp}" target="_blank" rel="noopener noreferrer" style="color: var(--accent-purple); text-decoration: underline;">
+                    ▶ Bấm để xem trực tiếp đoạn cắt trên ${platform} (${sInfo.cut_from || '0:00'}) ↗
+                  </a>
+                </div>
+              ` : ''}
+            </div>
+          `;
+        } else if (cutSummary) {
+          sourceDetailHtml = `
+            <div style="display: flex; flex-direction: column; gap: 6px; font-size: 13px;">
+              <div>
+                <span style="color: var(--text-secondary);">Nguồn video stock:</span>
+                <strong style="color: var(--accent-cyan); margin-left: 6px;">${platform}</strong>
+              </div>
+              <div style="color: #ffcc00; font-weight: 600; font-family: var(--font-mono);">
+                <span>✂️</span> ${cutSummary}
+              </div>
+            </div>
+          `;
+        } else {
+          sourceDetailHtml = `
+            <div style="color: var(--text-muted); font-style: italic; font-size: 12px;">
+              Kho mục tiêu: <span style="color: var(--success-mint); font-weight: 600;">${sc.preferred_vault || 'Universal'}</span> (sẽ tự động tải và cắt khi kích hoạt quy trình B2)
+            </div>
+          `;
+        }
+
+        detailTr.innerHTML = `
+          <td colspan="7" style="padding: 0;">
+            <div class="scene-detail-content">
+              <!-- Cột trái: Trình phát Video Cảnh -->
+              <div style="display: flex; flex-direction: column; gap: 10px;">
+                <div class="scene-video-wrapper">
+                  <video id="video-player-${sc.scene_id}" controls playsinline preload="metadata" ${videoSrcAttr} data-src="/api/projects/${currentProjectId}/preview/scene/${sc.scene_id}">
+                    Trình duyệt của bạn không hỗ trợ phát thẻ video HTML5.
+                  </video>
+                </div>
+                <div style="display: flex; gap: 8px; justify-content: space-between; align-items: center;">
+                  <button class="btn-scene-video" onclick="openSceneModal('${currentProjectId}', '${sc.scene_id}', '${safeText}', '${safePrompt}', '${safeDur}', window._scenesMap['${sc.scene_id}'] ? window._scenesMap['${sc.scene_id}'].source_info : null)" title="Phóng to video ra cửa sổ popup modal">
+                    <span>🔍</span> Phóng To Modal
+                  </button>
+                  <a href="/api/projects/${currentProjectId}/preview/scene/${sc.scene_id}" target="_blank" download="${sc.scene_id}.mp4" class="btn-scene-video" style="text-decoration: none; background: var(--bg-card); color: var(--text-secondary); border-color: var(--border-dark);" title="Tải tệp MP4 của phân cảnh này về máy">
+                    <span>💾</span> Tải Clip MP4
+                  </a>
+                </div>
+              </div>
+
+              <!-- Cột phải: Thông tin kịch bản & QC Tracking -->
+              <div class="scene-meta-box">
+                <div class="scene-meta-section">
+                  <div class="scene-meta-title"><span>🎬</span> Kịch Bản Thị Giác Yêu Cầu (Visual Prompt)</div>
+                  <div class="scene-meta-val" style="color: var(--accent-cyan); font-style: italic; line-height: 1.45;">
+                    ${sc.visual_prompt || 'Không có mô tả chi tiết'}
+                  </div>
+                </div>
+
+                <!-- Nguồn Tải Stock Footage -->
+                <div class="scene-meta-section" style="border-left: 3px solid var(--accent-cyan); padding-left: 10px; background: rgba(0, 229, 255, 0.03); border-radius: 4px; padding: 10px 12px;">
+                  <div class="scene-meta-title" style="color: var(--accent-cyan); font-weight: 700; margin-bottom: 6px;">
+                    <span>📥</span> Nguồn Tải & Đoạn Cắt Video Stock
+                  </div>
+                  <div class="scene-meta-val" style="font-size: 12px; line-height: 1.5;">
+                    ${sourceDetailHtml}
+                  </div>
+                </div>
+
+                <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 10px;">
+                  <div class="scene-meta-section">
+                    <div class="scene-meta-title"><span>🎥</span> Góc Quay & Vault</div>
+                    <div class="scene-meta-val" style="font-size: 12px;">
+                      <strong>${sc.camera_angle || 'Cinematic tracking shot'}</strong> · 
+                      <span style="color: var(--success-mint);">${sc.preferred_vault || 'Universal'} Vault</span>
+                    </div>
+                  </div>
+                  <div class="scene-meta-section">
+                    <div class="scene-meta-title"><span>⏱️</span> Thời Lượng & Ngân Sách</div>
+                    <div class="scene-meta-val" style="font-size: 12px; font-family: var(--font-mono);">
+                      ${durationFormatted} · ${sc.word_count || 0} từ (${pillText})
+                    </div>
+                  </div>
+                </div>
+
+                <div class="scene-meta-section">
+                  <div class="scene-meta-title"><span>🔎</span> Từ Khóa Tìm Kiếm Cào Footage</div>
+                  <div class="scene-meta-val" style="font-size: 12px;">
+                    ${allKwHtml}
+                  </div>
+                </div>
+              </div>
+            </div>
+          </td>
+        `;
+        tbody.appendChild(detailTr);
+      });
+    }
+
+    // Render SEO package in Screen 4
+    function renderSEOPackage(seo) {
+      const titlesBox = document.getElementById('titlesContainer');
+      titlesBox.innerHTML = '';
+
+      if (seo.titles && seo.titles.length > 0) {
+        seo.titles.forEach(t => {
+          const div = document.createElement('div');
+          div.className = 'title-opt';
+          div.innerHTML = `<span>${t}</span> <button class="copy-btn" onclick="navigator.clipboard.writeText('${t.replace(/'/g, "\\'")}')">Copy</button>`;
+          titlesBox.appendChild(div);
+        });
+      }
+
+      if (seo.description) {
+        document.getElementById('seoDescBox').textContent = seo.description;
+      }
+
+      if (seo.hashtags) {
+        document.getElementById('hashtagsContainer').textContent = seo.hashtags.join(' ');
+      }
+    }
+
+    // Load final completed assets
+    async function loadCompletedProjectAssets() {
+      await refreshProjectState();
+    }
+
+    // 1-Click Publish to YouTube
+    document.getElementById('btnPublishYoutube').addEventListener('click', async () => {
+      if (!currentProjectId) {
+        alert('Chưa có dự án nào được khởi tạo!');
+        return;
+      }
+
+      const btn = document.getElementById('btnPublishYoutube');
+      const msg = document.getElementById('publishStatusMsg');
+
+      btn.disabled = true;
+      msg.textContent = 'Đang xác thực và tải video lên YouTube...';
+
+      try {
+        const res = await fetch('/api/projects/' + currentProjectId + '/publish', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ privacy_status: 'private' })
+        });
+
+        const data = await res.json();
+        if (res.ok && data.success) {
+          msg.innerHTML = '<span style="color:var(--success-mint);">✔ Đã đăng video thành công! ID: ' + data.video_id + '</span>';
+        } else {
+          msg.innerHTML = '<span style="color:var(--alert-crimson);">Lỗi đăng tải: ' + (data.error || 'Thất bại') + '</span>';
+        }
+      } catch (e) {
+        msg.innerHTML = '<span style="color:var(--alert-crimson);">Lỗi kết nối: ' + e.message + '</span>';
+      } finally {
+        btn.disabled = false;
+      }
+    });
+
+    async function regenerateThumbnailAI() {
+      if (!currentProjectId) {
+        alert('Chưa có dự án nào được chọn!');
+        return;
+      }
+      const btn = document.getElementById('btnRegenerateThumb');
+      const originalText = btn ? btn.innerHTML : '';
+      if (btn) {
+        btn.disabled = true;
+        btn.innerHTML = '<span>⏳</span> Đang vẽ AI...';
+      }
+      try {
+        const res = await fetch(`/api/projects/${currentProjectId}/thumbnail/regenerate`, {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({})
+        });
+        const data = await res.json();
+        if (res.ok && data.status === 'ok') {
+          const thumbImg = document.getElementById('thumbPreviewImg');
+          if (thumbImg && data.thumbnail_url) {
+            thumbImg.src = data.thumbnail_url;
+            thumbImg.style.display = 'block';
+            document.getElementById('thumbEmptyNotice').style.display = 'none';
+          }
+          appendLog('[THUMB] Đã vẽ mới và cập nhật Thumbnail AI thành công!', 'mint');
+        } else {
+          alert('Lỗi tạo Thumbnail AI: ' + (data.detail || data.message || 'Thất bại'));
+        }
+      } catch (err) {
+        alert('Lỗi kết nối khi vẽ Thumbnail AI: ' + err.message);
+      } finally {
+        if (btn) {
+          btn.disabled = false;
+          btn.innerHTML = originalText;
+        }
+      }
+    }
+
+    // ==========================================
+    // SCREEN 2: PROJECT MANAGEMENT & QUEUE CONTROLLER
+    // ==========================================
+
+    let allProjectsData = [];
+    let currentFilter = 'all';
+    let currentSearchQuery = '';
+
+    // Load projects list
+    async function loadProjectsList() {
+      try {
+        const res = await fetch('/api/projects');
+        if (!res.ok) return;
+        const data = await res.json();
+        allProjectsData = data.projects || [];
+
+        // Count categories
+        let countAll = allProjectsData.length;
+        let countRunning = 0;
+        let countCompleted = 0;
+        let countError = 0;
+
+        allProjectsData.forEach(p => {
+          if (['QUEUED', 'B1_SCRIPT', 'B2_SOURCING_TTS', 'B3_RENDER', 'B4_PACKAGING'].includes(p.stage)) {
+            countRunning++;
+          } else if (p.stage === 'COMPLETE') {
+            countCompleted++;
+          } else if (['ERROR', 'CANCELLED'].includes(p.stage)) {
+            countError++;
+          }
+        });
+
+        // Update counts
+        const elAll = document.getElementById('countAll');
+        const elRunning = document.getElementById('countRunning');
+        const elCompleted = document.getElementById('countCompleted');
+        const elError = document.getElementById('countError');
+        const badge = document.getElementById('navProjectsBadge');
+
+        if (elAll) elAll.textContent = countAll;
+        if (elRunning) elRunning.textContent = countRunning;
+        if (elCompleted) elCompleted.textContent = countCompleted;
+        if (elError) elError.textContent = countError;
+        if (badge) badge.textContent = countAll;
+
+        renderProjectsTable();
+      } catch (err) {
+        console.warn('Error fetching projects list:', err);
+      }
+    }
+
+    // Render projects table
+    function renderProjectsTable() {
+      const tbody = document.getElementById('projectsTableBody');
+      if (!tbody) return;
+
+      let filtered = allProjectsData.filter(p => {
+        // Filter tab
+        if (currentFilter === 'running') {
+          if (!['QUEUED', 'B1_SCRIPT', 'B2_SOURCING_TTS', 'B3_RENDER', 'B4_PACKAGING'].includes(p.stage)) return false;
+        } else if (currentFilter === 'completed') {
+          if (p.stage !== 'COMPLETE') return false;
+        } else if (currentFilter === 'error') {
+          if (!['ERROR', 'CANCELLED'].includes(p.stage)) return false;
+        }
+
+        // Search query
+        if (currentSearchQuery) {
+          const matchTopic = (p.topic || '').toLowerCase().includes(currentSearchQuery);
+          const matchId = (p.project_id || '').toLowerCase().includes(currentSearchQuery);
+          const matchSkill = (p.skill_id || '').toLowerCase().includes(currentSearchQuery);
+          if (!matchTopic && !matchId && !matchSkill) return false;
+        }
+
+        return true;
+      });
+
+      if (filtered.length === 0) {
+        tbody.innerHTML = `<tr><td colspan="7" style="padding: 24px; text-align: center; color: var(--text-muted);">Không tìm thấy dự án nào phù hợp.</td></tr>`;
+        return;
+      }
+
+      tbody.innerHTML = '';
+      filtered.forEach(p => {
+        const tr = document.createElement('tr');
+        tr.style.borderBottom = '1px solid var(--border-dark)';
+
+        // Format stage badge
+        let stageBadgeHtml = '';
+        const isRunning = ['B1_SCRIPT', 'B2_SOURCING_TTS', 'B3_RENDER', 'B4_PACKAGING'].includes(p.stage);
+        if (isRunning) {
+          stageBadgeHtml = `<span class="status-badge status-badge-running"><span class="pulse-dot"></span>${p.stage}</span>`;
+        } else if (p.stage === 'QUEUED') {
+          stageBadgeHtml = `<span class="status-badge status-badge-queued">⏳ Hàng đợi</span>`;
+        } else if (p.stage === 'COMPLETE') {
+          stageBadgeHtml = `<span class="status-badge status-badge-complete">✔ Hoàn tất</span>`;
+        } else if (p.stage === 'CANCELLED') {
+          stageBadgeHtml = `<span class="status-badge status-badge-cancelled">⛔ Đã dừng</span>`;
+        } else if (p.stage === 'ERROR') {
+          stageBadgeHtml = `<span class="status-badge status-badge-error">✖ Lỗi</span>`;
+        } else {
+          stageBadgeHtml = `<span class="status-badge" style="background: rgba(255,255,255,0.06); color: var(--text-secondary);">${p.stage}</span>`;
+        }
+
+        // Format date
+        let dateStr = '--';
+        if (p.created_at) {
+          try {
+            let ts = p.created_at;
+            if (typeof ts === 'number' && ts < 1e12) {
+              ts = ts * 1000;
+            }
+            const d = new Date(ts);
+            dateStr = d.toLocaleTimeString('vi-VN', { hour: '2-digit', minute: '2-digit' }) + ' ' + d.toLocaleDateString('vi-VN');
+          } catch (e) {
+            dateStr = p.created_at;
+          }
+        }
+
+        // Action buttons
+        let actionsHtml = `<button onclick="selectProject('${p.project_id}', false); switchToScreen('script');" class="action-btn-sm" style="background: rgba(0, 229, 255, 0.12); border: 1px solid var(--accent-cyan); color: var(--accent-cyan); padding: 4px 8px; border-radius: 4px; font-size: 11px; cursor: pointer; font-weight: 700; margin-right: 4px;" title="Xem kịch bản & video từng cảnh">📝 Kịch bản</button>`;
+        actionsHtml += `<button onclick="selectProject('${p.project_id}', true)" class="action-btn-sm" style="background: var(--bg-card); border: 1px solid var(--border-dark); color: var(--text-primary); padding: 4px 8px; border-radius: 4px; font-size: 11px; cursor: pointer; font-weight: 600; margin-right: 4px;" title="Theo dõi tiến độ quy trình">👁️ Theo dõi</button>`;
+
+        if (isRunning || p.stage === 'QUEUED') {
+          actionsHtml += `<button onclick="stopProject('${p.project_id}')" class="action-btn-sm" style="background: rgba(255, 59, 48, 0.15); border: 1px solid var(--alert-crimson); color: #ff6b6b; padding: 4px 8px; border-radius: 4px; font-size: 11px; cursor: pointer; font-weight: 600;">⛔ Dừng</button>`;
+        } else {
+          if (p.stage !== 'COMPLETE') {
+            actionsHtml += `<button onclick="resumeProject('${p.project_id}')" class="action-btn-sm" style="background: rgba(0, 229, 255, 0.15); border: 1px solid var(--accent-cyan); color: var(--accent-cyan); padding: 4px 8px; border-radius: 4px; font-size: 11px; cursor: pointer; font-weight: 700; margin-right: 4px;" title="Chạy tiếp dự án này">▶ Chạy tiếp</button>`;
+          }
+          actionsHtml += `<button onclick="deleteProject('${p.project_id}')" class="action-btn-sm" style="background: rgba(255, 255, 255, 0.05); border: 1px solid var(--border-dark); color: var(--text-muted); padding: 4px 8px; border-radius: 4px; font-size: 11px; cursor: pointer;">🗑️</button>`;
+        }
+
+        const isCurrent = (p.project_id === currentProjectId);
+        if (isCurrent) {
+          tr.style.backgroundColor = 'rgba(0, 229, 255, 0.04)';
+        }
+
+        tr.innerHTML = `
+          <td style="padding: 12px 16px; font-family: var(--font-mono); font-size: 12px; color: ${isCurrent ? 'var(--accent-cyan)' : 'var(--text-secondary)'};">
+            ${p.project_id} ${isCurrent ? '<span style="font-size: 10px; background: rgba(0,229,255,0.15); color: var(--accent-cyan); padding: 1px 4px; border-radius: 3px;">Active</span>' : ''}
+          </td>
+          <td style="padding: 12px 16px; font-weight: 600; color: #fff; max-width: 250px; overflow: hidden; text-overflow: ellipsis; white-space: nowrap;">
+            ${p.topic || '--'}
+          </td>
+          <td style="padding: 12px 16px; font-size: 12px; color: var(--text-secondary);">
+            ${p.skill_id || '--'}
+          </td>
+          <td style="padding: 12px 16px;">
+            ${stageBadgeHtml}
+          </td>
+          <td style="padding: 12px 16px;">
+            <div style="display: flex; align-items: center; gap: 8px;">
+              <div style="flex: 1; background: var(--bg-card); height: 6px; border-radius: 3px; overflow: hidden;">
+                <div style="width: ${p.progress_pct || 0}%; height: 100%; background: var(--accent-cyan);"></div>
+              </div>
+              <span style="font-family: var(--font-mono); font-size: 11px; color: var(--text-secondary); width: 32px;">${Math.round(p.progress_pct || 0)}%</span>
+            </div>
+          </td>
+          <td style="padding: 12px 16px; font-size: 11px; color: var(--text-secondary); font-family: var(--font-mono);">
+            ${dateStr}
+          </td>
+          <td style="padding: 12px 16px; text-align: right; white-space: nowrap;">
+            ${actionsHtml}
+          </td>
+        `;
+        tbody.appendChild(tr);
+      });
+    }
+
+    // Load queue information
+    async function loadQueueInfo() {
+      try {
+        const res = await fetch('/api/projects/queue');
+        if (!res.ok) return;
+        const q = await res.json();
+
+        // Update Header Queue Pill
+        const headerPill = document.getElementById('headerQueuePill');
+        if (headerPill) {
+          headerPill.innerHTML = `<span>⏳</span> Hàng đợi: ${q.queue_length || 0}`;
+          if ((q.queue_length || 0) > 0) {
+            headerPill.style.borderColor = 'var(--warning-amber)';
+            headerPill.style.color = 'var(--warning-amber)';
+          } else {
+            headerPill.style.borderColor = 'var(--border-dark)';
+            headerPill.style.color = 'var(--text-secondary)';
+          }
+        }
+
+        // Update Card Đang Sản Xuất
+        const stageBadge = document.getElementById('runningProjStageBadge');
+        const topicEl = document.getElementById('runningProjTopic');
+        const progressEl = document.getElementById('runningProjProgressBar');
+        const statusTextEl = document.getElementById('runningProjStatusText');
+        const btnFocus = document.getElementById('btnFocusRunningProj');
+        const btnStop = document.getElementById('btnStopRunningProj');
+
+        if (q.running) {
+          if (stageBadge) {
+            stageBadge.textContent = q.running.stage;
+            stageBadge.style.color = 'var(--accent-cyan)';
+            stageBadge.style.background = 'rgba(0, 229, 255, 0.1)';
+          }
+          if (topicEl) topicEl.textContent = q.running.topic;
+          if (progressEl) progressEl.style.width = (q.running.progress || 0) + '%';
+          if (statusTextEl) statusTextEl.textContent = Math.round(q.running.progress || 0) + '% - ' + q.running.stage;
+          if (btnFocus) {
+            btnFocus.style.display = 'inline-block';
+            btnFocus.onclick = () => selectProject(q.running.project_id, true);
+          }
+          if (btnStop) {
+            btnStop.style.display = 'inline-block';
+            btnStop.onclick = () => stopProject(q.running.project_id);
+          }
+        } else {
+          if (stageBadge) {
+            stageBadge.textContent = 'IDLE';
+            stageBadge.style.color = 'var(--text-muted)';
+            stageBadge.style.background = 'rgba(255, 255, 255, 0.05)';
+          }
+          if (topicEl) topicEl.textContent = 'Không có video nào đang chạy';
+          if (progressEl) progressEl.style.width = '0%';
+          if (statusTextEl) statusTextEl.textContent = 'Sẵn sàng khởi tạo';
+          if (btnFocus) btnFocus.style.display = 'none';
+          if (btnStop) btnStop.style.display = 'none';
+        }
+
+        // Update Card Hàng Đợi
+        const queueBadge = document.getElementById('queueCountBadge');
+        const queueListContainer = document.getElementById('queueListContainer');
+        if (queueBadge) queueBadge.textContent = `${q.queue_length || 0} video chờ`;
+
+        if (queueListContainer) {
+          if (q.queue && q.queue.length > 0) {
+            queueListContainer.innerHTML = '';
+            q.queue.forEach((item, idx) => {
+              const row = document.createElement('div');
+              row.style.cssText = 'display: flex; justify-content: space-between; align-items: center; padding: 6px 0; border-bottom: 1px solid rgba(255,255,255,0.05); font-size: 12px;';
+              row.innerHTML = `
+                <div style="overflow: hidden; text-overflow: ellipsis; white-space: nowrap; max-width: 75%;">
+                  <span style="color: var(--warning-amber); font-weight: 700; margin-right: 6px;">#${idx + 1}</span>
+                  <span style="color: #fff;">${item.topic}</span>
+                  <span style="font-family: var(--font-mono); color: var(--text-muted); font-size: 11px; margin-left: 4px;">(${item.project_id})</span>
+                </div>
+                <button onclick="stopProject('${item.project_id}')" style="background: rgba(255, 59, 48, 0.15); border: 1px solid var(--alert-crimson); color: #ff6b6b; padding: 2px 8px; border-radius: 4px; font-size: 11px; cursor: pointer;">Hủy</button>
+              `;
+              queueListContainer.appendChild(row);
+            });
+          } else {
+            queueListContainer.innerHTML = '<div style="padding: 10px 0; text-align: center; color: var(--text-muted);">Hàng đợi trống. Video tiếp theo sẽ được xử lý ngay lập tức.</div>';
+          }
+        }
+      } catch (err) {
+        console.warn('Error fetching queue info:', err);
+      }
+    }
+
+    // Select project to track/view
+    async function selectProject(projectId, switchScreen = false) {
+      if (!projectId) return;
+      if (currentProjectId !== projectId) {
+        currentProjectId = projectId;
+        if (window._expandedSceneIds) window._expandedSceneIds.clear();
+      }
+      localStorage.setItem('bancontent_active_project_id', currentProjectId);
+      document.getElementById('headerProjectId').textContent = 'Project: ' + currentProjectId;
+
+      connectSSE(currentProjectId);
+      await refreshProjectState(true);
+
+      if (switchScreen) {
+        switchToScreen('monitor');
+      }
+      renderProjectsTable();
+    }
+
+    // Stop / cancel project
+    async function stopProject(projectId) {
+      const targetId = projectId || currentProjectId;
+      if (!targetId) return;
+
+      if (!confirm(`Bạn có chắc chắn muốn dừng dự án [${targetId}] không?`)) {
+        return;
+      }
+
+      try {
+        const res = await fetch('/api/projects/' + targetId + '/stop', { method: 'POST' });
+        const data = await res.json();
+        if (res.ok) {
+          appendLog(`[STOP] ${data.message}`, 'red');
+          if (targetId === currentProjectId) {
+            const stopBtn = document.getElementById('btnStopPipeline');
+            if (stopBtn) stopBtn.style.display = 'none';
+            document.getElementById('trackerStatus').textContent = 'ĐÃ DỪNG';
+          }
+          await loadProjectsList();
+          await loadQueueInfo();
+        } else {
+          alert('Không thể dừng dự án: ' + (data.detail || 'Lỗi không xác định'));
+        }
+      } catch (err) {
+        alert('Lỗi kết nối khi gửi lệnh dừng: ' + err.message);
+      }
+    }
+
+    // Delete project
+    async function deleteProject(projectId) {
+      if (!projectId) return;
+
+      if (!confirm(`Bạn có chắc chắn muốn xóa dự án [${projectId}] cùng toàn bộ tệp kết xuất liên quan trên đĩa không?`)) {
+        return;
+      }
+
+      try {
+        const res = await fetch('/api/projects/' + projectId, { method: 'DELETE' });
+        const data = await res.json();
+        if (res.ok) {
+          if (projectId === currentProjectId) {
+            currentProjectId = null;
+            localStorage.removeItem('bancontent_active_project_id');
+            document.getElementById('headerProjectId').textContent = 'Project: --';
+            document.getElementById('progressBarFill').style.width = '0%';
+            document.getElementById('trackerStatus').textContent = 'Chưa chọn dự án';
+          }
+          await loadProjectsList();
+          await loadQueueInfo();
+        } else {
+          alert('Không thể xóa dự án: ' + (data.detail || 'Lỗi không xác định'));
+        }
+      } catch (err) {
+        alert('Lỗi kết nối khi xóa dự án: ' + err.message);
+      }
+    }
+
+    // Resume / continue project
+    async function resumeProject(projectId) {
+      const targetId = projectId || currentProjectId;
+      if (!targetId) return;
+
+      try {
+        currentProjectId = targetId;
+        localStorage.setItem('bancontent_active_project_id', currentProjectId);
+        document.getElementById('headerProjectId').textContent = 'Project: ' + currentProjectId;
+        connectSSE(currentProjectId);
+
+        appendLog(`[RESUME] Tiếp tục sản xuất dự án [${targetId}]...`, 'cyan');
+
+        const res = await fetch('/api/projects/' + targetId + '/start', { method: 'POST' });
+        if (!res.ok) {
+          const err = await res.json();
+          alert('Không thể tiếp tục dự án: ' + (err.detail || 'Lỗi không xác định'));
+          return;
+        }
+
+        const data = await res.json();
+        if (data.status === 'queued') {
+          appendLog('[QUEUE] ' + (data.message || 'Dự án đã được đưa vào hàng đợi'), 'cyan');
+          alert('⏳ Dự án đã được đưa vào hàng đợi sản xuất!');
+          switchToScreen('projects');
+        } else {
+          appendLog('[START] ' + (data.message || 'Bắt đầu tiếp tục sản xuất'), 'green');
+          updateControlButtons('B1_SCRIPT');
+          switchToScreen('monitor');
+        }
+
+        loadProjectsList();
+        loadQueueInfo();
+      } catch (err) {
+        alert('Lỗi kết nối khi gửi lệnh chạy tiếp: ' + err.message);
+      }
+    }
+
+    // Update buttons in tracker card
+    function updateControlButtons(stage) {
+      const stopBtn = document.getElementById('btnStopPipeline');
+      const resumeBtn = document.getElementById('btnResumePipeline');
+      const isRunning = ['B1_SCRIPT', 'B2_SOURCING_TTS', 'B3_RENDER', 'B4_PACKAGING', 'QUEUED'].includes(stage);
+      const canResume = ['CANCELLED', 'ERROR', 'IDLE'].includes(stage) && Boolean(currentProjectId);
+
+      if (stopBtn) stopBtn.style.display = isRunning ? 'inline-flex' : 'none';
+      if (resumeBtn) resumeBtn.style.display = canResume ? 'inline-flex' : 'none';
+    }
+
+    // Wire project screen UI controls
+    const btnRefreshProj = document.getElementById('btnRefreshProjects');
+    if (btnRefreshProj) {
+      btnRefreshProj.addEventListener('click', () => {
+        loadProjectsList();
+        loadQueueInfo();
+      });
+    }
+
+    const btnNewProj = document.getElementById('btnNewProjectFromList');
+    if (btnNewProj) {
+      btnNewProj.addEventListener('click', () => {
+        switchToScreen('wizard');
+      });
+    }
+
+    const headerQueuePill = document.getElementById('headerQueuePill');
+    if (headerQueuePill) {
+      headerQueuePill.addEventListener('click', () => {
+        switchToScreen('projects');
+      });
+    }
+
+    const btnStopPipeline = document.getElementById('btnStopPipeline');
+    if (btnStopPipeline) {
+      btnStopPipeline.addEventListener('click', () => {
+        stopProject(currentProjectId);
+      });
+    }
+
+    const btnResumePipeline = document.getElementById('btnResumePipeline');
+    if (btnResumePipeline) {
+      btnResumePipeline.addEventListener('click', () => {
+        resumeProject(currentProjectId);
+      });
+    }
+
+    // Filter tabs
+    const filterTabs = document.querySelectorAll('#projectFilterTabs .proj-filter-btn');
+    filterTabs.forEach(btn => {
+      btn.addEventListener('click', () => {
+        filterTabs.forEach(b => {
+          b.classList.remove('active');
+          b.style.background = 'transparent';
+          b.style.color = 'var(--text-secondary)';
+        });
+        btn.classList.add('active');
+        btn.style.background = 'var(--bg-card)';
+        btn.style.color = 'var(--text-primary)';
+        currentFilter = btn.getAttribute('data-filter');
+        renderProjectsTable();
+      });
+    });
+
+    // Search input
+    const searchInput = document.getElementById('projectSearchInput');
+    if (searchInput) {
+      searchInput.addEventListener('input', (e) => {
+        currentSearchQuery = e.target.value.toLowerCase().trim();
+        renderProjectsTable();
+      });
+    }
+
+    // ==========================================
+    // SCREEN 5: SETTINGS CONTROLLER LOGIC
+    // ==========================================
+
+    // Toggle 9Router API Key visibility
+    const btnToggleNineRouterKey = document.getElementById('btnToggleNineRouterKey');
+    if (btnToggleNineRouterKey) {
+      btnToggleNineRouterKey.addEventListener('click', () => {
+        const input = document.getElementById('settingNineRouterApiKey');
+        if (input.type === 'password') {
+          input.type = 'text';
+          btnToggleNineRouterKey.textContent = '🔒';
+        } else {
+          input.type = 'password';
+          btnToggleNineRouterKey.textContent = '👁️';
+        }
+      });
+    }
+
+    // Speech pace slider live label
+    const settingSpeechRate = document.getElementById('settingSpeechRate');
+    if (settingSpeechRate) {
+      settingSpeechRate.addEventListener('input', function() {
+        document.getElementById('labelSpeechRate').textContent = parseFloat(this.value).toFixed(2) + 'x';
+      });
+    }
+
+    // Toggle Maziao API Key visibility
+    const btnToggleMaziaoKey = document.getElementById('btnToggleMaziaoKey');
+    if (btnToggleMaziaoKey) {
+      btnToggleMaziaoKey.addEventListener('click', () => {
+        const input = document.getElementById('settingMaziaoApiKey');
+        if (input.type === 'password') {
+          input.type = 'text';
+          btnToggleMaziaoKey.textContent = '🔒';
+        } else {
+          input.type = 'password';
+          btnToggleMaziaoKey.textContent = '👁️';
+        }
+      });
+    }
+
+    // TTS Sub-tab navigation
+    const ttsTabBtns = document.querySelectorAll('.tts-tab-btn');
+    const ttsSubPages = {
+      'zerotts': document.getElementById('ttsPageZerotts'),
+      'maziao': document.getElementById('ttsPageMaziao'),
+      'edge': document.getElementById('ttsPageEdge'),
+      'general': document.getElementById('ttsPageGeneral')
+    };
+
+    ttsTabBtns.forEach(btn => {
+      btn.addEventListener('click', () => {
+        const subtab = btn.getAttribute('data-subtab');
+        ttsTabBtns.forEach(b => b.classList.remove('active'));
+        btn.classList.add('active');
+
+        Object.keys(ttsSubPages).forEach(key => {
+          const page = ttsSubPages[key];
+          if (page) {
+            if (key === subtab) {
+              page.classList.add('active');
+              page.style.setProperty('display', 'flex', 'important');
+            } else {
+              page.classList.remove('active');
+              page.style.setProperty('display', 'none', 'important');
+            }
+          }
+        });
+      });
+    });
+
+    // ZeroTTS Voices Dynamic Loader
+    async function loadZeroTtsVoices(selectedVoice) {
+      try {
+        const res = await fetch('/api/system/tts/zerotts/voices');
+        if (!res.ok) return;
+        const data = await res.json();
+        const select = document.getElementById('settingZeroTtsVoice');
+        const badge = document.getElementById('zeroTtsVoiceCountBadge');
+        if (!select || !data.voices) return;
+
+        const currentVal = selectedVoice || select.value || 'maichi';
+        select.innerHTML = '';
+
+        const clonedVoices = data.voices.filter(v => v.is_cloned);
+        const officialVoices = data.voices.filter(v => !v.is_cloned);
+
+        if (clonedVoices.length > 0) {
+          const optGroup = document.createElement('optgroup');
+          optGroup.label = '👑 Giọng Nhân Bản Cá Nhân (Cloned Packs)';
+          clonedVoices.forEach(v => {
+            const opt = document.createElement('option');
+            opt.value = v.id;
+            opt.textContent = `${v.name} (${v.gender} - ${v.desc})`;
+            if (v.id === currentVal) opt.selected = true;
+            optGroup.appendChild(opt);
+          });
+          select.appendChild(optGroup);
+        }
+
+        const officialGroup = document.createElement('optgroup');
+        officialGroup.label = '⚡ Giọng Chuẩn ZeroTTS CPU ($0)';
+        officialVoices.forEach(v => {
+          const opt = document.createElement('option');
+          opt.value = v.id;
+          opt.textContent = `${v.name}`;
+          if (v.id === currentVal) opt.selected = true;
+          officialGroup.appendChild(opt);
+        });
+        select.appendChild(officialGroup);
+
+        if (badge) {
+          badge.textContent = `${officialVoices.length} giọng chuẩn + ${clonedVoices.length} giọng clone`;
+        }
+      } catch (e) {
+        console.warn('Lỗi tải danh sách giọng ZeroTTS:', e);
+      }
+    }
+
+    // ZeroTTS Voice Cloning File Upload
+    const inputZeroCloneFile = document.getElementById('inputZeroCloneFile');
+    const btnChooseZeroCloneFile = document.getElementById('btnChooseZeroCloneFile');
+    const labelZeroCloneFileName = document.getElementById('labelZeroCloneFileName');
+    const btnUploadZeroClone = document.getElementById('btnUploadZeroClone');
+
+    if (btnChooseZeroCloneFile && inputZeroCloneFile) {
+      btnChooseZeroCloneFile.addEventListener('click', () => {
+        inputZeroCloneFile.click();
+      });
+      inputZeroCloneFile.addEventListener('change', () => {
+        if (inputZeroCloneFile.files && inputZeroCloneFile.files[0]) {
+          const f = inputZeroCloneFile.files[0];
+          labelZeroCloneFileName.textContent = f.name + ' (' + (f.size / 1024).toFixed(1) + ' KB)';
+          btnUploadZeroClone.disabled = false;
+        } else {
+          labelZeroCloneFileName.textContent = 'Chưa chọn tệp...';
+          btnUploadZeroClone.disabled = true;
+        }
+      });
+    }
+
+    if (btnUploadZeroClone && inputZeroCloneFile) {
+      btnUploadZeroClone.addEventListener('click', async () => {
+        if (!inputZeroCloneFile.files || !inputZeroCloneFile.files[0]) {
+          alert('Vui lòng chọn tệp .zip hoặc .npz của ZeroTTS!');
+          return;
+        }
+        const file = inputZeroCloneFile.files[0];
+        const formData = new FormData();
+        formData.append('file', file);
+
+        btnUploadZeroClone.disabled = true;
+        btnUploadZeroClone.innerHTML = '<span>⏳</span> Đang cài đặt...';
+
+        try {
+          const res = await fetch('/api/system/tts/zerotts/install-clone', {
+            method: 'POST',
+            body: formData
+          });
+          const data = await res.json().catch(() => ({}));
+          if (res.ok && data.success) {
+            alert('Cài đặt giọng clone thành công!\n' + (data.message || ''));
+            const newVoiceId = data.voice ? data.voice.id : null;
+            await loadZeroTtsVoices(newVoiceId);
+            labelZeroCloneFileName.textContent = 'Đã cài đặt: ' + file.name;
+          } else {
+            alert('Không thể cài đặt giọng clone:\n' + (data.message || data.detail || 'Lỗi không xác định'));
+          }
+        } catch (e) {
+          alert('Lỗi tải tệp lên: ' + e.message);
+        } finally {
+          btnUploadZeroClone.disabled = false;
+          btnUploadZeroClone.innerHTML = '<span>📥</span> Cài Đặt Vào ZeroTTS';
+        }
+      });
+    }
+
+    const btnRefreshZeroVoices = document.getElementById('btnRefreshZeroVoices');
+    if (btnRefreshZeroVoices) {
+      btnRefreshZeroVoices.addEventListener('click', () => {
+        loadZeroTtsVoices();
+      });
+    }
+
+    // Maziao Dynamic Voices Loader
+    async function loadMaziaoVoices(selectedVoiceId) {
+      const apiKeyVal = document.getElementById('settingMaziaoApiKey') ? document.getElementById('settingMaziaoApiKey').value.trim() : '';
+      const baseUrlVal = document.getElementById('settingMaziaoBaseUrl') ? document.getElementById('settingMaziaoBaseUrl').value.trim() : 'https://app.maziao.com';
+      const badge = document.getElementById('maziaoVoiceCountBadge');
+      const select = document.getElementById('settingMaziaoVoiceId');
+      const btn = document.getElementById('btnFetchMaziaoVoices');
+
+      if (btn) {
+        btn.disabled = true;
+        btn.innerHTML = '<span>⏳</span> Đang tải...';
+      }
+      if (badge) {
+        badge.textContent = 'Đang quét...';
+        badge.className = 'badge-tag warning';
+      }
+
+      try {
+        const res = await fetch('/api/system/settings/maziao/voices', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({
+            api_key: apiKeyVal && !apiKeyVal.includes('***') ? apiKeyVal : null,
+            base_url: baseUrlVal || null
+          })
+        });
+        const data = await res.json().catch(() => ({}));
+        if (res.ok && data.success && data.voices && data.voices.length > 0) {
+          const currentVal = selectedVoiceId || (select ? select.value : 'zv_vi_sg_male_thien_tam');
+          if (select) {
+            select.innerHTML = '';
+            const cloned = data.voices.filter(v => v.is_cloned);
+            const vietnamese = data.voices.filter(v => !v.is_cloned && v.language === 'vi');
+            const others = data.voices.filter(v => !v.is_cloned && v.language !== 'vi');
+
+            if (cloned.length > 0) {
+              const grpCloned = document.createElement('optgroup');
+              grpCloned.label = '👑 Giọng Riêng / Cloned Của Bạn';
+              cloned.forEach(v => {
+                const opt = document.createElement('option');
+                opt.value = v.id;
+                opt.textContent = `${v.name} (${v.id})`;
+                if (v.id === currentVal) opt.selected = true;
+                grpCloned.appendChild(opt);
+              });
+              select.appendChild(grpCloned);
+            }
+
+            if (vietnamese.length > 0) {
+              const grpVi = document.createElement('optgroup');
+              grpVi.label = '🇻🇳 Giọng Tiếng Việt Maziao';
+              vietnamese.forEach(v => {
+                const opt = document.createElement('option');
+                opt.value = v.id;
+                opt.textContent = `${v.name} [${v.id}]`;
+                if (v.id === currentVal) opt.selected = true;
+                grpVi.appendChild(opt);
+              });
+              select.appendChild(grpVi);
+            }
+
+            if (others.length > 0) {
+              const grpOthers = document.createElement('optgroup');
+              grpOthers.label = '🌐 Giọng Quốc Tế Khác';
+              others.slice(0, 30).forEach(v => {
+                const opt = document.createElement('option');
+                opt.value = v.id;
+                opt.textContent = `${v.name} [${v.id}]`;
+                if (v.id === currentVal) opt.selected = true;
+                grpOthers.appendChild(opt);
+              });
+              select.appendChild(grpOthers);
+            }
+
+            if (currentVal && !data.voices.some(v => v.id === currentVal)) {
+              const customOpt = document.createElement('option');
+              customOpt.value = currentVal;
+              customOpt.textContent = `Tùy chỉnh: ${currentVal}`;
+              customOpt.selected = true;
+              select.prepend(customOpt);
+            }
+          }
+
+          if (badge) {
+            badge.textContent = `${data.voices.length} giọng khả dụng`;
+            badge.className = 'badge-tag success';
+          }
+          return true;
+        } else {
+          if (badge) {
+            badge.textContent = 'Lỗi nạp giọng';
+            badge.className = 'badge-tag error';
+          }
+        }
+      } catch (e) {
+        if (badge) {
+          badge.textContent = 'Lỗi mạng';
+          badge.className = 'badge-tag error';
+        }
+      } finally {
+        if (btn) {
+          btn.disabled = false;
+          btn.innerHTML = '<span>🔄</span> Tải Giọng Maziao';
+        }
+      }
+      return false;
+    }
+
+    const btnFetchMaziaoVoices = document.getElementById('btnFetchMaziaoVoices');
+    if (btnFetchMaziaoVoices) {
+      btnFetchMaziaoVoices.addEventListener('click', async () => {
+        const ok = await loadMaziaoVoices();
+        if (ok) {
+          alert('Đã tải danh sách giọng Maziao thành công! Hãy chọn giọng phù hợp trong menu thả xuống.');
+        } else {
+          alert('Không thể kết nối đến API Maziao. Đã nạp danh sách giọng tiếng Việt mặc định.');
+        }
+      });
+    }
+
+    // Helper: Populate model dropdown from list
+    function populateModelDropdown(models, selectedModel) {
+      const select = document.getElementById('settingLlmModel');
+      const badge = document.getElementById('modelCountBadge');
+      if (!select || !models || models.length === 0) return;
+
+      select.innerHTML = '';
+      models.forEach(m => {
+        const opt = document.createElement('option');
+        opt.value = m;
+        opt.textContent = m;
+        if (m === selectedModel) {
+          opt.selected = true;
+        }
+        select.appendChild(opt);
+      });
+
+      // If selectedModel is not in list, add it
+      if (selectedModel && !models.includes(selectedModel)) {
+        const opt = document.createElement('option');
+        opt.value = selectedModel;
+        opt.textContent = selectedModel + ' (Tùy chỉnh)';
+        opt.selected = true;
+        select.prepend(opt);
+      }
+
+      if (badge) {
+        badge.textContent = models.length + ' models khả dụng';
+      }
+    }
+
+    // Load settings from backend
+    async function loadSettings() {
+      try {
+        const res = await fetch('/api/system/settings');
+        if (!res.ok) return;
+        const data = await res.json();
+
+        // 9Router Base URL & Key
+        if (data.ninerouter_base_url) {
+          document.getElementById('settingNineRouterBaseUrl').value = data.ninerouter_base_url;
+        }
+        const nrKeyInput = document.getElementById('settingNineRouterApiKey');
+        const nrBadge = document.getElementById('nineRouterStatusBadge');
+        if (data.has_ninerouter_key) {
+          nrKeyInput.placeholder = 'Đã lưu: ' + data.ninerouter_api_key_masked;
+          nrBadge.textContent = '9Router Key Đã Lưu';
+          nrBadge.className = 'badge-tag success';
+        } else {
+          nrKeyInput.placeholder = 'Nhập 9Router API Key (nr_live_... hoặc sk-...)';
+          nrBadge.textContent = 'Mock Offline Mode';
+          nrBadge.className = 'badge-tag warning';
+        }
+
+        // Models list
+        if (data.cached_models && data.cached_models.length > 0) {
+          populateModelDropdown(data.cached_models, data.llm_model);
+        } else if (data.llm_model) {
+          document.getElementById('settingLlmModel').value = data.llm_model;
+        }
+
+        // Image Generation Model
+        if (data.image_model) {
+          const imgModelInput = document.getElementById('settingImageModel');
+          if (imgModelInput) imgModelInput.value = data.image_model;
+        }
+
+        // Direct Gemini API Key
+        const apiKeyInput = document.getElementById('settingGeminiApiKey');
+        if (data.has_gemini_key) {
+          apiKeyInput.placeholder = 'Đã lưu: ' + data.gemini_api_key_masked;
+        } else {
+          apiKeyInput.placeholder = 'Nhập Gemini API Key dự phòng (AIzaSy...)';
+        }
+
+        // Douyin Cookie
+        const cookieInput = document.getElementById('settingDouyinCookie');
+        const cookieBadge = document.getElementById('douyinCookieBadge');
+        if (data.douyin_cookie) {
+          cookieInput.value = data.douyin_cookie;
+        }
+        if (data.has_douyin_cookie) {
+          cookieBadge.textContent = 'Đã Lưu Cookie';
+          cookieBadge.className = 'badge-tag success';
+        } else {
+          cookieBadge.textContent = 'A_Bogus Tự Động Ký';
+          cookieBadge.className = 'badge-tag success';
+        }
+
+        // Jitters
+        if (data.jitter_min_sec !== undefined) document.getElementById('settingJitterMin').value = data.jitter_min_sec;
+        if (data.jitter_max_sec !== undefined) document.getElementById('settingJitterMax').value = data.jitter_max_sec;
+
+        // Speech & Audio
+        if (data.speech_rate !== undefined) {
+          document.getElementById('settingSpeechRate').value = data.speech_rate;
+          document.getElementById('labelSpeechRate').textContent = parseFloat(data.speech_rate).toFixed(2) + 'x';
+        }
+        if (data.target_lufs !== undefined) document.getElementById('settingTargetLufs').value = data.target_lufs;
+
+        // TTS Providers (ZeroTTS, Maziao Cloud TTS, Edge-TTS)
+        if (data.tts_primary_provider) {
+          const provSelect = document.getElementById('settingTtsProvider');
+          if (provSelect) {
+            provSelect.value = data.tts_primary_provider;
+          }
+        }
+
+        // Dynamically load ZeroTTS voices (built-in + cloned)
+        await loadZeroTtsVoices(data.zerotts_voice || 'maichi');
+
+        if (data.zerotts_comma_pause_ms !== undefined && document.getElementById('settingZeroTtsCommaPause')) {
+          document.getElementById('settingZeroTtsCommaPause').value = data.zerotts_comma_pause_ms;
+        }
+        if (data.zerotts_period_pause_ms !== undefined && document.getElementById('settingZeroTtsPeriodPause')) {
+          document.getElementById('settingZeroTtsPeriodPause').value = data.zerotts_period_pause_ms;
+        }
+
+        const mzKeyInput = document.getElementById('settingMaziaoApiKey');
+        const mzBadge = document.getElementById('maziaoStatusBadge');
+        if (mzKeyInput) {
+          if (data.has_maziao_key) {
+            mzKeyInput.placeholder = 'Đã lưu: ' + data.maziao_api_key_masked;
+            if (mzBadge) {
+              mzBadge.textContent = 'API Key Đã Lưu';
+              mzBadge.className = 'badge-tag success';
+            }
+          } else {
+            mzKeyInput.placeholder = 'Nhập Maziao API Key (sk-...)';
+            if (mzBadge) {
+              mzBadge.textContent = 'Chưa thiết lập';
+              mzBadge.className = 'badge-tag warning';
+            }
+          }
+        }
+        if (data.maziao_base_url && document.getElementById('settingMaziaoBaseUrl')) {
+          document.getElementById('settingMaziaoBaseUrl').value = data.maziao_base_url;
+        }
+        if (data.maziao_model_id && document.getElementById('settingMaziaoModel')) {
+          document.getElementById('settingMaziaoModel').value = data.maziao_model_id;
+        }
+
+        // Dynamically load Maziao voices (cloned + system)
+        await loadMaziaoVoices(data.maziao_voice_id || 'zv_vi_sg_male_thien_tam');
+
+        if (data.edge_tts_voice && document.getElementById('settingEdgeVoice')) {
+          document.getElementById('settingEdgeVoice').value = data.edge_tts_voice;
+        }
+        if (data.tts_enable_fallback !== undefined && document.getElementById('settingTtsFallback')) {
+          document.getElementById('settingTtsFallback').checked = data.tts_enable_fallback;
+        }
+
+        // Disk & Buffer
+        if (data.rolling_buffer_max_gb !== undefined) document.getElementById('settingBufferLimit').value = data.rolling_buffer_max_gb;
+        if (data.render_concurrency !== undefined) document.getElementById('settingRenderConcurrency').value = data.render_concurrency;
+        if (data.clean_intermediate_parts !== undefined) document.getElementById('settingCleanParts').checked = data.clean_intermediate_parts;
+
+        // Cache breakdown
+        if (data.cache_breakdown) {
+          const cb = data.cache_breakdown;
+          document.getElementById('cacheBreakdownText').textContent =
+            `Audio: ${cb.audio_mb} MB | Footage: ${cb.raw_footage_mb} MB | Scenes: ${cb.temp_scenes_mb} MB (Tổng: ${cb.total_mb} MB)`;
+        }
+      } catch (err) {
+        console.warn('Lỗi khi tải cấu hình:', err);
+      }
+    }
+
+    // Refresh binaries diagnostic boxes
+    async function refreshBinaries() {
+      try {
+        const res = await fetch('/api/system/health');
+        if (!res.ok) return;
+        const data = await res.json();
+        const bins = data.binaries || {};
+
+        function updateBin(name, verId, statId) {
+          const info = bins[name] || bins[name.replace('-', '_')] || {};
+          const isAvail = (info.is_available !== undefined) ? info.is_available : (info.available ?? false);
+          const verEl = document.getElementById(verId);
+          const statEl = document.getElementById(statId);
+          if (verEl) verEl.textContent = info.version || (isAvail ? 'Khả dụng' : 'Không tìm thấy');
+          if (statEl) {
+            statEl.textContent = isAvail ? 'SẴN SÀNG' : 'THIẾU';
+            statEl.className = 'binary-status ' + (isAvail ? 'ready' : 'missing');
+          }
+        }
+
+        updateBin('ffmpeg', 'binVerFfmpeg', 'binStatFfmpeg');
+        updateBin('ffprobe', 'binVerFfprobe', 'binStatFfprobe');
+        updateBin('yt-dlp', 'binVerYtdlp', 'binStatYtdlp');
+        updateBin('BBDown', 'binVerBbdown', 'binStatBbdown');
+      } catch (err) {
+        console.warn('Lỗi khi kiểm tra công cụ:', err);
+      }
+    }
+
+    // Auto setup / download external binaries
+    const btnSetupBinaries = document.getElementById('btnSetupBinaries');
+    if (btnSetupBinaries) {
+      btnSetupBinaries.addEventListener('click', async () => {
+        btnSetupBinaries.disabled = true;
+        btnSetupBinaries.innerHTML = '<span>⏳</span> Đang tải / thiết lập...';
+        try {
+          const res = await fetch('/api/system/binaries/setup', { method: 'POST' });
+          const data = await res.json();
+          if (res.ok && data.success) {
+            alert('Cài đặt công cụ hoàn tất!\n' + (data.message || ''));
+          } else {
+            alert('Kết quả thiết lập công cụ:\n' + (data.message || 'Không thể cài đặt một số công cụ.'));
+          }
+          refreshBinaries();
+        } catch (err) {
+          alert('Lỗi kết nối khi cài đặt công cụ: ' + err.message);
+        } finally {
+          btnSetupBinaries.disabled = false;
+          btnSetupBinaries.innerHTML = '<span>⬇️</span> Cài Đặt / Tải Tự Động Binaries';
+        }
+      });
+    }
+
+    // Fetch models list from 9Router
+    document.getElementById('btnFetchNineRouterModels').addEventListener('click', async () => {
+      const btn = document.getElementById('btnFetchNineRouterModels');
+      const badge = document.getElementById('nineRouterStatusBadge');
+      const baseUrl = document.getElementById('settingNineRouterBaseUrl').value.trim();
+      const apiKey = document.getElementById('settingNineRouterApiKey').value.trim();
+
+      btn.disabled = true;
+      btn.innerHTML = '<span>⏳</span> Đang tải...';
+      badge.textContent = 'Đang quét models...';
+      badge.className = 'badge-tag warning';
+
+      try {
+        const res = await fetch('/api/system/settings/9router/models', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({
+            base_url: baseUrl,
+            api_key: apiKey && !apiKey.includes('***') ? apiKey : null
+          })
+        });
+        const data = await res.json();
+        if (data.success && data.models && data.models.length > 0) {
+          populateModelDropdown(data.models, document.getElementById('settingLlmModel').value);
+          badge.textContent = `Đã kết nối (${data.models.length} models)`;
+          badge.className = 'badge-tag success';
+          alert(`9Router Gateway:\n${data.message}`);
+        } else {
+          badge.textContent = 'Lỗi kết nối';
+          badge.className = 'badge-tag error';
+          alert('Không thể lấy danh sách model từ 9Router:\n' + data.message);
+        }
+      } catch (err) {
+        badge.textContent = 'Lỗi mạng';
+        badge.className = 'badge-tag error';
+        alert('Lỗi kết nối đến server: ' + err.message);
+      } finally {
+        btn.disabled = false;
+        btn.innerHTML = '<span>🔄</span> Tải Models';
+      }
+    });
+
+    // Test 9Router Connection
+    document.getElementById('btnTestNineRouter').addEventListener('click', async () => {
+      const btn = document.getElementById('btnTestNineRouter');
+      const badge = document.getElementById('nineRouterStatusBadge');
+      const baseUrl = document.getElementById('settingNineRouterBaseUrl').value.trim();
+      const apiKey = document.getElementById('settingNineRouterApiKey').value.trim();
+
+      btn.disabled = true;
+      btn.textContent = 'Đang thử...';
+      badge.textContent = 'Đang kiểm tra...';
+      badge.className = 'badge-tag warning';
+
+      try {
+        const res = await fetch('/api/system/settings/9router/test', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({
+            base_url: baseUrl,
+            api_key: apiKey && !apiKey.includes('***') ? apiKey : null
+          })
+        });
+        const data = await res.json().catch(() => ({}));
+        const msg = data.message || data.detail || (res.ok ? 'Kết nối thành công!' : ('Mã lỗi HTTP ' + res.status));
+        if (data.success) {
+          badge.textContent = 'Kết Nối Thành Công';
+          badge.className = 'badge-tag success';
+          alert('9Router Test: ' + msg);
+        } else {
+          badge.textContent = 'Lỗi Kết Nối';
+          badge.className = 'badge-tag error';
+          alert('9Router Test Thất Bại: ' + msg);
+        }
+      } catch (err) {
+        badge.textContent = 'Lỗi Mạng';
+        badge.className = 'badge-tag error';
+        alert('Lỗi kiểm tra: ' + (err.message || 'Mất kết nối'));
+      } finally {
+        btn.disabled = false;
+        btn.textContent = 'Kiểm Tra';
+      }
+    });
+
+    // Test Gemini API key (Fallback)
+    document.getElementById('btnTestGemini').addEventListener('click', async () => {
+      const btn = document.getElementById('btnTestGemini');
+      const inputVal = document.getElementById('settingGeminiApiKey').value.trim();
+
+      btn.disabled = true;
+      btn.textContent = 'Đang thử...';
+
+      try {
+        const res = await fetch('/api/system/settings/test-gemini', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ api_key: inputVal && !inputVal.includes('***') ? inputVal : null })
+        });
+        const data = await res.json().catch(() => ({}));
+        const msg = data.message || data.detail || (res.ok ? 'Kết nối thành công!' : ('Mã lỗi HTTP ' + res.status));
+        alert('Google Gemini Test: ' + msg);
+      } catch (err) {
+        alert('Lỗi kiểm tra: ' + (err.message || 'Mất kết nối'));
+      } finally {
+        btn.disabled = false;
+        btn.textContent = 'Test Gemini';
+      }
+    });
+
+    // Test Maziao Cloud TTS
+    const btnTestMaziao = document.getElementById('btnTestMaziao');
+    if (btnTestMaziao) {
+      btnTestMaziao.addEventListener('click', async () => {
+        const input = document.getElementById('settingMaziaoApiKey');
+        const inputVal = input ? input.value.trim() : '';
+        const baseUrlEl = document.getElementById('settingMaziaoBaseUrl');
+        const baseUrlVal = baseUrlEl ? baseUrlEl.value.trim() : 'https://app.maziao.com';
+        const badge = document.getElementById('maziaoStatusBadge');
+
+        btnTestMaziao.disabled = true;
+        btnTestMaziao.textContent = 'Đang thử...';
+        if (badge) {
+          badge.textContent = 'Đang kiểm tra...';
+          badge.className = 'badge-tag warning';
+        }
+
+        try {
+          const res = await fetch('/api/system/settings/test-maziao', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({
+              api_key: inputVal && !inputVal.includes('***') ? inputVal : null,
+              base_url: baseUrlVal || null
+            })
+          });
+          const data = await res.json().catch(() => ({}));
+          const msg = data.message || data.detail || (res.ok ? 'Kết nối thành công!' : ('Lỗi máy chủ HTTP ' + res.status + ' - Vui lòng chạy lại start.bat'));
+
+          if (res.ok && data.success) {
+            if (badge) {
+              badge.textContent = 'Kết Nối Thành Công';
+              badge.className = 'badge-tag success';
+            }
+            alert('Maziao Cloud TTS:\n' + msg);
+          } else {
+            if (badge) {
+              badge.textContent = 'Lỗi Kết Nối';
+              badge.className = 'badge-tag error';
+            }
+            alert('Maziao Cloud TTS:\n' + msg);
+          }
+        } catch (err) {
+          if (badge) {
+            badge.textContent = 'Lỗi Mạng';
+            badge.className = 'badge-tag error';
+          }
+          alert('Lỗi kiểm tra Maziao: ' + (err.message || 'Mất kết nối tới server cục bộ'));
+        } finally {
+          btnTestMaziao.disabled = false;
+          btnTestMaziao.textContent = 'Kiểm Tra';
+        }
+      });
+    }
+
+    // Save settings
+    async function saveCurrentSettings() {
+      const btnTop = document.getElementById('btnSaveSettingsTop');
+      const btnBottom = document.getElementById('btnSaveSettingsBottom');
+      const toast = document.getElementById('saveStatusToast');
+
+      if (btnTop) { btnTop.disabled = true; btnTop.innerHTML = '<span>⏳</span> Đang lưu...'; }
+      if (btnBottom) { btnBottom.disabled = true; btnBottom.innerHTML = '<span>⏳</span> Đang lưu...'; }
+      if (toast) { toast.textContent = 'Đang lưu cấu hình...'; toast.style.color = 'var(--accent-cyan)'; }
+
+      try {
+        const getVal = (id, def = '') => { const el = document.getElementById(id); return el ? el.value : def; };
+        const getNum = (id, def = 0) => { const el = document.getElementById(id); return el ? (parseFloat(el.value) || def) : def; };
+        const getInt = (id, def = 0) => { const el = document.getElementById(id); return el ? (parseInt(el.value, 10) || def) : def; };
+        const getCheck = (id, def = false) => { const el = document.getElementById(id); return el ? el.checked : def; };
+
+        const nrKeyVal = getVal('settingNineRouterApiKey').trim();
+        const geminiKeyVal = getVal('settingGeminiApiKey').trim();
+        const mzKeyVal = getVal('settingMaziaoApiKey').trim();
+
+        // Determine primary voice identifier based on selected provider
+        const selectedProv = getVal('settingTtsProvider', 'zerotts');
+        let primaryVoice = 'vi-VN-HoaiMyNeural';
+        if (selectedProv === 'zerotts') {
+          primaryVoice = getVal('settingZeroTtsVoice', 'banmai');
+        } else if (selectedProv === 'maziao') {
+          primaryVoice = getVal('settingMaziaoVoiceId', 'zv_vi_sg_male_thien_tam').trim();
+        } else if (selectedProv === 'edge_tts') {
+          primaryVoice = getVal('settingEdgeVoice', 'vi-VN-HoaiMyNeural');
+        }
+
+        const payload = {
+          ninerouter_base_url: getVal('settingNineRouterBaseUrl', 'http://localhost:20128/v1').trim(),
+          llm_model: getVal('settingLlmModel', 'antigravity/claude-3-5-sonnet'),
+          image_model: getVal('settingImageModel', 'ag/gemini-3.8-flash').trim(),
+          image_provider: '9router',
+          douyin_cookie: getVal('settingDouyinCookie').trim(),
+          jitter_min_sec: getNum('settingJitterMin', 2.0),
+          jitter_max_sec: getNum('settingJitterMax', 5.0),
+          default_voice: primaryVoice,
+          speech_rate: getNum('settingSpeechRate', 1.0),
+          target_lufs: getNum('settingTargetLufs', -14.0),
+
+          // TTS Providers
+          tts_primary_provider: selectedProv,
+          tts_enable_fallback: getCheck('settingTtsFallback', true),
+          zerotts_voice: getVal('settingZeroTtsVoice', 'banmai'),
+          zerotts_comma_pause_ms: getInt('settingZeroTtsCommaPause', 200),
+          zerotts_period_pause_ms: getInt('settingZeroTtsPeriodPause', 400),
+          maziao_base_url: getVal('settingMaziaoBaseUrl', 'https://app.maziao.com').trim(),
+          maziao_model_id: getVal('settingMaziaoModel', 'lingual_speech_v2'),
+          maziao_voice_id: getVal('settingMaziaoVoiceId', 'zv_vi_sg_male_thien_tam').trim(),
+          edge_tts_voice: getVal('settingEdgeVoice', 'vi-VN-HoaiMyNeural'),
+
+          rolling_buffer_max_gb: getNum('settingBufferLimit', 5.0),
+          render_concurrency: getInt('settingRenderConcurrency', 2),
+          clean_intermediate_parts: getCheck('settingCleanParts', true),
+        };
+
+        if (nrKeyVal && !nrKeyVal.includes('***')) {
+          payload.ninerouter_api_key = nrKeyVal;
+        }
+        if (geminiKeyVal && !geminiKeyVal.includes('***')) {
+          payload.gemini_api_key = geminiKeyVal;
+        }
+        if (mzKeyVal && !mzKeyVal.includes('***')) {
+          payload.maziao_api_key = mzKeyVal;
+        }
+
+        const res = await fetch('/api/system/settings', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify(payload)
+        });
+        const data = await res.json().catch(() => ({}));
+        if (res.ok && data.success) {
+          if (toast) {
+            toast.textContent = '✔ Đã lưu cấu hình hệ thống thành công!';
+            toast.style.color = 'var(--success-mint)';
+            setTimeout(() => { toast.textContent = ''; }, 4000);
+          }
+          alert('✔ Đã lưu toàn bộ cấu hình hệ thống thành công!');
+          await loadSettings();
+        } else {
+          const errMsg = data.message || data.detail || ('Lỗi máy chủ HTTP ' + res.status);
+          if (toast) {
+            toast.textContent = 'Lỗi lưu: ' + errMsg;
+            toast.style.color = 'var(--alert-crimson)';
+          }
+          alert('❌ Không thể lưu cấu hình:\n' + errMsg);
+        }
+      } catch (err) {
+        if (toast) {
+          toast.textContent = 'Lỗi kết nối: ' + err.message;
+          toast.style.color = 'var(--alert-crimson)';
+        }
+        alert('❌ Lỗi khi lưu cấu hình: ' + (err.message || 'Mất kết nối tới máy chủ'));
+      } finally {
+        if (btnTop) { btnTop.disabled = false; btnTop.innerHTML = '<span>💾</span> Lưu Cấu Hình'; }
+        if (btnBottom) { btnBottom.disabled = false; btnBottom.innerHTML = '<span>💾</span> LƯU CẤU HÌNH HỆ THỐNG'; }
+      }
+    }
+
+    document.getElementById('btnSaveSettingsTop').addEventListener('click', saveCurrentSettings);
+    document.getElementById('btnSaveSettingsBottom').addEventListener('click', saveCurrentSettings);
+    document.getElementById('btnRefreshBinaries').addEventListener('click', refreshBinaries);
+
+    // Clear Cache
+    document.getElementById('btnClearCache').addEventListener('click', async () => {
+      if (!confirm('Bạn có chắc chắn muốn dọn dẹp các tệp tạm thời trong bộ nhớ đệm cache không?\n(Dữ liệu các video đã xuất bản trong renders/ vẫn được giữ nguyên)')) {
+        return;
+      }
+      const btn = document.getElementById('btnClearCache');
+      btn.disabled = true;
+      btn.innerHTML = '<span>⏳</span> Đang dọn dẹp...';
+
+      try {
+        const res = await fetch('/api/system/cache/clear', { method: 'POST' });
+        const data = await res.json();
+        if (res.ok && data.success) {
+          alert(`Đã dọn dẹp bộ đệm cache thành công!\nGiải phóng: ${data.freed_mb} MB (${data.files_removed} tệp đã xóa)`);
+          loadSettings();
+          updateHealth();
+        } else {
+          alert('Không thể dọn dẹp cache: ' + (data.error || 'Lỗi không xác định'));
+        }
+      } catch (err) {
+        alert('Lỗi khi gọi dọn dẹp cache: ' + err.message);
+      } finally {
+        btn.disabled = false;
+        btn.innerHTML = '<span>🧹</span> Dọn Dẹp Cache Ngay';
+      }
+    });
+
+    // Dynamic Skill Niche Loader
+    let skillsMap = {};
+    async function loadSkills() {
+      const selectSkill = document.getElementById('selectSkill');
+      const descEl = document.getElementById('skillDescription');
+      if (!selectSkill) return;
+      try {
+        const res = await fetch('/api/skills');
+        if (res.ok) {
+          const data = await res.json();
+          const skills = data.skills || [];
+          if (skills.length > 0) {
+            skillsMap = {};
+            const prevVal = selectSkill.value || localStorage.getItem('bancontent_selected_skill') || 'nature-wildlife-survival';
+            selectSkill.innerHTML = '';
+            skills.forEach(s => {
+              skillsMap[s.id] = s;
+              const opt = document.createElement('option');
+              opt.value = s.id;
+              const icon = s.id.includes('nature') ? '🌿 ' : s.id.includes('history') ? '🏛️ ' : s.id.includes('warehouse') ? '🏭 ' : s.id.includes('military') ? '⚔️ ' : s.id.includes('weather') ? '🌪️ ' : '🎬 ';
+              const badgeTxt = s.badge ? `[${s.badge}] ` : '';
+              opt.textContent = `${icon}${badgeTxt}${s.name}`;
+              selectSkill.appendChild(opt);
+            });
+            if (skillsMap[prevVal]) {
+              selectSkill.value = prevVal;
+            } else {
+              selectSkill.value = skills[0].id;
+            }
+            updateSkillDesc();
+          }
+        }
+      } catch (err) {
+        console.warn('Failed to load dynamic skills:', err);
+      }
+    }
+
+    function updateSkillDesc() {
+      const selectSkill = document.getElementById('selectSkill');
+      const descEl = document.getElementById('skillDescription');
+      if (!selectSkill || !descEl) return;
+      const s = skillsMap[selectSkill.value];
+      if (s) {
+        descEl.textContent = `💡 ${s.style_name || s.description || ''}`;
+      }
+    }
+
+    const selectSkillEl = document.getElementById('selectSkill');
+    if (selectSkillEl) {
+      selectSkillEl.addEventListener('change', () => {
+        localStorage.setItem('bancontent_selected_skill', selectSkillEl.value);
+        updateSkillDesc();
+      });
+    }
+
+    // Initial load
+    loadSkills();
+    loadSettings();
+    refreshBinaries();
+    loadProjectsList();
+    loadQueueInfo();
+
+    // Periodic queue and projects poll
+    setInterval(() => {
+      loadProjectsList();
+      loadQueueInfo();
+    }, 4000);
+
+    // Restore active project on page reload (F5)
+    (async function restoreActiveProjectOnLoad() {
+      const savedProjectId = localStorage.getItem('bancontent_active_project_id');
+      if (savedProjectId) {
+        try {
+          const res = await fetch('/api/projects/' + savedProjectId + '/status');
+          if (res.ok) {
+            const proj = await res.json();
+            currentProjectId = proj.project_id;
+            document.getElementById('headerProjectId').textContent = 'Project: ' + currentProjectId;
+            connectSSE(currentProjectId);
+            await refreshProjectState();
+            appendLog(`[RESTORE] Đã khôi phục phiên làm việc của dự án: ${currentProjectId}`, 'cyan');
+
+            // Tracker progress restoration
+            const progress = proj.progress_pct || 0;
+            document.getElementById('progressBarFill').style.width = progress + '%';
+            document.getElementById('trackerStatus').textContent = Math.round(progress) + '% - ' + (proj.stage || 'INIT');
+
+            updateControlButtons(proj.stage);
+          }
+        } catch (e) {
+          console.warn('Could not restore saved project:', e);
+        }
+      }
+    })();
+  </script>
+
+  <!-- VIDEO POPUP MODAL (SCREEN 3 TRACKING) -->
+  <div id="sceneVideoModal" class="scene-modal-backdrop" style="display: none;" onclick="if(event.target === this) closeSceneModal();">
+    <div class="scene-modal-dialog">
+      <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 14px;">
+        <div style="display: flex; align-items: center; gap: 10px;">
+          <span style="font-size: 16px; font-weight: 700; color: #fff;" id="modalSceneTitle">Scene Preview</span>
+          <span id="modalSceneDuration" style="font-family: var(--font-mono); font-size: 12px; background: rgba(0,229,255,0.15); color: var(--accent-cyan); padding: 2px 8px; border-radius: 4px;">--s</span>
+        </div>
+        <button onclick="closeSceneModal()" style="background: transparent; border: none; color: var(--text-secondary); font-size: 22px; cursor: pointer; line-height: 1; padding: 4px 8px;" title="Đóng cửa sổ">✕</button>
+      </div>
+
+      <div class="scene-video-wrapper" style="max-height: 480px;">
+        <video id="modalVideoPlayer" controls playsinline style="width: 100%; height: 100%; object-fit: contain;"></video>
+      </div>
+
+      <div style="margin-top: 14px; display: grid; grid-template-columns: 1fr; gap: 10px;">
+        <div class="scene-meta-section">
+          <div class="scene-meta-title"><span>🎙️</span> Lời Thoại Thuyết Minh (Voiceover)</div>
+          <div class="scene-meta-val" id="modalSceneNarration" style="font-size: 14px; font-weight: 500;">--</div>
+        </div>
+        <div class="scene-meta-section" id="modalVisualPromptBox">
+          <div class="scene-meta-title"><span>🎬</span> Kịch Bản Thị Giác Yêu Cầu (Visual Prompt)</div>
+          <div class="scene-meta-val" id="modalScenePrompt" style="color: var(--text-secondary); font-size: 13px;">--</div>
+        </div>
+        <div class="scene-meta-section" id="modalSourceBox">
+          <div class="scene-meta-title"><span>📥</span> Nguồn Tải Stock Footage (Source & Attribution)</div>
+          <div class="scene-meta-val" id="modalSceneSource" style="font-size: 13px;">--</div>
+        </div>
+      </div>
+
+      <div style="margin-top: 14px; display: flex; justify-content: flex-end; gap: 10px;">
+        <a id="modalDownloadBtn" href="#" target="_blank" download class="btn-scene-video" style="text-decoration: none;">
+          <span>💾</span> Tải Tệp MP4 Cảnh Này
+        </a>
+        <button onclick="closeSceneModal()" style="background: var(--bg-card); border: 1px solid var(--border-dark); color: var(--text-secondary); padding: 6px 14px; border-radius: 6px; font-size: 12px; cursor: pointer; font-weight: 600;">
+          Đóng
+        </button>
+      </div>
+    </div>
+  </div>
+</body>
+</html>

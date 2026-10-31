@@ -1,0 +1,33 @@
+schema_version: 1
+id: extreme-weather
+name: Extreme Weather & Catastrophic Natural Disasters
+style_name: Phóng sự thiên tai & thời tiết cực đoan · Hyper-realistic storm chasing & satellite disaster analysis
+badge: Thiên Tai · Bão Lũ & Khí Hậu Cực Đoan
+version: 1.0.0
+description: Phóng sự tài liệu giải mã cơ chế vật lý khí quyển đằng sau những siêu bão, lốc xoáy quái vật, lũ quét kinh hoàng và các đợt thời tiết cực đoan làm thay đổi địa hình trái đất.
+hooks:
+  script.plan: prompts/script.md
+  script.rewrite: prompts/script.md
+  scene.split: prompts/scenes.md
+  prompt.image: prompts/scenes.md
+  prompt.video: prompts/video.md
+  prompt.thumbnail: prompts/thumbnails.md
+  prompt.seo: prompts/seo.md
+languages:
+  - vi
+  - en
+permissions: []
+thematic_plates: []
+preferred_categories:
+  - "News & Politics"
+  - "Science & Technology"
+  - "Education"
+discouraged_categories:
+  - "Howto & Style"
+  - "Entertainment"
+  - "Music"
+fallback_search_templates:
+  - '"{subject_anchor}" storm footage'
+  - '"{subject_anchor}" extreme weather documentary'
+  - '"{subject_anchor}" satellite radar'
+trusted_channels: []

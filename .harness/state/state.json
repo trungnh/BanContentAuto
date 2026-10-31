@@ -1,15 +1,76 @@
 {
   "schema_version": 1,
-  "intent_id": null,
-  "lifecycle_scope": null,
-  "status": "uninitialized",
-  "current_stage": null,
+  "intent_id": "bancontent-auto-video",
+  "lifecycle_scope": "greenfield",
+  "status": "active",
+  "current_stage": "verify",
   "current_unit": null,
-  "awaiting": null,
-  "stage_selection": {},
-  "stage_status": {},
-  "approved_gates": [],
-  "last_evidence": null,
+  "awaiting": {
+    "stage": "verify",
+    "opened_at": "2026-10-24T17:05:24.672Z",
+    "artifacts": [
+      "project/evidence/verification.md",
+      "project/evidence/visual-verification.md",
+      "project/traceability.md"
+    ]
+  },
+  "stage_selection": {
+    "discover": "execute",
+    "elaborate": "execute",
+    "ui-design": "execute",
+    "design": "execute",
+    "plan": "execute",
+    "implement": "execute",
+    "verify": "execute",
+    "release": "undecided",
+    "operate": "undecided"
+  },
+  "stage_status": {
+    "discover": "completed",
+    "elaborate": "completed",
+    "ui-design": "completed",
+    "design": "completed",
+    "plan": "completed",
+    "implement": "completed",
+    "verify": "awaiting_approval",
+    "release": "pending",
+    "operate": "pending"
+  },
+  "approved_gates": [
+    {
+      "stage": "discover",
+      "approved_at": "2026-10-24T14:30:40.879Z",
+      "human_turn_at": "2026-10-24T14:30:37.465Z",
+      "prompt_sha256": "6007acbe30b2cd98703e83350ea665c06009fcd51f26dd73b309294235f45f21"
+    },
+    {
+      "stage": "elaborate",
+      "approved_at": "2026-10-24T14:44:28.797Z",
+      "human_turn_at": "2026-10-24T14:44:24.929Z",
+      "prompt_sha256": "6007acbe30b2cd98703e83350ea665c06009fcd51f26dd73b309294235f45f21"
+    },
+    {
+      "stage": "ui-design",
+      "approved_at": "2026-10-24T15:23:19.127Z",
+      "human_turn_at": "2026-10-24T15:23:14.135Z",
+      "prompt_sha256": "6007acbe30b2cd98703e83350ea665c06009fcd51f26dd73b309294235f45f21"
+    },
+    {
+      "stage": "design",
+      "approved_at": "2026-10-24T15:38:24.348Z",
+      "human_turn_at": "2026-10-24T15:38:19.707Z",
+      "prompt_sha256": "6007acbe30b2cd98703e83350ea665c06009fcd51f26dd73b309294235f45f21"
+    },
+    {
+      "stage": "plan",
+      "approved_at": "2026-10-24T15:48:47.877Z",
+      "human_turn_at": "2026-10-24T15:48:43.559Z",
+      "prompt_sha256": "6007acbe30b2cd98703e83350ea665c06009fcd51f26dd73b309294235f45f21"
+    }
+  ],
+  "last_evidence": [
+    "project/evidence/unit-WU-08.md"
+  ],
   "parked_reason": null,
-  "updated_at": null
+  "updated_at": "2026-10-24T17:05:24.672Z"
 }

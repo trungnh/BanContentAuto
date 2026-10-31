@@ -1,0 +1,33 @@
+schema_version: 1
+id: military-microhistory
+name: Military Micro-History Documentary
+style_name: Phóng sự lịch sử quân sự vi mô · Archival collage & battlefield logistics
+badge: Quân Sự · Hậu Cần & Kỷ Vật Chiến Hào
+version: 1.0.0
+description: Phóng sự tài liệu lịch sử quân sự vi mô giải mã các trận đánh qua lăng kính hậu cần, khẩu phần người lính, kỷ vật giao thông hào và công nghệ vũ khí bộ binh.
+hooks:
+  script.plan: prompts/script.md
+  script.rewrite: prompts/script.md
+  scene.split: prompts/scenes.md
+  prompt.image: prompts/scenes.md
+  prompt.video: prompts/video.md
+  prompt.thumbnail: prompts/thumbnails.md
+  prompt.seo: prompts/seo.md
+languages:
+  - vi
+  - en
+permissions: []
+thematic_plates: []
+preferred_categories:
+  - "Education"
+  - "History"
+  - "Science & Technology"
+discouraged_categories:
+  - "Howto & Style"
+  - "Gaming"
+  - "Entertainment"
+fallback_search_templates:
+  - '"{subject_anchor}" military archival footage'
+  - '"{subject_anchor}" combat documentary'
+  - '"{subject_anchor}" historical footage'
+trusted_channels: []
