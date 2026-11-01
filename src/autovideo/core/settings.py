@@ -51,6 +51,8 @@ class UserSettings:
     semantic_judge_min_score: int = 5  # 0-10 (calibrated on proj_f2668146: off-topic=0, generic-correct=3-5)
     semantic_judge_reject_overlays: bool = True
     footage_max_reuse: int = 2  # max scenes per single source video
+    footage_library_enabled: bool = True  # ADR-020: local CLIP library-first sourcing
+    footage_online_augment: bool = True  # ADR-022: search YouTube for new footage when the library has nothing better
 
     # TTS Providers & Voiceover Architecture (ZeroTTS, Maziao Cloud, Edge-TTS)
     tts_primary_provider: str = "zerotts"  # "zerotts" | "maziao" | "edge_tts"

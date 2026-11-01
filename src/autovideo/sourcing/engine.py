@@ -23,6 +23,7 @@ from autovideo.sourcing.universal import (
     DurationFilteredError,
     UniversalDownloader,
     UniversalDownloaderError,
+    YouTubeBlockedError,
 )
 
 logger = logging.getLogger(__name__)
@@ -301,6 +302,8 @@ class AssetSourcingEngine:
                             "description": getattr(u_info, "description", ""),
                         },
                     )
+            except YouTubeBlockedError:
+                raise
             except Exception as e:
                 logger.info(f"Fallback attempt on {vault} failed: {e}; cascading to next tier.")
                 continue

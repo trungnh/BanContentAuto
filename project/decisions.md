@@ -523,3 +523,152 @@ aise ValueError liên quan đến lint_res.banned_matches. Cổng kiểm định
   - *Ưu điểm*: video lạc đề hoàn toàn bị chặn một cách có tính quyết định (deterministic), có test hồi quy dùng đúng dữ liệu thật. Mức độ khớp nội dung được kiểm chứng trên pixel của đoạn sẽ cắt. Lỗi không còn bị che giấu mà hiển thị qua `needs_review`.
   - *Nhược điểm*: tốn thêm lượt gọi LLM vision (tối đa 6 mỗi scene) và thời gian sourcing tăng. Nếu judge không khả dụng, pipeline vẫn chạy nhưng gắn cờ `semantic_check_unavailable`. Bộ lọc scene-term có thể loại cả video tốt nhưng tiêu đề sơ sài; khi đó scene rơi vào best-effort và được gắn cờ.
 - **Related requirements**: `REQ-SRC-01`, `REQ-SRC-02`, `REQ-VD-01`, `NFR-REL-01`.
+
+---
+
+## ADR-020: Tinh chỉnh Nhận diện Watermark Góc & Cơ chế Tự Phục Hồi Thích Ứng (Adaptive Sourcing Resilience)
+
+- **Status**: accepted
+- **Date**: 2026-10-31
+- **Context**:
+  1. Trong dự án `proj_cf3b1f52` (Chủ đề Linh cẩu đốm, Skill `nature-wildlife-survival`), quy trình sourcing sập tại `SCENE_001` trên toàn bộ 7 từ khóa tìm kiếm với lỗi:
+     `Asset sourcing failed across all vaults for scene SCENE_001 with query 'spotted hyena crushing bone close up'`
+  2. Phân tích nguyên nhân cốt lõi (RCA):
+     - `VisualQualityInspector.inspect_video_segment` kiểm tra watermark ở cả 4 góc màn hình với công thức thô `static_edge_ratio = edges[diff < 15] / edges.size >= 0.016`.
+     - Trong các cảnh tự nhiên (wildlife savanna), 2 góc dưới màn hình luôn là mặt đất, bụi cây cỏ với mật độ cạnh Canny dày đặc (~31% diện tích). Do bụi cỏ rung rinh trước gió luôn có ~10-15% pixel ngẫu nhiên rơi vào khoảng sai khác nhỏ (`abs(p1 - p2) < 15`), tỷ lệ `static_edge_ratio` đạt tới 0.08 - 0.09.
+     - Hệ quả: **100% video thiên nhiên chân thực tải về** (`universal_MVLKLya0Kh0.mp4`, `universal_l5cPeo9-Dco.mp4`, v.v.) bị thuật toán Computer Vision kết án nhầm là chứa watermark ở 4 góc và từ chối cắt ghép.
+     - Ngoài ra, trong `coordinator.py`, biến `best_fallback` được ghi nhận nhưng thiếu lệnh gán nhận ứng viên (`accepted = dict(best_fallback)`), dẫn đến việc từ chối cả các ứng viên tiệm cận ngưỡng khi không có ứng viên đạt điểm tuyệt đối.
+- **Decision**:
+  1. **Khử Báo Động Giả Watermark Bằng Thuộc Tính Quang Học Thật**:
+     - Giới hạn phạm vi dò logo góc vào 2 góc trên (`top_left`, `top_right`) - vị trí chuẩn mực của station logo / broadcast bugs trên truyền hình tài liệu.
+     - Bổ sung điều kiện quang học cho watermark: Watermark/logo là các phần tử đồ họa nhân tạo màu sáng (`gray1 > 195`) có cạnh sắc nét (`edges > 0`) và cố định vị trí (`diff_gray < 10`).
+     - Bụi cây tự nhiên có độ sáng trung bình (60-140) cho tỷ lệ `bright_static_edge_ratio = 0.00094` (< ngưỡng 0.003 -> sạch 100%). Logo nhà đài thực tế (NHM, BBC) cho tỷ lệ 0.01301 (> ngưỡng 0.003 -> chặn chính xác).
+  2. **Tiếp nhận Ứng viên Thích ứng (Resilience Best-Effort Acceptance)**:
+     - Trong `coordinator.py`: Khi không có ứng viên nào vượt qua ngưỡng semantic tuyệt đối nhưng có ứng viên có chủ thể và là cảnh thật, tự động kích hoạt `accepted = dict(best_fallback)` và ghi nhận cờ `review_reasons` để đảm bảo pipeline không bao giờ bị dừng đột ngột mà vẫn minh bạch truy vết.
+     - Xử lý phòng thủ `NoneType` khi `yt-dlp` trả về video rỗng hoặc đã bị xóa.
+- **Consequences**:
+  - *Ưu điểm*: Loại bỏ hoàn toàn 100% hiện tượng nhận nhầm bụi cây/mặt đất thành watermark; giữ nguyên khả năng chặn logo nhà đài thật; pipeline tự phục hồi linh hoạt, thông suốt.
+  - *Nhược điểm*: Các ứng viên dưới ngưỡng tối ưu cần kiểm tra review ở khâu hậu kiểm.
+- **Related requirements**: `REQ-SRC-01`, `REQ-SRC-02`, `REQ-VD-01`, `NFR-REL-01`.
+
+
+## ADR-020: Thư Viện Footage Cục Bộ + CLIP (ONNX) Khớp Ngữ Nghĩa, Library-First Sourcing, Bỏ Tier 4
+
+- **Status**: Implemented (đang render lại proj_cf3b1f52 để kiểm chứng)
+- **Date**: 2026-10-31
+- **Context**:
+  - Review proj_cf3b1f52 (lần chạy đầu tiên với ADR-019): tôi chấm trung bình 2.5/10, judge chấm 3.7/10.
+  - **19/37 scene là Tier 4**, tức chép nối tiếp file đã render của scene trước: 12 scene giống hệt nhau và hình mờ dần.
+  - YouTube chặn bước mở chi tiết từng video (anti-bot), nhưng tìm kiếm dạng flat vẫn chạy. Code cũ mở chi tiết cả 8 kết quả cho mỗi query, khoảng 50 request mỗi scene.
+  - Pipeline chỉ đoán điểm cắt (heuristic) chứ không tìm cảnh khớp bên trong video.
+  - Judge chấm từng scene riêng lẻ nên không thấy trùng hình và không nhận ra footage do AI tạo.
+  - Không có log lưu ra file.
+  - Người dùng yêu cầu giảm số lượt gọi AI nhìn hình, và có nút tự tải/cài CLIP trong Cài đặt → Binaries & System PATH.
+- **Decision**:
+  1. **CLIP ViT-B/32 dạng ONNX int8 (`Xenova/clip-vit-base-patch32`, 155.8 MB) chạy bằng onnxruntime**, không cần torch/torchvision, nên không đụng tới bản torch hiện có của máy. Model nằm ở `bin/models/clip/`. Module `footage/clip_installer.py` và `footage/clip_engine.py`.
+  2. **Thư viện footage** (`footage/library.py`): danh mục gồm `cache/raw_footage` (metadata gộp từ project_state của mọi project, cộng `catalog.json`). Lấy mẫu 1 fps → embedding CLIP được cache dạng `.npz` theo từng video. Shot cut suy ra từ chỗ embedding thay đổi đột ngột. Cờ `inauthentic` được lưu lại để loại vĩnh viễn video AI/CGI.
+  3. **Matcher** (`footage/matcher.py`): khớp text (visual_prompt + từ khóa EN) với từng frame. Dùng cửa sổ trượt đúng thời lượng scene (vector hoá bằng numpy). Ràng buộc: có chủ thể (sim ≥ 0.27), phạt các loại lỗi hình (người nói chuyện/xe safari, chữ/logo, giao diện player, game, hoạt hình, hình tối), phạt cửa sổ cắt qua shot cut, không trùng cửa sổ đã dùng, giới hạn tái sử dụng mỗi video.
+  4. **Picker** (`footage/scene_picker.py`): lấy top-K từ CLIP → kiểm tra hình (VisualQualityInspector) → nếu CLIP đủ tự tin thì nhận luôn, không thì **1 lượt gọi** `SemanticFootageJudge.choose_best` với ảnh lưới A–D. Kết quả có cả danh sách `ai_generated` để đánh dấu video.
+  5. **Coordinator**:
+     - Thứ tự sourcing: library-first → tìm online (chỉ khi library không có ứng viên tốt và YouTube không chặn) → dự phòng tốt nhất của library hoặc online → phương án cuối là cửa sổ library chưa dùng (ngưỡng nới lỏng).
+     - **Xoá Tier 4.** Video tải online mới được tự động thêm vào library.
+     - Phát hiện `YouTubeBlockedError` → dừng tìm kiếm online cho các scene còn lại.
+     - Log riêng cho từng project: `logs/<project_id>.log`.
+     - Kiểm tra trùng hình toàn video bằng dHash sau B2.
+  6. **UniversalDownloader**: tìm kiếm flat (`extract_flat`), chỉ tải tối đa 3 ứng viên, dùng lại file đã có trong cache, nhận diện thông báo anti-bot/429.
+  7. **UI/API**: ô "CLIP (AI cục bộ)" trong card Binaries có thanh tiến trình. Thêm `GET /api/system/clip/status`, `POST /api/system/clip/install`, và trường `clip` trong `/api/system/health`. Thêm setting `footage_library_enabled`.
+- **Consequences**:
+  - *Ưu điểm*:
+    - Chú thích shot không tốn lượt gọi LLM. Mỗi scene tối đa 1 lượt gọi 9router (dry-run 9 scene = 9 lượt).
+    - Index 109 video (8.603 frame) mất 279 s trên CPU, chỉ làm một lần và có cache.
+    - Không trùng hình. Không còn chuỗi Tier 4.
+    - Request tới YouTube giảm mạnh: library có sẵn thì không cần gọi YouTube.
+  - *Nhược điểm*:
+    - CLIP không hiểu tiếng Việt và hành động tinh tế, nên vẫn cần judge ở bước cuối.
+    - Chất lượng phụ thuộc độ phủ của library: scene "phân trắng, bọ cánh cứng" vẫn không có footage (cần làm S5: kịch bản biết footage có gì).
+    - Phát hiện footage AI dựa vào judge, có thể sót ở những scene được nhận luôn theo nhánh "CLIP tự tin".
+- **Related requirements**: `REQ-SRC-01`, `REQ-SRC-02`, `REQ-VD-01`, `NFR-REL-01`.
+
+
+## ADR-021: Kế Hoạch Footage Toàn Cục, Sửa Lỗi Crop Zoom 5×, Chặn Loài Dễ Nhầm & Scene Editor Trên Dashboard
+
+- **Status**: Implemented
+- **Date**: 2026-10-31
+- **Context**:
+  - Sau ADR-020, proj_cf3b1f52 còn 12/37 scene bị gắn cờ. Các lỗi cụ thể: 035 là chó rừng, 021 hình mờ; chọn shot theo thứ tự scene khiến cảnh "cho con bú" bị dùng ở 018/020 trước khi tới 024/025; có những cặp shot giống nhau; một số mô tả shot không có footage.
+  - Dashboard không có thao tác nào để sửa scene hay render lại; muốn render lại phải xoá file thủ công.
+  - **Bug phát hiện khi điều tra**: `detect_crop_region` lấy mẫu 25 frame **đầu video nguồn** (thường là màn đen/intro), không phải đoạn cắt. Với `gErthNrddFs` nó trả về `crop=384:1008`, chỉ giữ 19% khung hình (zoom khoảng 5× vào mép trái). Đây là nguyên nhân thật của 035 (chó rừng ở mép khung) và 021 (cận cảnh chân bị mờ). CLIP và judge vẫn chấm đúng trên khung hình gốc.
+- **Decision**:
+  1. **Crop guard**: `detect_crop_region(start_sec=...)` lấy mẫu tại đúng offset cắt. Chỉ nhận dải đen letterbox/pillarbox thật: phải giữ ≥ 55% diện tích và phủ gần trọn chiều ngang hoặc chiều dọc.
+  2. **Planner toàn cục** (`SceneFootageMatcher.plan`, kiểu regret-greedy):
+     - Mỗi video có nhiều cửa sổ ứng viên (`top_windows(per_video)`).
+     - Mỗi vòng gán shot cho scene sẽ thiệt nhiều nhất nếu không được shot tốt nhất của nó.
+     - Kèm phạt đa dạng: cosine giữa embedding cửa sổ ứng viên và các cửa sổ đã dùng > 0.92 thì bị trừ điểm.
+     - Có pre-pass TTS (audio cache theo hash) để biết thời lượng thật của mọi scene trước khi lập kế hoạch.
+  3. **Loài dễ nhầm**:
+     - 1 lượt gọi text cho mỗi chủ thể (`suggest_confusers`), cache trong `footage_index/confusers.json`.
+     - CLIP phạt cửa sổ có độ giống loài nhầm vượt độ giống chủ thể.
+     - Loại video có metadata nhắc tên loài nhầm mà không nhắc tên chủ thể (ví dụ "Striped Hyena walking").
+     - Prompt `choose_best` có thêm SPECIES CHECK; mỗi hàng dùng 4 frame.
+  4. **Chặn hình mờ**: `VisualQualityInspector` bỏ đoạn có median variance-of-Laplacian < 35 (hiệu chỉnh: mờ = 25, đêm nhưng nét = 52).
+  5. **Viết lại mô tả shot theo kho footage**: các scene có điểm CLIP tốt nhất < 0.29 được gửi trong **1 lượt gọi gộp** (`rewrite_visual_prompts`), kèm danh sách tiêu đề trong kho, để viết lại visual_prompt/từ khóa. Lời thoại giữ nguyên. Sau đó lập kế hoạch lại. Lưu vào metadata `visual_prompt_rewritten`.
+  6. **Scene Editor** (`autovideo/scene_editor.py`) + API + UI:
+     - `GET …/scenes/{id}/alternatives`: CLIP xếp hạng các đoạn chưa dùng, kèm ảnh xem trước, không gọi LLM.
+     - `POST …/scenes/{id}/apply`: dùng đoạn được chọn.
+     - `POST …/scenes/{id}/redo`: tự chọn lại, loại đoạn hiện tại, 1 lượt gọi LLM.
+     - `POST …/scenes/redo-flagged`: làm lại mọi scene đang bị gắn cờ.
+     - `POST …/rerender`: backup rồi chạy lại pipeline.
+     - `GET …/scene-jobs`: trạng thái job.
+     - Sau mỗi lần sửa, tự ghép lại video cuối (concat, không encode lại các scene khác).
+     - Không cho sửa khi pipeline đang chạy.
+     - UI: badge "⚠ CẦN KIỂM TRA" / "✏️ ĐÃ SỬA"; nút "Làm lại scene", "Chọn footage khác" (modal); trên header có "LÀM LẠI N SCENE CẦN KIỂM TRA" và "RENDER LẠI TOÀN BỘ".
+  7. Settings UI: trường **"Mô Hình AI Chấm Footage"** (`semantic_judge_model`). `SaveSettingsRequest` nhận thêm các field footage.
+- **Consequences**:
+  - *Ưu điểm*:
+    - Mọi thao tác sửa video giờ làm được trên dashboard.
+    - Hết lỗi zoom 5×.
+    - Shot khan hiếm được dành cho scene cần nó nhất.
+    - Chi phí LLM thêm cho mỗi project chỉ khoảng 2 lượt text, cộng 1 lượt cho mỗi scene được làm lại.
+  - *Nhược điểm*:
+    - Pre-pass TTS khiến bước sourcing chỉ bắt đầu sau khi tổng hợp xong toàn bộ giọng đọc. Thời gian tổng không đổi, nhưng tiến độ hiển thị dồn ở đầu.
+    - Planner tối ưu trên điểm CLIP, chưa dùng điểm LLM.
+    - Ngưỡng chặn hình mờ hiệu chỉnh trên một chủ đề.
+- **Related requirements**: `REQ-SRC-01`, `REQ-SRC-02`, `REQ-VD-01`, `REQ-UI-*`, `NFR-REL-01`.
+
+
+## ADR-022: Làm Lại Scene Tự Tìm Footage Mới Online, Nhớ Các Lần Đã Thử, Không Bao Giờ Nhận Footage Chưa Được Xác Minh
+
+- **Status**: Implemented
+- **Date**: 2026-11-01
+- **Context**:
+  1. Người dùng báo: bấm "làm lại 7 scene cần kiểm tra" thì không rõ hệ thống có xử lý không, và số scene cần kiểm tra lúc nào cũng là 7. Thực tế job có chạy (9→7), nhưng các lần bấm sau lặp lại đúng kết quả cũ trên cùng một kho footage; không có cách xoá cờ; kết quả chỉ hiện một dòng chữ.
+  2. Người dùng yêu cầu: khi kho không có đoạn tốt hơn thì phải tự tìm footage mới online.
+  3. Lỗi phát hiện khi chạy thử: khi judge (9Router) bị timeout, picker coi top CLIP là ứng viên được chấp nhận. Kết quả là 022/031 bị thay footage và xoá cờ mà chưa được AI xác minh.
+- **Decision**:
+  1. **Tìm footage mới online** (`footage/online_augment.search_and_add`):
+     - Mỗi query chỉ tìm dạng flat (1 request).
+     - Bỏ qua video đã có trong kho, video có tiêu đề về loài dễ nhầm, tiêu đề chứa từ khóa tiêu cực, độ dài ngoài khoảng 15–900 s, và video dọc.
+     - Mỗi scene tải tối đa 3 video, đăng ký vào catalog và index CLIP.
+     - Gặp `YouTubeBlockedError` đầu tiên thì dừng cả batch.
+     - Thêm setting `footage_online_augment` (mặc định bật).
+  2. **`SceneEditor._auto_repick`**: thư viện (bỏ qua nếu đã thử với cùng fingerprint) → tìm online nếu chưa có đoạn đạt → chọn lại → chỉ thay khi tốt hơn → cắt lại **một lần** với ứng viên tốt nhất.
+  3. **Nhớ các lần đã thử** (`metadata.auto_redo`: result, fingerprint của thư viện, online.tried/added/blocked).
+     - Bấm làm lại hàng loạt chỉ bỏ qua scene đã thử **cả** thư viện lẫn online với cùng fingerprint. Khi đó trả về thông báo giải thích.
+     - Thư viện có video mới thì scene được thử lại tự động.
+     - YouTube chặn thì không tính là đã thử hết.
+  4. **Judge không phản hồi = không xác minh được**: không bao giờ thay footage dựa trên phỏng đoán của CLIP, không tải video, giữ nguyên footage cũ và đánh dấu `judge_unavailable` để thử lại. `choose_best` thử lại 1 lần khi gặp timeout hoặc lỗi 502/503.
+  5. **API/UI**:
+     - Thêm `POST …/scenes/{id}/accept`; `redo-flagged?force=`.
+     - Nhãn "🖐 CẦN CHỌN TAY" chỉ hiện sau khi đã thử cả thư viện và online.
+     - Thêm nút "✔ Chấp nhận".
+     - Bảng kết quả theo từng scene, gồm số video tải online và cảnh báo khi YouTube chặn.
+     - Nút làm lại hàng loạt đổi theo trạng thái.
+- **Consequences**:
+  - *Ưu điểm*:
+    - Trên proj_cf3b1f52: 7 → 4 → 0 scene cần kiểm tra.
+    - Tải thêm 12 video mới vào kho, có ích cho các project sau.
+    - 021/022 đạt 8/10, 031 đạt 6/10 đã được judge xác minh.
+  - *Nhược điểm*:
+    - Mỗi scene có thể tải tối đa 3 video (dung lượng đĩa và request YouTube).
+    - Footage được nhận theo nhánh "CLIP tự tin" không qua LLM, có thể lọt phụ đề cứng (thấy ở frame cuối của 017).
+- **Related requirements**: `REQ-SRC-01`, `REQ-SRC-02`, `REQ-UI-*`, `NFR-REL-01`.

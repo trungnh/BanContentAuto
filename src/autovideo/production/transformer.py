@@ -7,6 +7,7 @@ with blurred margin backgrounds, cinematic slow-motion duration fitting, Ken Bur
 from __future__ import annotations
 
 import json
+import logging
 import math
 import re
 import subprocess
@@ -17,6 +18,8 @@ from pathlib import Path
 from typing import Any, Dict, List, Optional, Tuple
 
 from autovideo.core.binary_manager import BinaryManager
+
+logger = logging.getLogger(__name__)
 
 
 class VideoProbeError(Exception):
@@ -191,11 +194,19 @@ def detect_crop_region(
     video_path: Path | str,
     binary_manager: Optional[BinaryManager] = None,
     sample_frames: int = 25,
+    start_sec: float = 0.0,
+    min_keep_ratio: float = 0.55,
 ) -> Optional[str]:
     """
     Run ffmpeg with cropdetect to determine if the video has hardcoded black bars.
     Returns FFmpeg crop filter string (e.g. 'crop=1408:1072:258:4') if significant
     black bars are detected, or None if the video is full frame.
+
+    ADR-021: frames are sampled at `start_sec` (the actual cut window, not the video intro which is
+    often a black fade / title card), and only genuine letterbox/pillarbox bands are accepted:
+    the crop must keep >= `min_keep_ratio` of the frame area and span (almost) the full width
+    or the full height. Anything else (e.g. 'crop=384:1008:6:8' = 19% of the frame) is rejected,
+    because it would zoom ~5x into an arbitrary corner.
     """
     path = Path(video_path).resolve()
     if not path.exists() or path.stat().st_size == 0:
@@ -206,14 +217,16 @@ def detect_crop_region(
     if not ffmpeg_info.is_available or not ffmpeg_info.path:
         return None
 
-    cmd = [
-        str(ffmpeg_info.path),
+    cmd = [str(ffmpeg_info.path)]
+    if start_sec and start_sec > 0:
+        cmd.extend(["-ss", f"{start_sec:.2f}"])
+    cmd.extend([
         "-i", str(path),
         "-vf", "cropdetect=24:16:0",
         "-vframes", str(sample_frames),
         "-f", "null",
         "-",
-    ]
+    ])
 
     try:
         proc = subprocess.run(
@@ -237,6 +250,17 @@ def detect_crop_region(
 
         # A crop is considered significant if width or height loses >= 32px or margins >= 16px
         if (in_w - w_c >= 32) or (in_h - h_c >= 32) or x_c >= 16 or y_c >= 16:
+            if in_w <= 0 or in_h <= 0:
+                return None
+            keep = (w_c * h_c) / float(in_w * in_h)
+            full_width = w_c >= in_w * 0.92
+            full_height = h_c >= in_h * 0.92
+            if keep < min_keep_ratio or not (full_width or full_height):
+                logger.warning(
+                    "detect_crop_region: bỏ qua crop bất thường %s cho %s (giữ %.0f%% khung hình)",
+                    most_common, path.name, keep * 100,
+                )
+                return None
             return f"crop={w_c}:{h_c}:{x_c}:{y_c}"
 
         return None

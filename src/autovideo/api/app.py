@@ -98,10 +98,24 @@ class SaveSettingsRequest(BaseModel):
     render_concurrency: Optional[int] = Field(None, ge=1, le=8, description="Render concurrency threads")
     clean_intermediate_parts: Optional[bool] = Field(None, description="Auto-clean intermediate chapter parts")
 
+    # ADR-019/020/021: footage matching
+    semantic_judge_enabled: Optional[bool] = Field(None, description="Enable vision-LLM footage judge")
+    semantic_judge_model: Optional[str] = Field(None, description="Vision model for footage judge (empty = llm_model)")
+    semantic_judge_min_score: Optional[int] = Field(None, ge=0, le=10, description="Min judge score to accept footage")
+    footage_library_enabled: Optional[bool] = Field(None, description="Use local CLIP footage library first")
+    footage_online_augment: Optional[bool] = Field(None, description="Search YouTube for new footage when library has nothing better")
+    footage_max_reuse: Optional[int] = Field(None, ge=1, le=5, description="Max scenes per source video")
+
 
 class TestGeminiRequest(BaseModel):
     """Payload for testing Gemini API key connectivity."""
     api_key: Optional[str] = Field(None, description="Gemini API key to test")
+
+
+class ApplyFootageRequest(BaseModel):
+    """ADR-021: user-selected footage window for a scene."""
+    video_id: str = Field(..., description="Library video_id")
+    start: float = Field(..., ge=0.0, description="Window start (seconds)")
 
 
 class TestMaziaoRequest(BaseModel):
@@ -169,6 +183,11 @@ def get_system_health(config: AppConfig, binary_manager: BinaryManager) -> Dict[
 
     # 3. Binaries status
     binary_statuses = binary_manager.check_all()
+    try:
+        from autovideo.footage.clip_installer import ClipInstaller
+        clip_status = ClipInstaller(config).status()
+    except Exception as exc:  # pragma: no cover - defensive
+        clip_status = {"installed": False, "is_available": False, "error": str(exc)}
 
     # 4. CPU count and estimation
     cpu_cores = os.cpu_count() or 4
@@ -186,6 +205,7 @@ def get_system_health(config: AppConfig, binary_manager: BinaryManager) -> Dict[
         "rolling_buffer_gb": buffer_gb,
         "rolling_buffer_limit_gb": getattr(config.performance, "rolling_buffer_max_gb", 5.0),
         "binaries": {k: v.to_dict() for k, v in binary_statuses.items()},
+        "clip": clip_status,
         "zerotts_ready": True,
     }
 
@@ -333,6 +353,69 @@ def create_app(
         """Automatically installs or copies missing external binaries into bin/."""
         result = api.state.settings_manager.setup_binaries()
         return result
+
+    @api.get("/api/system/clip/status")
+    async def clip_status_endpoint() -> Dict[str, Any]:
+        """ADR-020: local CLIP model status (deps, model files, install progress)."""
+        from autovideo.footage.clip_installer import ClipInstaller
+        return ClipInstaller(api.state.config).status()
+
+    # ---------------- ADR-021: Scene editor (dashboard operations on rendered projects) ----------------
+    def _scene_editor():
+        if getattr(api.state, "scene_editor", None) is None:
+            from autovideo.scene_editor import SceneEditor
+            api.state.scene_editor = SceneEditor(coord)
+        return api.state.scene_editor
+
+    def _edit_call(fn, *args):
+        from autovideo.scene_editor import SceneEditError
+        try:
+            return fn(*args)
+        except SceneEditError as exc:
+            raise HTTPException(status_code=409, detail=str(exc))
+
+    @api.get("/api/projects/{project_id}/scenes/{scene_id}/alternatives")
+    def scene_alternatives_endpoint(project_id: str, scene_id: str, k: int = 6) -> Dict[str, Any]:
+        """CLIP-ranked unused footage windows for one scene, with JPEG preview strips (no LLM call)."""
+        return _edit_call(_scene_editor().list_alternatives, project_id, scene_id, k)
+
+    @api.post("/api/projects/{project_id}/scenes/{scene_id}/apply")
+    def scene_apply_endpoint(project_id: str, scene_id: str, req: ApplyFootageRequest) -> Dict[str, Any]:
+        """Re-cut a scene from the chosen footage window, then rebuild the final video (background job)."""
+        return _edit_call(_scene_editor().apply_window, project_id, scene_id, req.video_id, req.start)
+
+    @api.post("/api/projects/{project_id}/scenes/{scene_id}/redo")
+    def scene_redo_endpoint(project_id: str, scene_id: str) -> Dict[str, Any]:
+        """Automatically re-pick footage for one scene (excluding its current footage) + rebuild final."""
+        return _edit_call(_scene_editor().redo_scene, project_id, scene_id)
+
+    @api.post("/api/projects/{project_id}/scenes/redo-flagged")
+    def scenes_redo_flagged_endpoint(project_id: str, force: bool = False) -> Dict[str, Any]:
+        """Redo flagged scenes not yet exhausted against the current library, then rebuild the final video."""
+        return _edit_call(_scene_editor().redo_flagged, project_id, force)
+
+    @api.post("/api/projects/{project_id}/scenes/{scene_id}/accept")
+    def scene_accept_endpoint(project_id: str, scene_id: str) -> Dict[str, Any]:
+        """User accepts the current footage of a scene -> clears its 'needs review' flag."""
+        return _edit_call(_scene_editor().accept_scene, project_id, scene_id)
+
+    @api.post("/api/projects/{project_id}/rerender")
+    def project_rerender_endpoint(project_id: str) -> Dict[str, Any]:
+        """Back up current scenes/parts/final and run the whole pipeline again (script & voice reused)."""
+        return _edit_call(_scene_editor().rerender, project_id)
+
+    @api.get("/api/projects/{project_id}/scene-jobs")
+    def scene_jobs_endpoint(project_id: str) -> Dict[str, Any]:
+        """Status of the running/last scene-editor job for a project."""
+        return _scene_editor().job_status(project_id)
+
+    @api.post("/api/system/clip/install")
+    async def clip_install_endpoint() -> Dict[str, Any]:
+        """ADR-020: start background download/installation of the local CLIP model."""
+        from autovideo.footage.clip_installer import ClipInstaller
+        inst = ClipInstaller(api.state.config)
+        res = inst.start_install()
+        return {**res, "status": inst.status()}
 
     @api.post("/api/system/cache/clear")
     async def clear_system_cache_endpoint() -> Dict[str, Any]:

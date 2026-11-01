@@ -48,6 +48,9 @@ from autovideo.script.pipeline import (
 )
 from autovideo.script.word_budget import WordBudgetValidator, calculate_scene_budget
 from autovideo.sourcing.engine import AssetSourcingEngine, SourcedAsset
+from autovideo.sourcing.universal import YouTubeBlockedError
+from autovideo.footage.matcher import SceneQuery
+from autovideo.footage.scene_picker import library_sourced_asset, pick_library_window
 from autovideo.sourcing.relevance import anchor_matches, extract_scene_terms
 from autovideo.skills.registry import SkillRegistry
 from autovideo.voiceover.manager import VoiceoverConfig, VoiceoverManager
@@ -1010,11 +1013,216 @@ class MasterPipelineCoordinator:
         if vid:
             used_video_counts[vid] = used_video_counts.get(vid, 0) + 1
         raw = metadata.get("raw_asset_path")
+        start = float(metadata.get("start_offset_sec") or 0.0)
+        dur = float(metadata.get("duration_sec") or 0.0)
+        if vid:
+            # ADR-020: footage library tracks used windows per source video_id
+            used_intervals.setdefault(vid, []).append((start, start + dur))
         if raw:
-            start = float(metadata.get("start_offset_sec") or 0.0)
-            dur = float(metadata.get("duration_sec") or 0.0)
             for key in {str(raw), str(Path(raw))}:
                 used_intervals.setdefault(key, []).append((start, start + dur))
+
+    @staticmethod
+    def _register_in_library(library: Optional[Any], sourced: Any) -> None:
+        """ADR-020: every newly downloaded online video becomes reusable library footage."""
+        if library is None or sourced is None:
+            return
+        meta = getattr(sourced, "metadata", None) or {}
+        vid = str(meta.get("video_id") or "")
+        if not vid or vid in library.videos:
+            return
+        try:
+            from autovideo.footage.library import CatalogEntry
+            entry = CatalogEntry(
+                video_id=vid, path=Path(sourced.file_path), title=str(meta.get("title") or ""),
+                description=str(meta.get("description") or ""), uploader=str(meta.get("uploader") or ""),
+                webpage_url=str(meta.get("webpage_url") or ""),
+            )
+            library.register(entry)
+            library.index_video(entry)
+        except Exception as exc:
+            logger.debug("Không thêm được %s vào library: %s", vid, exc)
+
+    def _prepare_footage_library(
+        self,
+        project_id: str,
+        subject_anchor: Optional[str],
+        max_reuse: int,
+        enabled: bool = True,
+        quiet: bool = False,
+    ) -> Tuple[Optional[Any], Optional[Any]]:
+        """
+        ADR-020: build/load the local CLIP index over cached source videos matching the subject.
+        Returns (library, matcher) or (None, None) when CLIP is not installed / disabled.
+        """
+        if not enabled:
+            logger.info("Footage library bị tắt trong Cài đặt.")
+            return None, None
+        try:
+            from autovideo.footage.clip_engine import load_clip_engine
+            from autovideo.footage.library import FootageLibrary
+            from autovideo.footage.matcher import SceneFootageMatcher
+        except Exception as exc:
+            logger.warning("Không nạp được module footage library: %s", exc)
+            return None, None
+
+        clip = load_clip_engine()
+        if clip is None and quiet:
+            return None, None
+        if clip is None:
+            self.emit_event(
+                project_id=project_id,
+                stage=PipelineStage.B2_SOURCING_TTS,
+                progress=25.0,
+                message="B2: ⚠ CLIP chưa được cài (Cài đặt → Binaries). Chạy chế độ tìm kiếm online thuần.",
+                details={"clip_available": False},
+            )
+            return None, None
+
+        library = FootageLibrary(clip, config=self.config)
+        catalog = library.load_catalog()
+        entries = [e for e in catalog.values() if anchor_matches(e.text(), subject_anchor or "")]
+
+        def _progress(i: int, n: int, title: str) -> None:
+            if quiet:
+                return
+            if i == 1 or i == n or i % 10 == 0:
+                self.emit_event(
+                    project_id=project_id,
+                    stage=PipelineStage.B2_SOURCING_TTS,
+                    progress=25.0,
+                    message=f"B2: Đang index thư viện footage bằng CLIP cục bộ {i}/{n} ({title[:40]})",
+                    details={"library_index": i, "library_total": n},
+                )
+
+        n_ok = library.build(entries, _progress)
+        logger.info("Footage library: %d/%d video (anchor '%s') đã index", n_ok, len(entries), subject_anchor)
+        matcher = SceneFootageMatcher(library, clip, subject_anchor or "", max_reuse_per_video=max_reuse)
+        return library, matcher
+
+    @staticmethod
+    def _dhash(img: Any) -> int:
+        import cv2
+        g = cv2.cvtColor(img, cv2.COLOR_BGR2GRAY) if img.ndim == 3 else img
+        small = cv2.resize(g, (9, 8), interpolation=cv2.INTER_AREA)
+        bits = (small[:, 1:] > small[:, :-1]).flatten()
+        return int("".join("1" if b else "0" for b in bits), 2)
+
+    def _detect_duplicate_scenes(
+        self, records: List[Any], max_distance: int = 6
+    ) -> List[Tuple[str, str, int]]:
+        """Return (earlier_scene, later_scene, distance) pairs whose sampled frames are near-identical."""
+        ff_bin, _ = BinaryManager(self.config).find_binary("ffmpeg")
+        hashes: List[Tuple[str, List[int]]] = []
+        for rec in records:
+            p = Path(rec.video_path) if getattr(rec, "video_path", None) else None
+            if not p or not p.exists() or p.stat().st_size < 1024:
+                continue
+            hs = []
+            for r in (0.3, 0.7):
+                f = VisualQualityInspector._extract_frame(p, float(rec.duration_sec) * r, ffmpeg_bin=ff_bin)
+                if f is not None:
+                    hs.append(self._dhash(f))
+            if hs:
+                hashes.append((rec.scene_id, hs))
+        dups: List[Tuple[str, str, int]] = []
+        for j in range(len(hashes)):
+            for i in range(j):
+                d = min(bin(a ^ b).count("1") for a in hashes[i][1] for b in hashes[j][1])
+                if d <= max_distance:
+                    dups.append((hashes[i][0], hashes[j][0], d))
+                    break
+        return dups
+
+    def _build_library_plan(
+        self,
+        project_id: str,
+        all_scenes: List[Any],
+        resumed_ids: Set[str],
+        footage_library: Any,
+        footage_matcher: Any,
+        semantic_judge: Any,
+        subject_anchor: str,
+        used_intervals: Dict[str, List[Tuple[float, float]]],
+        used_counts: Dict[str, int],
+        weak_threshold: float = 0.29,
+    ) -> Tuple[Dict[str, List[Any]], Dict[str, Dict[str, Any]]]:
+        """
+        ADR-021 (B1-B4):
+        - confuser species for the subject (1 cached text call per subject)
+        - TTS pre-pass so every scene has its real duration before planning (audio is cached by hash)
+        - global regret-greedy shot assignment across all scenes (with diversity penalty)
+        - footage-aware rewrite of weak shot descriptions (1 batched text call), then re-plan
+        Returns (plan: scene_id -> [WindowCandidate...], rewrites: scene_id -> {visual_prompt, keywords}).
+        """
+        from autovideo.footage.matcher import SceneQuery as _SQ
+
+        # Confusers (cached per subject)
+        conf_file = footage_library.index_dir / "confusers.json"
+        conf_map: Dict[str, List[str]] = {}
+        try:
+            if conf_file.exists():
+                conf_map = json.loads(conf_file.read_text(encoding="utf-8"))
+        except Exception:
+            conf_map = {}
+        key = (subject_anchor or "").lower()
+        if key and key not in conf_map and semantic_judge.active:
+            conf_map[key] = semantic_judge.suggest_confusers(subject_anchor)
+            try:
+                conf_file.write_text(json.dumps(conf_map, ensure_ascii=False, indent=1), encoding="utf-8")
+            except Exception:
+                pass
+        footage_matcher.set_confusers(conf_map.get(key, []))
+        logger.info("Footage library: confusers cho '%s' = %s", subject_anchor, footage_matcher.confusers)
+
+        # TTS pre-pass (durations)
+        pending = [(i, s) for i, s in enumerate(all_scenes, start=1) if s.scene_id not in resumed_ids]
+        for n, (i, s) in enumerate(pending, start=1):
+            self._check_cancellation(project_id)
+            try:
+                res = self.voiceover_manager.synthesize_scene(scene=s, scene_index=i, project_id=project_id)
+                s.duration_sec = res.duration_sec
+            except Exception as exc:
+                logger.warning("TTS pre-pass lỗi %s: %s", s.scene_id, exc)
+            if n == 1 or n == len(pending) or n % 10 == 0:
+                self.emit_event(
+                    project_id=project_id, stage=PipelineStage.B2_SOURCING_TTS, progress=25.0,
+                    message=f"B2: Đang chuẩn bị giọng đọc để lập kế hoạch footage {n}/{len(pending)}",
+                    details={"tts_prepass": n, "total": len(pending)},
+                )
+
+        def _texts(s: Any) -> List[str]:
+            kws = list(getattr(getattr(s, "keywords", None), "en", None) or [])
+            return [str(getattr(s, "visual_prompt", "") or "")] + [str(k) for k in kws]
+
+        queries = {s.scene_id: _SQ(s.scene_id, float(s.duration_sec), _texts(s)) for _, s in pending}
+        if not queries:
+            return {}, {}
+        plan = footage_matcher.plan(list(queries.values()), used_intervals, used_counts)
+
+        # Footage-aware rewrite of weak shots
+        rewrites: Dict[str, Dict[str, Any]] = {}
+        weak = [sid for sid in queries if not plan.get(sid) or plan[sid][0].total < weak_threshold]
+        if weak and semantic_judge.active:
+            by_id = {s.scene_id: s for _, s in pending}
+            items = [{"scene_id": sid, "narration": by_id[sid].text,
+                      "visual_prompt": getattr(by_id[sid], "visual_prompt", "")} for sid in weak]
+            titles = sorted({vi.entry.title for vi in footage_matcher.eligible_videos() if vi.entry.title})
+            rewrites = semantic_judge.rewrite_visual_prompts(items, titles, subject_anchor)
+            for sid, rw in rewrites.items():
+                if sid in queries:
+                    queries[sid] = _SQ(sid, queries[sid].duration, [rw["visual_prompt"]] + rw.get("keywords", []))
+            if rewrites:
+                logger.info("Footage library: viết lại mô tả shot cho %d/%d scene yếu", len(rewrites), len(weak))
+                plan = footage_matcher.plan(list(queries.values()), used_intervals, used_counts)
+
+        self.emit_event(
+            project_id=project_id, stage=PipelineStage.B2_SOURCING_TTS, progress=25.0,
+            message=f"B2: Đã lập kế hoạch footage toàn cục cho {len(plan)} scene "
+                    f"({sum(1 for v in plan.values() if v)} có shot phù hợp, {len(rewrites)} mô tả shot được viết lại)",
+            details={"planned": len(plan), "rewritten": len(rewrites)},
+        )
+        return plan, rewrites
 
     def refresh_settings(self) -> None:
         """Synchronizes dynamic settings for voiceover and scriptwriting pipeline."""
@@ -1084,6 +1292,29 @@ class MasterPipelineCoordinator:
             raise
 
     def _run_pipeline_sync(self, project_id: str, resume: bool = True) -> None:
+        """Synchronous pipeline entry: attaches a per-project log file (ADR-020 S8), then runs the 4 steps."""
+        handler: Optional[logging.Handler] = None
+        try:
+            log_dir = self.config.paths.base_dir / "logs"
+            log_dir.mkdir(parents=True, exist_ok=True)
+            handler = logging.FileHandler(log_dir / f"{project_id}.log", encoding="utf-8")
+            handler.setLevel(logging.INFO)
+            handler.setFormatter(logging.Formatter("%(asctime)s %(levelname)s %(name)s: %(message)s"))
+            pkg_logger = logging.getLogger("autovideo")
+            if pkg_logger.level == logging.NOTSET or pkg_logger.level > logging.INFO:
+                pkg_logger.setLevel(logging.INFO)
+            pkg_logger.addHandler(handler)
+        except Exception as exc:
+            logger.warning("Không tạo được file log cho %s: %s", project_id, exc)
+            handler = None
+        try:
+            self._run_pipeline_body(project_id, resume)
+        finally:
+            if handler is not None:
+                logging.getLogger("autovideo").removeHandler(handler)
+                handler.close()
+
+    def _run_pipeline_body(self, project_id: str, resume: bool = True) -> None:
         """Synchronous implementation of the 4-step pipeline."""
         project = self.projects[project_id]
         project_dir = self.config.paths.get_project_render_dir(project_id)
@@ -1216,18 +1447,49 @@ class MasterPipelineCoordinator:
         used_footage_intervals: Dict[str, List[Tuple[float, float]]] = {}
         max_footage_reuse = 2
         max_judge_calls_per_scene = 6
+        library_enabled = True
         semantic_judge = SemanticFootageJudge(enabled=False)
         try:
             from autovideo.core.settings import SettingsManager
             _s = SettingsManager(config=self.config).load_settings()
             semantic_judge = SemanticFootageJudge.from_settings(_s)
             max_footage_reuse = max(1, int(getattr(_s, "footage_max_reuse", 2)))
+            library_enabled = bool(getattr(_s, "footage_library_enabled", True))
         except Exception as exc:
             logger.warning("Không khởi tạo được SemanticFootageJudge: %s", exc)
         logger.info(
             "Semantic judge: active=%s model=%s min_score=%.1f | footage_max_reuse=%d",
             semantic_judge.active, semantic_judge.model, semantic_judge.min_score, max_footage_reuse,
         )
+
+        # ADR-020: local CLIP footage library (library-first sourcing) + YouTube block state
+        youtube_state: Dict[str, bool] = {"blocked": False}
+        footage_library, footage_matcher = self._prepare_footage_library(
+            project_id, subject_anchor, max_footage_reuse,
+            enabled=library_enabled,
+        )
+
+        # ADR-021: global footage plan (confusers, TTS pre-pass, regret-greedy assignment, shot rewrite)
+        library_plan: Dict[str, List[Any]] = {}
+        shot_rewrites: Dict[str, Dict[str, Any]] = {}
+        if footage_matcher is not None:
+            resumed_ids: Set[str] = set()
+            plan_iv: Dict[str, List[Tuple[float, float]]] = {}
+            plan_ct: Dict[str, int] = {}
+            for _i, _s in enumerate(all_scenes, start=1):
+                _p = temp_scenes_dir / f"scene_{_i:03d}.mp4"
+                if resume and _s.scene_id in existing_scenes_map and _p.exists() and _p.stat().st_size > 2048:
+                    resumed_ids.add(_s.scene_id)
+                    self._track_footage_usage(existing_scenes_map[_s.scene_id].metadata or {}, plan_ct, plan_iv)
+            try:
+                library_plan, shot_rewrites = self._build_library_plan(
+                    project_id, all_scenes, resumed_ids, footage_library, footage_matcher, semantic_judge,
+                    subject_anchor or "", plan_iv, plan_ct,
+                )
+            except PipelineCancelledError:
+                raise
+            except Exception as exc:
+                logger.warning("Không lập được kế hoạch footage toàn cục: %s", exc)
 
         for idx, scene in enumerate(all_scenes, start=1):
             self._check_cancellation(project_id)
@@ -1434,7 +1696,33 @@ class MasterPipelineCoordinator:
                 return None
 
             accepted: Optional[Dict[str, Any]] = None
-            for candidate_kw in kw_candidates:
+            library_fallback: Optional[Dict[str, Any]] = None
+
+            # ADR-020 Step A: library first - local CLIP over already-downloaded footage, 0-1 LLM call
+            if footage_matcher is not None:
+                try:
+                    _rw = shot_rewrites.get(scene.scene_id) or {}
+                    accepted, library_fallback = pick_library_window(
+                        lib=footage_library,
+                        matcher=footage_matcher,
+                        judge=semantic_judge,
+                        scene_id=scene.scene_id,
+                        duration=scene.duration_sec,
+                        narration=scene.text,
+                        visual_prompt=_rw.get("visual_prompt") or scene_visual_prompt,
+                        en_keywords=list(_rw.get("keywords") or []) + en_kws,
+                        subject_anchor=subject_anchor or "",
+                        used_intervals=used_footage_intervals,
+                        used_counts=used_video_counts,
+                        ffmpeg_bin=ff_bin,
+                        candidates_override=library_plan.get(scene.scene_id),
+                    )
+                except Exception as exc:
+                    logger.warning("Footage library lỗi cho %s: %s", scene.scene_id, exc)
+
+            # ADR-020 Step B: online search only if the library had nothing good and YouTube is not blocking us
+            online_allowed = accepted is None and not youtube_state["blocked"]
+            for candidate_kw in (kw_candidates if online_allowed else []):
                 if judge_budget["calls"] >= max_judge_calls_per_scene:
                     break
                 try:
@@ -1454,70 +1742,75 @@ class MasterPipelineCoordinator:
                         exclude_video_ids=list(exclude_ids),
                     )
                     if sourced and sourced.file_path.exists() and sourced.file_path.stat().st_size > 0:
+                        self._register_in_library(footage_library, sourced)
                         accepted = _evaluate_candidate(sourced)
                         if accepted:
                             break
                         rejected_vid = str((getattr(sourced, "metadata", None) or {}).get("video_id") or "")
                         if rejected_vid and rejected_vid not in exclude_ids:
                             exclude_ids.append(rejected_vid)
+                except YouTubeBlockedError as exc:
+                    youtube_state["blocked"] = True
+                    logger.error("YouTube đang chặn truy cập -> dừng tìm kiếm online cho các scene còn lại: %s", exc)
+                    self.emit_event(
+                        project_id=project_id,
+                        stage=PipelineStage.B2_SOURCING_TTS,
+                        progress=scene_progress,
+                        message="B2: ⚠ YouTube đang chặn truy cập (anti-bot). Chỉ dùng thư viện footage cục bộ cho các scene còn lại.",
+                        details={"youtube_blocked": True},
+                    )
+                    last_err = exc
+                    break
                 except Exception as exc:
                     logger.warning("Thử từ khóa '%s' cho phân cảnh %s thất bại: %s", candidate_kw, scene.scene_id, exc)
                     last_err = exc
                     continue
 
-            # If all candidates failed with strict duration, try primary candidate with relaxed duration (5-300s)
-            if not accepted and judge_budget["calls"] < max_judge_calls_per_scene:
-                try:
-                    primary_kw = kw_candidates[0] if kw_candidates else project.topic
-                    logger.info("Thử lại tải footage cho %s với từ khóa '%s' (nới lỏng thời lượng)...", scene.scene_id, primary_kw)
-                    sourced = self.sourcing_engine.source_scene_asset(
-                        scene_id=scene.scene_id,
-                        query=primary_kw,
-                        preferred_vault=scene.preferred_vault,
-                        enforce_duration=False,
-                        subject_anchor=subject_anchor,
-                        niche_id=project.skill_id,
-                        preferred_categories=skill_pref_cats,
-                        discouraged_categories=skill_disc_cats,
-                        trusted_channels=skill_trusted_channels,
-                        scene_terms=scene_terms,
-                        exclude_video_ids=list(exclude_ids),
-                    )
-                    if sourced and sourced.file_path.exists() and sourced.file_path.stat().st_size > 0:
-                        accepted = _evaluate_candidate(sourced)
-                except Exception as exc:
-                    last_err = exc
-
-            # Best-effort: subject visible & real footage but below match threshold -> use, flag for review
+            # Best-effort ordering: library LLM-ranked fallback > online best-effort (both: subject present, real footage)
+            if not accepted and library_fallback:
+                accepted = dict(library_fallback)
+                review_reasons.append(f"semantic_below_threshold(score={accepted['semantic'].get('score')})")
             if not accepted and best_fallback:
                 accepted = dict(best_fallback)
                 review_reasons.append(f"semantic_below_threshold(score={accepted['semantic'].get('score')})")
+
+            # Last resort (replaces the old Tier-4 chain): best unused library window with relaxed subject threshold.
+            # Always DISTINCT source footage - never re-uses an already rendered scene file.
+            if not accepted and footage_matcher is not None:
+                try:
+                    relaxed = footage_matcher.candidates(
+                        SceneQuery(scene.scene_id, scene.duration_sec, [scene_visual_prompt] + en_kws),
+                        used_footage_intervals, used_video_counts, top_k=1,
+                    ) or footage_matcher.with_subject_min(0.22).candidates(
+                        SceneQuery(scene.scene_id, scene.duration_sec, [scene_visual_prompt] + en_kws),
+                        used_footage_intervals, used_video_counts, top_k=1,
+                    )
+                    if relaxed:
+                        c = relaxed[0]
+                        accepted = {
+                            "path": footage_library.videos[c.video_id].entry.path,
+                            "sourced": library_sourced_asset(footage_library, c, scene.scene_id, subject_anchor or ""),
+                            "offset": c.start,
+                            "semantic": {"verdict": "not_verified", "score": round(c.total, 4), "method": "clip_last_resort"},
+                        }
+                        review_reasons.append(f"library_last_resort(clip={c.total:.3f})")
+                except Exception as exc:
+                    logger.warning("Library last-resort lỗi cho %s: %s", scene.scene_id, exc)
 
             if accepted:
                 footage_path = accepted["path"]
                 sourced_asset_obj = accepted["sourced"]
                 final_start_offset = float(accepted["offset"])
-                semantic_record = accepted["semantic"]
+                semantic_record = dict(accepted["semantic"])
+                if accepted.get("library"):
+                    semantic_record["library"] = accepted["library"]
                 if semantic_record.get("verdict") == "unavailable":
                     review_reasons.append("semantic_check_unavailable")
                 logger.info(
-                    "Đã chọn footage cho %s: %s (offset=%.1fs, semantic=%s)",
-                    scene.scene_id, footage_path.name, final_start_offset, semantic_record.get("verdict"),
+                    "Đã chọn footage cho %s: %s (offset=%.1fs, semantic=%s/%s)",
+                    scene.scene_id, footage_path.name, final_start_offset,
+                    semantic_record.get("verdict"), semantic_record.get("method", "online"),
                 )
-
-            # Tier 4: Pipeline Resilience Fallback - If all online candidates fail, reuse a valid footage from previous scenes
-            if not footage_path and retained_completed_scenes:
-                logger.warning(
-                    "Mọi từ khóa tìm kiếm cho %s đều thất bại. Kích hoạt cơ chế tự phục hồi: Tái sử dụng footage từ cảnh đã hoàn tất...",
-                    scene.scene_id,
-                )
-                for rec in reversed(retained_completed_scenes):
-                    if rec.video_path and Path(rec.video_path).exists() and Path(rec.video_path).stat().st_size > 10000:
-                        footage_path = Path(rec.video_path)
-                        final_start_offset = 0.0
-                        review_reasons.append(f"tier4_reused_footage_from_{rec.scene_id}")
-                        logger.info("Đã chọn footage dự phòng cho %s từ %s (%s)", scene.scene_id, rec.scene_id, footage_path.name)
-                        break
 
             if not footage_path:
                 raise RuntimeError(
@@ -1628,6 +1921,7 @@ class MasterPipelineCoordinator:
                     "semantic_check": semantic_record,
                     "needs_review": bool(review_reasons),
                     "review_reasons": review_reasons,
+                    "visual_prompt_rewritten": (shot_rewrites.get(scene.scene_id) or {}).get("visual_prompt"),
                 } if footage_path else None,
             )
             retained_completed_scenes.append(record)
@@ -1644,6 +1938,26 @@ class MasterPipelineCoordinator:
 
             # Measure rolling buffer
             project.rolling_buffer_bytes = self.rolling_buffer.get_buffer_size_bytes(temp_scenes_dir)
+
+        # ADR-020: global duplicate-shot check across all assembled scenes (perceptual hash)
+        try:
+            dups = self._detect_duplicate_scenes(project.completed_scenes)
+            for a, b, dist in dups:
+                rec_b = next((r for r in project.completed_scenes if r.scene_id == b), None)
+                if rec_b is not None and rec_b.metadata is not None:
+                    rec_b.metadata["needs_review"] = True
+                    rec_b.metadata.setdefault("review_reasons", []).append(f"duplicate_of_{a}(dhash={dist})")
+            if dups:
+                self.emit_event(
+                    project_id=project_id,
+                    stage=PipelineStage.B2_SOURCING_TTS,
+                    progress=60.0,
+                    message=f"B2: ⚠ Phát hiện {len(dups)} cặp scene có hình gần trùng: "
+                            + ", ".join(f"{a}~{b}" for a, b, _ in dups[:8]),
+                    details={"duplicates": dups},
+                )
+        except Exception as exc:
+            logger.warning("Duplicate check lỗi: %s", exc)
 
         self._check_cancellation(project_id)
         self.emit_event(

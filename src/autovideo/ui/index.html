@@ -1254,6 +1254,13 @@
             <button id="btnResumePipeline" style="display: none; background: rgba(0, 229, 255, 0.15); border: 1px solid var(--accent-cyan); color: var(--accent-cyan); padding: 4px 12px; border-radius: 6px; font-size: 12px; font-weight: 700; cursor: pointer; align-items: center; gap: 6px; transition: all 0.2s;" title="Tiếp tục sản xuất dự án này">
               <span>▶</span> TIẾP TỤC CHẠY
             </button>
+            <button id="btnRedoFlagged" onclick="redoFlaggedScenes()" style="display: none; background: rgba(255, 179, 0, 0.15); border: 1px solid var(--warning-amber, #ffb300); color: var(--warning-amber, #ffb300); padding: 4px 12px; border-radius: 6px; font-size: 12px; font-weight: 700; cursor: pointer; align-items: center; gap: 6px;" title="Tự động tìm lại footage cho mọi scene đang bị gắn cờ cần kiểm tra, rồi ghép lại video cuối">
+              <span>🛠</span> <span id="btnRedoFlaggedText">LÀM LẠI SCENE CẦN KIỂM TRA</span>
+            </button>
+            <button id="btnRerender" onclick="rerenderProject()" style="display: none; background: rgba(170, 102, 255, 0.15); border: 1px solid var(--accent-purple, #aa66ff); color: var(--accent-purple, #aa66ff); padding: 4px 12px; border-radius: 6px; font-size: 12px; font-weight: 700; cursor: pointer; align-items: center; gap: 6px;" title="Sao lưu bản hiện tại rồi chạy lại toàn bộ khâu tìm & cắt footage (giữ nguyên kịch bản và giọng đọc)">
+              <span>♻</span> RENDER LẠI TOÀN BỘ
+            </button>
+            <span id="sceneJobStatus" style="font-size: 12px; color: var(--text-secondary); display: none;"></span>
           </div>
           <div class="tracker-status-text" id="trackerStatus">Sẵn sàng khởi chạy</div>
         </div>
@@ -1666,6 +1673,16 @@
               </div>
             </div>
 
+            <!-- ADR-021: Vision model used to judge footage vs narration -->
+            <div class="form-group" style="margin-top: 10px;">
+              <label class="form-label" for="settingJudgeModel">Mô Hình AI Chấm Footage (Vision Judge, qua 9Router)</label>
+              <input class="form-input" id="settingJudgeModel" type="text" list="judgeModelList" placeholder="(để trống = dùng mô hình LLM chính ở trên)" style="font-family: var(--font-mono); font-size: 12px;">
+              <datalist id="judgeModelList"></datalist>
+              <div style="font-size: 11px; color: var(--text-muted); margin-top: 2px;">
+                Mô hình nhìn ảnh để chọn footage khớp lời thoại (~1 lượt gọi mỗi scene). Nên chọn mô hình mạnh hơn bản "flash-low" để phân biệt loài chính xác hơn (ví dụ linh cẩu vs chó rừng).
+              </div>
+            </div>
+
             <!-- Direct Gemini API Key (Fallback) -->
             <div class="form-group" style="margin-top: 4px; padding-top: 10px; border-top: 1px dashed var(--border-dark);">
               <label class="form-label" for="settingGeminiApiKey" style="font-size: 12px; color: var(--text-secondary);">
@@ -1955,7 +1972,7 @@
             </div>
           </div>
 
-          <div style="display: grid; grid-template-columns: repeat(4, 1fr); gap: 12px; margin-top: 12px;">
+          <div style="display: grid; grid-template-columns: repeat(5, 1fr); gap: 12px; margin-top: 12px;">
             <div class="binary-box" id="binaryBoxFfmpeg">
               <div class="binary-name">FFMPEG</div>
               <div class="binary-version" id="binVerFfmpeg">Đang kiểm tra...</div>
@@ -1975,6 +1992,20 @@
               <div class="binary-name">BBDOWN</div>
               <div class="binary-version" id="binVerBbdown">Đang kiểm tra...</div>
               <div class="binary-status ready" id="binStatBbdown">SẴN SÀNG</div>
+            </div>
+            <div class="binary-box" id="binaryBoxClip" title="AI so khớp hình ảnh chạy cục bộ trên máy (ONNX, không cần GPU) - dùng để tìm & cắt footage khớp kịch bản mà không tốn lượt gọi 9router">
+              <div class="binary-name">CLIP (AI CỤC BỘ)</div>
+              <div class="binary-version" id="binVerClip">Đang kiểm tra...</div>
+              <div class="binary-status missing" id="binStatClip">THIẾU</div>
+              <div id="clipProgressWrap" style="display:none; margin-top:8px;">
+                <div style="height:6px; background:rgba(255,255,255,0.08); border-radius:4px; overflow:hidden;">
+                  <div id="clipProgressBar" style="height:100%; width:0%; background:linear-gradient(90deg,#00E676,#00B0FF); transition:width .4s;"></div>
+                </div>
+                <div id="clipProgressText" style="font-size:11px; opacity:.75; margin-top:4px;"></div>
+              </div>
+              <button type="button" class="btn-secondary" id="btnInstallClip" style="margin-top:8px; padding:6px 10px; font-size:11px; width:100%;">
+                <span>⬇️</span> Tải &amp; cài CLIP (~155 MB)
+              </button>
             </div>
           </div>
         </div>
@@ -2460,6 +2491,21 @@
         return;
       }
 
+      // ADR-021: flagged-scene counters. "manual" = AI already tried and found nothing better (needs a human).
+      const _flagged = scenes.filter(s => s.metadata && s.metadata.needs_review);
+      const _manual = _flagged.filter(s => s.metadata.auto_redo && s.metadata.auto_redo.result === 'kept' && s.metadata.auto_redo.online && s.metadata.auto_redo.online.tried);
+      window._flaggedSceneCount = _flagged.length;
+      window._autoRedoCount = _flagged.length - _manual.length;
+      window._manualSceneIds = _manual.map(s => s.scene_id);
+      const _redoTxt = document.getElementById('btnRedoFlaggedText');
+      if (_redoTxt) {
+        _redoTxt.textContent = window._autoRedoCount > 0
+          ? `LÀM LẠI ${window._autoRedoCount} SCENE CẦN KIỂM TRA`
+          : `🖐 ${_manual.length} SCENE CẦN CHỌN TAY`;
+      }
+      const _redoBtn = document.getElementById('btnRedoFlagged');
+      if (_redoBtn) _redoBtn.style.display = (window._currentStage === 'COMPLETE' && window._flaggedSceneCount > 0) ? 'inline-flex' : 'none';
+
       // SMART DOM GUARD: If table is already rendered with the exact same scene list,
       // do NOT destroy DOM to prevent collapsing or resetting loading/buffering video players!
       const existingRows = tbody.querySelectorAll('.scene-row');
@@ -2598,10 +2644,20 @@
           `;
         }
 
+        const scMeta = sc.metadata || {};
+        const reviewReasons = (scMeta.review_reasons || []).join(', ');
+        const isManual = scMeta.needs_review && scMeta.auto_redo && scMeta.auto_redo.result === 'kept' && scMeta.auto_redo.online && scMeta.auto_redo.online.tried;
+        const reviewBadge = !scMeta.needs_review ? '' : (isManual
+          ? `<div style="margin-top:4px;"><span title="${escapeJsStr(scMeta.auto_redo.reason || '')} — mở scene để 'Chọn footage khác' hoặc 'Chấp nhận'" style="font-size:10px; font-weight:700; color:#ff8a65; background:rgba(255,112,67,0.12); border:1px solid rgba(255,112,67,0.45); border-radius:4px; padding:1px 6px;">🖐 CẦN CHỌN TAY</span></div>`
+          : `<div style="margin-top:4px;"><span title="${escapeJsStr(reviewReasons)}" style="font-size:10px; font-weight:700; color:#ffb300; background:rgba(255,179,0,0.12); border:1px solid rgba(255,179,0,0.4); border-radius:4px; padding:1px 6px;">⚠ CẦN KIỂM TRA</span></div>`);
+        const editedBadge = scMeta.edited
+          ? `<div style="margin-top:4px;"><span title="Đã chỉnh sửa lúc ${escapeJsStr(scMeta.edited.at || '')}" style="font-size:10px; font-weight:700; color:#00e676; background:rgba(0,230,118,0.10); border:1px solid rgba(0,230,118,0.35); border-radius:4px; padding:1px 6px;">✏️ ĐÃ SỬA</span></div>` : '';
+
         mainTr.innerHTML = `
           <td>
             <span class="toggle-arrow" id="arrow-${sc.scene_id}">▶</span>
             <strong style="color: var(--accent-cyan);">${sc.scene_id}</strong>
+            ${reviewBadge}${editedBadge}
           </td>
           <td style="font-family: var(--font-mono); font-weight: 600;">${durationFormatted}</td>
           <td style="line-height: 1.45;">${sc.text || '--'}</td>
@@ -2691,6 +2747,21 @@
                     <span>💾</span> Tải Clip MP4
                   </a>
                 </div>
+                <div style="display: flex; gap: 8px; justify-content: space-between; align-items: center;">
+                  <button class="btn-scene-video" onclick="event.stopPropagation(); redoScene('${sc.scene_id}')" style="background: rgba(255,179,0,0.12); border-color: rgba(255,179,0,0.5); color: #ffb300;" title="Tự động tìm footage khác cho scene này (AI chọn), rồi ghép lại video cuối">
+                    <span>🔁</span> Làm lại scene
+                  </button>
+                  <button class="btn-scene-video" onclick="event.stopPropagation(); openAltModal('${sc.scene_id}')" style="background: rgba(170,102,255,0.12); border-color: rgba(170,102,255,0.5); color: #c79bff;" title="Xem các đoạn footage thay thế và tự chọn đoạn ưng ý">
+                    <span>🎞</span> Chọn footage khác
+                  </button>
+                </div>
+                ${scMeta.needs_review ? `
+                <div style="display: flex; gap: 8px; align-items: center; justify-content: space-between; background: rgba(255,179,0,0.06); border: 1px dashed rgba(255,179,0,0.35); border-radius: 6px; padding: 6px 8px;">
+                  <span style="font-size: 11px; color: var(--text-secondary); line-height: 1.4;">${escapeJsStr((scMeta.auto_redo && scMeta.auto_redo.reason) || ('Lý do gắn cờ: ' + (reviewReasons || '--')))}</span>
+                  <button class="btn-scene-video" onclick="event.stopPropagation(); acceptScene('${sc.scene_id}')" style="background: rgba(0,230,118,0.12); border-color: rgba(0,230,118,0.5); color: #00e676; white-space: nowrap;" title="Footage hiện tại đã ổn: bỏ cờ cần kiểm tra cho scene này">
+                    <span>✔</span> Chấp nhận
+                  </button>
+                </div>` : ''}
               </div>
 
               <!-- Cột phải: Thông tin kịch bản & QC Tracking -->
@@ -3223,6 +3294,208 @@
 
       if (stopBtn) stopBtn.style.display = isRunning ? 'inline-flex' : 'none';
       if (resumeBtn) resumeBtn.style.display = canResume ? 'inline-flex' : 'none';
+      // ADR-021: scene editing is available once the project has finished
+      const canEdit = stage === 'COMPLETE' && Boolean(currentProjectId);
+      const rerenderBtn = document.getElementById('btnRerender');
+      const redoBtn = document.getElementById('btnRedoFlagged');
+      if (rerenderBtn) rerenderBtn.style.display = canEdit ? 'inline-flex' : 'none';
+      if (redoBtn) redoBtn.style.display = (canEdit && (window._flaggedSceneCount || 0) > 0) ? 'inline-flex' : 'none';
+      window._currentStage = stage;
+    }
+
+    // ================= ADR-021: Scene editor (redo / alternatives / rerender) =================
+    let sceneJobTimer = null;
+
+    function setSceneJobStatus(text, color) {
+      const el = document.getElementById('sceneJobStatus');
+      if (!el) return;
+      el.style.display = text ? 'inline' : 'none';
+      el.style.color = color || 'var(--text-secondary)';
+      el.textContent = text || '';
+    }
+
+    async function pollSceneJob() {
+      if (!currentProjectId) return;
+      try {
+        const res = await fetch(`/api/projects/${currentProjectId}/scene-jobs`);
+        const job = await res.json();
+        if (job.state === 'running') {
+          setSceneJobStatus('⏳ ' + (job.message || job.label || 'Đang xử lý...'), '#ffb300');
+          sceneJobTimer = setTimeout(pollSceneJob, 2000);
+          return;
+        }
+        sceneJobTimer = null;
+        if (job.state === 'done') {
+          const r = job.result || {};
+          let msg = '✅ ' + (job.label || 'Hoàn tất');
+          if (r.changed !== undefined) {
+            msg += ` — đã thay ${r.changed} scene, giữ nguyên ${r.kept} scene (không tìm được footage tốt hơn)`;
+          } else if (r.kept) {
+            msg += ' — ' + (r.reason || 'giữ nguyên footage hiện tại');
+          } else {
+            msg += ' — đã ghép lại video cuối';
+          }
+          setSceneJobStatus(msg, r.kept && r.changed === undefined ? '#ffb300' : '#00e676');
+        } else if (job.state === 'error') {
+          setSceneJobStatus('❌ ' + (job.error || 'Lỗi'), '#ff6b6b');
+        }
+        // Force re-render so updated clips / badges are shown (cache-bust video players)
+        window._sceneCacheBust = Date.now();
+        await refreshProjectState(true);
+        document.querySelectorAll('video[id^="video-player-"]').forEach(v => {
+          const base = v.getAttribute('data-src');
+          if (base && v.src) v.src = base + '?t=' + window._sceneCacheBust;
+        });
+        if (typeof loadCompletedProjectAssets === 'function') loadCompletedProjectAssets();
+        if (job.state === 'done' && window._jobSummaryShownFor !== job.started_at) {
+          window._jobSummaryShownFor = job.started_at;
+          showJobSummary(job);
+        }
+      } catch (err) {
+        console.warn('pollSceneJob error', err);
+        sceneJobTimer = setTimeout(pollSceneJob, 4000);
+      }
+    }
+
+    async function postSceneAction(url, body, confirmText) {
+      if (!currentProjectId) return;
+      if (confirmText && !confirm(confirmText)) return;
+      try {
+        const res = await fetch(url, {
+          method: 'POST',
+          headers: body ? { 'Content-Type': 'application/json' } : {},
+          body: body ? JSON.stringify(body) : undefined,
+        });
+        const data = await res.json();
+        if (!res.ok) {
+          alert(data.detail || 'Không thực hiện được thao tác.');
+          return null;
+        }
+        setSceneJobStatus('⏳ ' + (data.message || data.label || 'Đang xử lý...'), '#ffb300');
+        if (!sceneJobTimer) sceneJobTimer = setTimeout(pollSceneJob, 1500);
+        return data;
+      } catch (err) {
+        alert('Lỗi kết nối: ' + err.message);
+        return null;
+      }
+    }
+
+    function redoScene(sceneId) {
+      postSceneAction(`/api/projects/${currentProjectId}/scenes/${sceneId}/redo`, null,
+        `Tự động tìm footage khác cho ${sceneId}? (AI sẽ chọn đoạn khớp nhất, không dùng lại đoạn hiện tại)`);
+    }
+
+    function redoFlaggedScenes() {
+      const auto = window._autoRedoCount || 0;
+      const manual = window._manualSceneIds || [];
+      if (auto === 0 && manual.length > 0) {
+        alert(`${manual.length} scene này AI đã thử cả thư viện footage lẫn tìm video mới trên YouTube nhưng không có đoạn nào tốt hơn, ` +
+              `nên bấm làm lại sẽ cho kết quả giống hệt.\n\n` +
+              `Với mỗi scene, hãy chọn một trong hai:\n` +
+              `  • 🎞 "Chọn footage khác" để tự chọn đoạn ưng ý\n` +
+              `  • ✔ "Chấp nhận" nếu footage hiện tại đã ổn\n\n` +
+              `Mở ${manual[0]} ngay bây giờ.`);
+        openAltModal(manual[0]);
+        return;
+      }
+      postSceneAction(`/api/projects/${currentProjectId}/scenes/redo-flagged`, null,
+        `AI sẽ thử tìm lại footage cho ${auto} scene cần kiểm tra: tìm trong thư viện trước, nếu không có đoạn đạt thì ` +
+        `tự tìm & tải video mới trên YouTube (tối đa 3 video/scene). Chỉ thay khi tìm được đoạn tốt hơn.` +
+        (manual.length ? `\n${manual.length} scene "cần chọn tay" sẽ được bỏ qua.` : '') + `\nTiếp tục?`);
+    }
+
+    async function acceptScene(sceneId) {
+      if (!currentProjectId) return;
+      try {
+        const res = await fetch(`/api/projects/${currentProjectId}/scenes/${sceneId}/accept`, { method: 'POST' });
+        const data = await res.json();
+        if (!res.ok) { alert(data.detail || 'Không chấp nhận được.'); return; }
+        setSceneJobStatus(`✔ Đã chấp nhận ${sceneId} — còn ${data.still_flagged} scene cần kiểm tra`, '#00e676');
+        await refreshProjectState(true);
+      } catch (err) {
+        alert('Lỗi kết nối: ' + err.message);
+      }
+    }
+
+    function showJobSummary(job) {
+      const r = job.result || {};
+      const rows = (r.scenes || (r.scene_id ? [r] : [])).map(s => {
+        let icon = '🔁', text = '';
+        if (s.error) { icon = '❌'; text = s.error; }
+        else if (s.kept) { icon = '⏸'; text = s.reason || 'Giữ nguyên footage hiện tại'; }
+        else { icon = '✅'; text = `Đã thay footage${s.score !== undefined && s.score !== null ? ' (điểm ' + (s.score > 1 ? Number(s.score).toFixed(0) + '/10' : Number(s.score).toFixed(3)) + ')' : ''}`; }
+        return `<tr><td style="padding:6px 10px; white-space:nowrap; font-weight:700; color:var(--accent-cyan);">${s.scene_id}</td>
+                    <td style="padding:6px 10px;">${icon}</td><td style="padding:6px 10px; color:var(--text-secondary); font-size:13px;">${escapeJsStr(text)}</td></tr>`;
+      }).join('');
+      if (!rows) return;
+      document.getElementById('altFootageTitle').textContent = 'Kết quả: ' + (job.label || '');
+      let head = '';
+      if (r.changed !== undefined) {
+        head = `<div style="margin-bottom:10px; font-size:13px;">Đã thay <b style="color:#00e676;">${r.changed}</b> scene · giữ nguyên <b style="color:#ffb300;">${r.kept}</b> scene` +
+               (r.skipped_exhausted ? ` · bỏ qua <b>${r.skipped_exhausted}</b> scene "cần chọn tay"` : '') +
+               (r.online_added ? ` · tải thêm <b style="color:#00b0ff;">${r.online_added}</b> video mới từ YouTube vào thư viện` : '') +
+               (r.still_flagged !== undefined ? ` · còn <b>${r.still_flagged}</b> scene cần kiểm tra` : '') + `</div>` +
+               (r.youtube_blocked ? `<div style="margin-bottom:10px; font-size:12px; color:#ff8a65;">⚠ YouTube đang chặn truy cập (anti-bot) nên một số scene chưa tìm online được — bấm lại sau ít phút/giờ.</div>` : '');
+      }
+      const tip = (r.kept || (r.still_flagged > 0))
+        ? `<div style="margin-top:10px; font-size:12px; color:var(--text-muted);">Scene "giữ nguyên" là do thư viện không có đoạn nào tốt hơn. Mở scene đó để <b>Chọn footage khác</b> (tự chọn) hoặc <b>Chấp nhận</b> footage hiện tại.</div>` : '';
+      document.getElementById('altFootageBody').innerHTML = head + `<table style="width:100%; border-collapse:collapse;">${rows}</table>` + tip;
+      document.getElementById('altFootageModal').style.display = 'flex';
+    }
+
+    async function rerenderProject() {
+      if (!currentProjectId) return;
+      if (!confirm('Render lại toàn bộ dự án?\nBản hiện tại sẽ được sao lưu vào cache/backups. Kịch bản và giọng đọc được giữ nguyên.')) return;
+      try {
+        const res = await fetch(`/api/projects/${currentProjectId}/rerender`, { method: 'POST' });
+        const data = await res.json();
+        if (!res.ok) { alert(data.detail || 'Không render lại được.'); return; }
+        setSceneJobStatus('♻ Đã sao lưu bản cũ và bắt đầu render lại...', '#c79bff');
+        refreshProjectState(true);
+      } catch (err) {
+        alert('Lỗi kết nối: ' + err.message);
+      }
+    }
+
+    async function openAltModal(sceneId) {
+      const modal = document.getElementById('altFootageModal');
+      const body = document.getElementById('altFootageBody');
+      document.getElementById('altFootageTitle').textContent = `Chọn footage khác cho ${sceneId}`;
+      body.innerHTML = '<div style="padding:30px; text-align:center; color:var(--text-muted);">⏳ Đang tìm các đoạn footage phù hợp trong thư viện (CLIP cục bộ)...</div>';
+      modal.style.display = 'flex';
+      try {
+        const res = await fetch(`/api/projects/${currentProjectId}/scenes/${sceneId}/alternatives?k=6`);
+        const data = await res.json();
+        if (!res.ok) { body.innerHTML = `<div style="padding:20px; color:#ff6b6b;">${data.detail || 'Lỗi'}</div>`; return; }
+        const card = (alt, isCurrent) => `
+          <div style="border:1px solid ${isCurrent ? 'rgba(0,229,255,0.5)' : 'var(--border-dark)'}; border-radius:8px; padding:8px; background:var(--bg-card);">
+            ${alt.preview_jpg_b64 ? `<img src="data:image/jpeg;base64,${alt.preview_jpg_b64}" style="width:100%; border-radius:4px; display:block;">` : ''}
+            <div style="font-size:12px; margin-top:6px; color:var(--text-secondary); white-space:nowrap; overflow:hidden; text-overflow:ellipsis;" title="${escapeJsStr(alt.title || '')}">${alt.title || alt.video_id}</div>
+            <div style="display:flex; justify-content:space-between; align-items:center; margin-top:6px; font-size:11px; font-family:var(--font-mono);">
+              <span>@${Math.floor(alt.start / 60)}:${String(Math.floor(alt.start % 60)).padStart(2, '0')}${alt.clip_score !== undefined ? ' · khớp ' + alt.clip_score.toFixed(3) : ''}</span>
+              ${isCurrent ? '<span style="color:var(--accent-cyan); font-weight:700;">ĐANG DÙNG</span>' :
+                `<button class="btn-scene-video" style="padding:3px 10px;" onclick="applyAlt('${sceneId}','${alt.video_id}',${alt.start})">✔ Dùng đoạn này</button>`}
+            </div>
+          </div>`;
+        let html = `<div style="font-size:13px; color:var(--text-secondary); margin-bottom:10px; line-height:1.45;">“${escapeJsStr(data.text || '')}”</div>`;
+        html += '<div style="display:grid; grid-template-columns:repeat(auto-fill,minmax(280px,1fr)); gap:10px;">';
+        if (data.current) html += card(data.current, true);
+        (data.alternatives || []).forEach(a => { html += card(a, false); });
+        html += '</div>';
+        if (!(data.alternatives || []).length) html += '<div style="padding:16px; color:var(--text-muted);">Không còn đoạn footage chưa dùng nào phù hợp trong thư viện.</div>';
+        body.innerHTML = html;
+      } catch (err) {
+        body.innerHTML = `<div style="padding:20px; color:#ff6b6b;">Lỗi kết nối: ${err.message}</div>`;
+      }
+    }
+
+    function closeAltModal() {
+      document.getElementById('altFootageModal').style.display = 'none';
+    }
+
+    async function applyAlt(sceneId, videoId, start) {
+      const r = await postSceneAction(`/api/projects/${currentProjectId}/scenes/${sceneId}/apply`, { video_id: videoId, start: start });
+      if (r) closeAltModal();
     }
 
     // Wire project screen UI controls
@@ -3660,6 +3933,14 @@
           if (imgModelInput) imgModelInput.value = data.image_model;
         }
 
+        // ADR-021: Vision judge model (+ suggestions from cached 9router models)
+        const judgeInput = document.getElementById('settingJudgeModel');
+        if (judgeInput) judgeInput.value = data.semantic_judge_model || '';
+        const judgeList = document.getElementById('judgeModelList');
+        if (judgeList && Array.isArray(data.cached_models)) {
+          judgeList.innerHTML = data.cached_models.map(m => `<option value="${m}"></option>`).join('');
+        }
+
         // Direct Gemini API Key
         const apiKeyInput = document.getElementById('settingGeminiApiKey');
         if (data.has_gemini_key) {
@@ -3785,9 +4066,67 @@
         updateBin('ffprobe', 'binVerFfprobe', 'binStatFfprobe');
         updateBin('yt-dlp', 'binVerYtdlp', 'binStatYtdlp');
         updateBin('BBDown', 'binVerBbdown', 'binStatBbdown');
+        renderClipStatus(data.clip || {});
       } catch (err) {
         console.warn('Lỗi khi kiểm tra công cụ:', err);
       }
+    }
+
+    // ADR-020: Local CLIP model (download & install from Settings)
+    let clipPollTimer = null;
+    function renderClipStatus(st) {
+      const verEl = document.getElementById('binVerClip');
+      const statEl = document.getElementById('binStatClip');
+      const btn = document.getElementById('btnInstallClip');
+      const wrap = document.getElementById('clipProgressWrap');
+      const bar = document.getElementById('clipProgressBar');
+      const txt = document.getElementById('clipProgressText');
+      if (!verEl || !statEl || !btn) return;
+      const running = st.install_state === 'running';
+      const installed = !!st.installed;
+      verEl.textContent = installed ? (st.version || 'Khả dụng')
+        : (st.missing_packages && st.missing_packages.length ? 'Thiếu thư viện: ' + st.missing_packages.join(', ') : 'Chưa tải model');
+      statEl.textContent = running ? 'ĐANG CÀI' : (installed ? 'SẴN SÀNG' : 'THIẾU');
+      statEl.className = 'binary-status ' + (installed && !running ? 'ready' : 'missing');
+      wrap.style.display = running || st.install_state === 'error' ? 'block' : 'none';
+      bar.style.width = Math.round(st.progress || 0) + '%';
+      txt.textContent = st.install_state === 'error' ? ('❌ ' + (st.error || st.message || 'Lỗi')) : (st.message || '');
+      btn.disabled = running;
+      btn.innerHTML = running ? '<span>⏳</span> Đang tải / cài đặt...'
+        : (installed ? '<span>🔁</span> Cài lại / kiểm tra CLIP' : '<span>⬇️</span> Tải &amp; cài CLIP (~155 MB)');
+    }
+
+    async function pollClipStatus() {
+      try {
+        const res = await fetch('/api/system/clip/status');
+        if (!res.ok) return;
+        const st = await res.json();
+        renderClipStatus(st);
+        if (st.install_state === 'running') {
+          clipPollTimer = setTimeout(pollClipStatus, 1500);
+        } else {
+          clipPollTimer = null;
+          if (st.install_state === 'done' && st.installed) refreshBinaries();
+        }
+      } catch (err) {
+        console.warn('Lỗi kiểm tra CLIP:', err);
+      }
+    }
+
+    const btnInstallClip = document.getElementById('btnInstallClip');
+    if (btnInstallClip) {
+      btnInstallClip.addEventListener('click', async () => {
+        btnInstallClip.disabled = true;
+        try {
+          const res = await fetch('/api/system/clip/install', { method: 'POST' });
+          const data = await res.json();
+          if (data.status) renderClipStatus(data.status);
+          if (!clipPollTimer) pollClipStatus();
+        } catch (err) {
+          alert('Lỗi kết nối khi cài CLIP: ' + err.message);
+          btnInstallClip.disabled = false;
+        }
+      });
     }
 
     // Auto setup / download external binaries
@@ -4013,6 +4352,7 @@
           ninerouter_base_url: getVal('settingNineRouterBaseUrl', 'http://localhost:20128/v1').trim(),
           llm_model: getVal('settingLlmModel', 'antigravity/claude-3-5-sonnet'),
           image_model: getVal('settingImageModel', 'ag/gemini-3.8-flash').trim(),
+          semantic_judge_model: (document.getElementById('settingJudgeModel') ? document.getElementById('settingJudgeModel').value : '').trim(),
           image_provider: '9router',
           douyin_cookie: getVal('settingDouyinCookie').trim(),
           jitter_min_sec: getNum('settingJitterMin', 2.0),
@@ -4246,6 +4586,18 @@
           Đóng
         </button>
       </div>
+    </div>
+  </div>
+
+  <!-- ADR-021: Alternative footage picker modal -->
+  <div id="altFootageModal" onclick="if (event.target === this) closeAltModal()" style="display:none; position:fixed; inset:0; background:rgba(0,0,0,0.72); z-index:10000; align-items:center; justify-content:center; padding:24px;">
+    <div style="background:var(--bg-panel, #12151c); border:1px solid var(--border-dark); border-radius:12px; width:min(1100px, 96vw); max-height:90vh; overflow:auto; padding:18px 20px;">
+      <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:10px;">
+        <div id="altFootageTitle" style="font-weight:700; font-size:15px; color:var(--accent-cyan);">Chọn footage khác</div>
+        <button onclick="closeAltModal()" style="background:var(--bg-card); border:1px solid var(--border-dark); color:var(--text-secondary); padding:4px 12px; border-radius:6px; cursor:pointer;">Đóng</button>
+      </div>
+      <div style="font-size:12px; color:var(--text-muted); margin-bottom:10px;">Các đoạn được CLIP cục bộ xếp hạng theo độ khớp với kịch bản (không tốn lượt gọi AI). Chỉ hiện đoạn chưa được scene khác dùng.</div>
+      <div id="altFootageBody"></div>
     </div>
   </div>
 </body>

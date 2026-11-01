@@ -170,9 +170,12 @@ def test_coordinator_always_passes_subject_anchor_source():
     """Guard against re-introducing the conditional anchor bypass (RC-1)."""
     import inspect
     import autovideo.coordinator as coord_mod
-    src = inspect.getsource(coord_mod.MasterPipelineCoordinator._run_pipeline_sync)
+    src = inspect.getsource(coord_mod.MasterPipelineCoordinator._run_pipeline_body)
     assert "pass_anchor" not in src and "primary_anchor" not in src
-    assert src.count("subject_anchor=subject_anchor,") >= 2
+    # Every online sourcing call must carry the anchor (ADR-020 removed the relaxed-duration retry call)
+    n_calls = src.count("self.sourcing_engine.source_scene_asset(")
+    assert n_calls >= 1
+    assert src.count("subject_anchor=subject_anchor,") >= n_calls
     assert "scene_terms=scene_terms" in src
 
 

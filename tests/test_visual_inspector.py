@@ -191,3 +191,38 @@ def test_sourcing_anchor_rejection_contract(tmp_path):
         # Sourcing MUST pick the authentic spotted hyena video, rejecting 4K fennec fox and castle
         assert info.video_id == "real_hyena"
 
+
+def test_watermark_detection_bright_overlay(tmp_path):
+    """Verify that bright static station logos in corners are flagged."""
+    f1 = np.full((720, 1280, 3), 100, dtype=np.uint8)
+    f2 = np.full((720, 1280, 3), 130, dtype=np.uint8)  # Moving background (diff=30)
+    # Add bright white static logo in top-left (e.g. 50x50 white square at (20, 20))
+    f1[20:70, 20:70] = [255, 255, 255]
+    f2[20:70, 20:70] = [255, 255, 255]  # Static between f1 and f2
+
+    mock_v = tmp_path / "mock_watermark.mp4"
+    mock_v.write_bytes(b"x" * 2048)
+
+    with patch.object(VisualQualityInspector, "_extract_frame", side_effect=[f1, f1, f2, f2]):
+        res = VisualQualityInspector.inspect_video_segment(mock_v, 0.0, 5.0)
+        assert not res.is_clean
+        assert res.has_watermark
+        assert any("corner_watermark(top_left)" in d for d in res.defects)
+
+
+def test_watermark_no_false_positive_on_moving_bushes(tmp_path):
+    """Verify that moving high-frequency textures (savanna bushes/grass) without bright overlays pass cleanly."""
+    np.random.seed(42)
+    # Natural green/brown bushes with texture (luminance ~ 80-130, no bright pixels > 195)
+    f1 = np.random.randint(60, 130, (720, 1280, 3), dtype=np.uint8)
+    f2 = np.random.randint(80, 150, (720, 1280, 3), dtype=np.uint8)  # Camera pan / movement
+
+    mock_v = tmp_path / "mock_clean_bushes.mp4"
+    mock_v.write_bytes(b"x" * 2048)
+
+    with patch.object(VisualQualityInspector, "_extract_frame", side_effect=[f1, f1, f2, f2]):
+        res = VisualQualityInspector.inspect_video_segment(mock_v, 0.0, 5.0)
+        assert res.is_clean
+        assert not res.has_watermark
+        assert "corner_watermark" not in str(res.defects)
+

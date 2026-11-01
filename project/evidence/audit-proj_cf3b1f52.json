@@ -1,0 +1,831 @@
+{
+  "project_id": "proj_cf3b1f52",
+  "anchor": "spotted hyena",
+  "total": 37,
+  "flagged": 31,
+  "scenes": [
+    {
+      "scene_id": "SCENE_001",
+      "title": "These guys even chew up the bones!!! Feeding Spotted Hyena at Lion Safari Park South Africa",
+      "query": "\"spotted hyena\" jaws chewing bone",
+      "issues": [
+        "semantic_fail(score=4.0)",
+        "needs_review:semantic_below_threshold(score=4.0)",
+        "live_judge_fail(score=4.0)"
+      ],
+      "live_judge": {
+        "verdict": "fail",
+        "score": 4.0,
+        "subject_present": true,
+        "is_real_footage": true,
+        "has_overlay": false,
+        "reason": "Spotted hyenas are visible at night behind a chain-link fence feeding on scraps/meat, but there is no close view or demonstration of bone-crushing jaw strength as described in the narration.",
+        "sampled_offsets": [
+          0.83,
+          2.76,
+          4.69
+        ]
+      }
+    },
+    {
+      "scene_id": "SCENE_002",
+      "title": "",
+      "query": "spotted hyena walking savanna sunrise",
+      "issues": [
+        "no_traceable_source(tier4_reuse?)",
+        "needs_review:tier4_reused_footage_from_SCENE_001",
+        "live_judge_fail(score=3.0)"
+      ],
+      "live_judge": {
+        "verdict": "fail",
+        "score": 3.0,
+        "subject_present": true,
+        "is_real_footage": true,
+        "has_overlay": false,
+        "reason": "Spotted hyenas are visible, but the entire shot is filmed through a prominent chain-link fence at night, looking captive or behind an enclosure rather than showing a natural pacing behavior in the wild as desired.",
+        "sampled_offsets": [
+          0.92,
+          3.08,
+          5.24
+        ]
+      }
+    },
+    {
+      "scene_id": "SCENE_003",
+      "title": "male lion found hyena hide and attack it video",
+      "query": "\"spotted hyena\" s facing male lion",
+      "issues": [
+        "semantic_fail(score=3.0)",
+        "needs_review:semantic_below_threshold(score=3.0)",
+        "live_judge_fail(score=3.0)"
+      ],
+      "live_judge": {
+        "verdict": "fail",
+        "score": 3.0,
+        "subject_present": true,
+        "is_real_footage": true,
+        "has_overlay": false,
+        "reason": "A single spotted hyena is seen trotting and looking across a grassy field. It does not show a pack standing guard over a kill or an approaching lion.",
+        "sampled_offsets": [
+          0.9,
+          3.0,
+          5.1
+        ]
+      }
+    },
+    {
+      "scene_id": "SCENE_004",
+      "title": "Hyena vs Baby Wildebeest | BBC Earth",
+      "query": "\"spotted hyena\" pack chasing wildebeest",
+      "issues": [
+        "semantic_fail(score=5.0)",
+        "needs_review:semantic_below_threshold(score=5.0)",
+        "live_judge_fail(score=5.0)"
+      ],
+      "live_judge": {
+        "verdict": "fail",
+        "score": 5.0,
+        "subject_present": true,
+        "is_real_footage": true,
+        "has_overlay": true,
+        "reason": "Spotted hyenas are shown walking across the savanna, but they are only calmly moving rather than actively chasing wildebeest at high speed to hunt.",
+        "sampled_offsets": [
+          1.06,
+          3.52,
+          5.98
+        ]
+      }
+    },
+    {
+      "scene_id": "SCENE_005",
+      "title": "Spotted hyena clan den in rocky section.",
+      "query": "\"spotted hyena\" female  savanna rocks",
+      "issues": [],
+      "live_judge": {
+        "verdict": "pass",
+        "score": 6.0,
+        "subject_present": true,
+        "is_real_footage": true,
+        "has_overlay": false,
+        "reason": "Spotted hyenas are clearly visible in a natural rocky landscape, matching the subject of the narration regarding their taxonomy, though it shows walking or resting groups rather than a clear single profile shot illustrating their anatomy.",
+        "sampled_offsets": [
+          1.19,
+          3.96,
+          6.73
+        ]
+      }
+    },
+    {
+      "scene_id": "SCENE_006",
+      "title": "",
+      "query": "spotted hyena running dust slow motion",
+      "issues": [
+        "no_traceable_source(tier4_reuse?)",
+        "needs_review:tier4_reused_footage_from_SCENE_005",
+        "live_judge_fail(score=4.0)"
+      ],
+      "live_judge": {
+        "verdict": "fail",
+        "score": 4.0,
+        "subject_present": true,
+        "is_real_footage": true,
+        "has_overlay": false,
+        "reason": "Spotted hyenas are clearly visible, but they are slowly walking or resting rather than running at high speed to demonstrate the biomechanics of their sprint described in the narration.",
+        "sampled_offsets": [
+          1.27,
+          4.24,
+          7.21
+        ]
+      }
+    },
+    {
+      "scene_id": "SCENE_007",
+      "title": "Spotted Hyena Feast",
+      "query": "\"spotted hyena\" hyena biting carcass close up",
+      "issues": [
+        "semantic_fail(score=4.0)",
+        "needs_review:semantic_below_threshold(score=4.0)"
+      ],
+      "live_judge": {
+        "verdict": "pass",
+        "score": 5.0,
+        "subject_present": true,
+        "is_real_footage": true,
+        "has_overlay": false,
+        "reason": "Spotted hyenas are shown feeding/gnawing on a carcass in tall grass, which relates generally to hyena jaw power, but it is filmed from a wide distance rather than showing any visible detail of the skull, sagittal crest, or jaw muscle mechanics described in the narration.",
+        "sampled_offsets": [
+          1.24,
+          4.12,
+          7.0
+        ]
+      }
+    },
+    {
+      "scene_id": "SCENE_008",
+      "title": "",
+      "query": "spotted hyena teeth open mouth",
+      "issues": [
+        "no_traceable_source(tier4_reuse?)",
+        "needs_review:tier4_reused_footage_from_SCENE_007"
+      ],
+      "live_judge": {
+        "verdict": "pass",
+        "score": 5.0,
+        "subject_present": true,
+        "is_real_footage": true,
+        "has_overlay": false,
+        "reason": "Shows spotted hyenas feeding on a carcass in the grass, but it is a wide shot where teeth and bone marrow consumption details described in the narration cannot be clearly seen.",
+        "sampled_offsets": [
+          1.18,
+          3.92,
+          6.66
+        ]
+      }
+    },
+    {
+      "scene_id": "SCENE_009",
+      "title": "Spotted Hyenas - strange behaviour at waterhole",
+      "query": "\"spotted hyena\" animal behavior",
+      "issues": [],
+      "live_judge": {
+        "verdict": "pass",
+        "score": 6.0,
+        "subject_present": true,
+        "is_real_footage": true,
+        "has_overlay": false,
+        "reason": "Multiple spotted hyenas are seen gathering and interacting near trees, fitting the theme of a group coming together, though it is full daylight around a concrete structure rather than twilight in a river basin.",
+        "sampled_offsets": [
+          0.84,
+          2.8,
+          4.76
+        ]
+      }
+    },
+    {
+      "scene_id": "SCENE_010",
+      "title": "The Matriarch's Morning Walk 🐾 | The Queen's Eye (Ep 1) | WildPulse Earth 4K",
+      "query": "\"spotted hyena\" trotting endurance savanna",
+      "issues": [
+        "semantic_fail(score=3.0)",
+        "needs_review:semantic_below_threshold(score=3.0)",
+        "live_judge_fail(score=3.0)"
+      ],
+      "live_judge": {
+        "verdict": "fail",
+        "score": 3.0,
+        "subject_present": true,
+        "is_real_footage": true,
+        "has_overlay": true,
+        "reason": "The footage shows two hyenas interacting closely and sniffing each other while stationary, rather than a single hyena running or trotting to demonstrate cardiovascular stamina and endurance.",
+        "sampled_offsets": [
+          1.13,
+          3.76,
+          6.39
+        ]
+      }
+    },
+    {
+      "scene_id": "SCENE_011",
+      "title": "Hyena hunting for zebra and wildebeest in Masai Mara, Kenya",
+      "query": "\"spotted hyena\" pursuing zebra chase",
+      "issues": [],
+      "live_judge": {
+        "verdict": "pass",
+        "score": 6.0,
+        "subject_present": true,
+        "is_real_footage": true,
+        "has_overlay": false,
+        "reason": "A spotted hyena is running across a grassy plain, fitting the endurance pursuit theme, but there is no prey visible and the pace looks more like a steady lope than an intense chase right behind a zebra colt.",
+        "sampled_offsets": [
+          1.02,
+          3.4,
+          5.78
+        ]
+      }
+    },
+    {
+      "scene_id": "SCENE_012",
+      "title": "Hyena standoff with a newborn calf",
+      "query": "\"spotted hyena\" hyena pack tackling antelope kill",
+      "issues": [
+        "semantic_fail(score=3.0)",
+        "needs_review:semantic_below_threshold(score=3.0)",
+        "live_judge_fail(score=3.0)"
+      ],
+      "live_judge": {
+        "verdict": "fail",
+        "score": 3.0,
+        "subject_present": true,
+        "is_real_footage": true,
+        "has_overlay": true,
+        "reason": "Only a single hyena is standing still observing buffaloes; there is no pack, no coordinated attack, and no pulling down of prey as described in the narration. Burned-in explanatory text is also present.",
+        "sampled_offsets": [
+          1.03,
+          3.44,
+          5.85
+        ]
+      }
+    },
+    {
+      "scene_id": "SCENE_013",
+      "title": "The sweetest secret of the Mara",
+      "query": "\"spotted hyena\" alpha female hyena matriarch den",
+      "issues": [
+        "semantic_fail(score=4.0)",
+        "needs_review:semantic_below_threshold(score=4.0)",
+        "live_judge_fail(score=4.0)"
+      ],
+      "live_judge": {
+        "verdict": "fail",
+        "score": 4.0,
+        "subject_present": true,
+        "is_real_footage": true,
+        "has_overlay": true,
+        "reason": "A spotted hyena is carrying a young pup/cub in its mouth at night, showing maternal/cub behavior rather than an imposing matriarch overlooking the clan/social structure.",
+        "sampled_offsets": [
+          0.98,
+          3.28,
+          5.58
+        ]
+      }
+    },
+    {
+      "scene_id": "SCENE_014",
+      "title": "",
+      "query": "female spotted hyena dominating male",
+      "issues": [
+        "no_traceable_source(tier4_reuse?)",
+        "needs_review:tier4_reused_footage_from_SCENE_013",
+        "live_judge_fail(score=3.0)"
+      ],
+      "live_judge": {
+        "verdict": "fail",
+        "score": 3.0,
+        "subject_present": true,
+        "is_real_footage": true,
+        "has_overlay": true,
+        "reason": "The clip shows a mother hyena carrying a cub in her mouth at night. It does not depict female dominance, aggression towards a male, or feeding hierarchy as described in the narration.",
+        "sampled_offsets": [
+          1.15,
+          3.84,
+          6.53
+        ]
+      }
+    },
+    {
+      "scene_id": "SCENE_015",
+      "title": "",
+      "query": "spotted hyena greeting ceremony clan",
+      "issues": [
+        "no_traceable_source(tier4_reuse?)",
+        "needs_review:tier4_reused_footage_from_SCENE_014",
+        "live_judge_fail(score=3.0)"
+      ],
+      "live_judge": {
+        "verdict": "fail",
+        "score": 3.0,
+        "subject_present": true,
+        "is_real_footage": true,
+        "has_overlay": true,
+        "reason": "The clip shows a single spotted hyena carrying a cub in its mouth at night, not two hyenas performing a greeting ceremony.",
+        "sampled_offsets": [
+          1.12,
+          3.72,
+          6.32
+        ]
+      }
+    },
+    {
+      "scene_id": "SCENE_016",
+      "title": "Tiếng linh cẩu gọi bạn tình (Spotted Hyena Calling)",
+      "query": "\"spotted hyena\" linh cẩu đốm trong đêm",
+      "issues": [
+        "semantic_fail(score=3.0)",
+        "needs_review:semantic_below_threshold(score=3.0)",
+        "live_judge_fail(score=3.0)"
+      ],
+      "live_judge": {
+        "verdict": "fail",
+        "score": 3.0,
+        "subject_present": true,
+        "is_real_footage": true,
+        "has_overlay": false,
+        "reason": "A hyena is seen at a distance wading in water near the shoreline, completely unrelated to vocalizing or laughing.",
+        "sampled_offsets": [
+          1.09,
+          3.64,
+          6.19
+        ]
+      }
+    },
+    {
+      "scene_id": "SCENE_017",
+      "title": "Hyenas Intimidate Two Male Lions on Kill- Londolozi TV",
+      "query": "\"spotted hyena\" lions chasing hyenas off carcass",
+      "issues": [],
+      "live_judge": {
+        "verdict": "pass",
+        "score": 6.0,
+        "subject_present": true,
+        "is_real_footage": true,
+        "has_overlay": false,
+        "reason": "Shows hyenas observing lions near a carcass at a kill site, fitting the competitive dynamic between the two species, but features stationary male lions rather than a charging pride of lionesses.",
+        "sampled_offsets": [
+          1.14,
+          3.8,
+          6.46
+        ]
+      }
+    },
+    {
+      "scene_id": "SCENE_018",
+      "title": "Buffalo calf faces down a spotted hyena",
+      "query": "\"spotted hyena\" hyena pack counter attacking lions",
+      "issues": [
+        "semantic_fail(score=3.0)",
+        "needs_review:semantic_below_threshold(score=3.0)",
+        "live_judge_fail(score=3.0)"
+      ],
+      "live_judge": {
+        "verdict": "fail",
+        "score": 3.0,
+        "subject_present": true,
+        "is_real_footage": true,
+        "has_overlay": false,
+        "reason": "The spotted hyena is present, but it is stalking or confronting a small dark animal (likely a calf) in wide shots, rather than snarling intensely at close range or rallying reinforcements to fight lions.",
+        "sampled_offsets": [
+          1.14,
+          3.8,
+          6.46
+        ]
+      }
+    },
+    {
+      "scene_id": "SCENE_019",
+      "title": "Spotted Hyenas - strange behaviour at waterhole",
+      "query": "\"spotted hyena\" hyena pack gathering savanna",
+      "issues": [],
+      "live_judge": {
+        "verdict": "pass",
+        "score": 5.0,
+        "subject_present": true,
+        "is_real_footage": true,
+        "has_overlay": false,
+        "reason": "Shows a clan of spotted hyenas moving in a savanna landscape, but lacks calling or attacking behavior.",
+        "sampled_offsets": [
+          1.45,
+          4.84,
+          8.23
+        ]
+      }
+    },
+    {
+      "scene_id": "SCENE_020",
+      "title": "Hyenas laughing (and whooping, giggling, and grunting)",
+      "query": "\"spotted hyena\" laughing vocalization",
+      "issues": [
+        "semantic_fail(score=4.0)",
+        "needs_review:semantic_below_threshold(score=4.0)",
+        "live_judge_fail(score=4.0)"
+      ],
+      "live_judge": {
+        "verdict": "fail",
+        "score": 4.0,
+        "subject_present": true,
+        "is_real_footage": true,
+        "has_overlay": true,
+        "reason": "Shows spotted hyenas (walking and running), but lacks the key vocalizing/laughing posture, open jaws facing a rival clan member, or clear communication context described in the narration.",
+        "sampled_offsets": [
+          1.36,
+          4.52,
+          7.68
+        ]
+      }
+    },
+    {
+      "scene_id": "SCENE_021",
+      "title": "Hyena Clan vs Lion — Who REALLY Wins? ⚔️ Realistic Wildlife Showdown 2026",
+      "query": "\"spotted hyena\" clan vs lion",
+      "issues": [],
+      "live_judge": {
+        "verdict": "pass",
+        "score": 6.0,
+        "subject_present": true,
+        "is_real_footage": true,
+        "has_overlay": false,
+        "reason": "Shows spotted hyenas confronting a male lion, but only two hyenas are visible facing the lion rather than a large clan of over twenty mobbing or harassing from behind.",
+        "sampled_offsets": [
+          1.38,
+          4.6,
+          7.82
+        ]
+      }
+    },
+    {
+      "scene_id": "SCENE_022",
+      "title": "CUTE Spotted Hyena! | Ngorongoro Crater, Tanzania| OneWildPlanet | African Serengeti Safari Animals",
+      "query": "\"spotted hyena\" alpha female  portrait",
+      "issues": [
+        "live_judge_fail(score=4.0)"
+      ],
+      "live_judge": {
+        "verdict": "fail",
+        "score": 4.0,
+        "subject_present": true,
+        "is_real_footage": true,
+        "has_overlay": false,
+        "reason": "The spotted hyena is visible, but it is a medium-wide shot of the animal foraging or sniffing the ground in dim light, rather than a close-up showing muscular dominance, scars, or intense eyes as described.",
+        "sampled_offsets": [
+          1.4,
+          4.68,
+          7.96
+        ]
+      }
+    },
+    {
+      "scene_id": "SCENE_023",
+      "title": "",
+      "query": "spotted hyena clan greeting ceremony",
+      "issues": [
+        "no_traceable_source(tier4_reuse?)",
+        "needs_review:tier4_reused_footage_from_SCENE_022",
+        "live_judge_fail(score=3.0)"
+      ],
+      "live_judge": {
+        "verdict": "fail",
+        "score": 3.0,
+        "subject_present": true,
+        "is_real_footage": true,
+        "has_overlay": false,
+        "reason": "A spotted hyena is present, but it is alone, foraging or sniffing the ground in grass; there is no dominant female, submissive greeting ritual, or social interaction reflecting the narration.",
+        "sampled_offsets": [
+          1.21,
+          4.04,
+          6.87
+        ]
+      }
+    },
+    {
+      "scene_id": "SCENE_024",
+      "title": "",
+      "query": "spotted hyena communal den landscape",
+      "issues": [
+        "no_traceable_source(tier4_reuse?)",
+        "needs_review:tier4_reused_footage_from_SCENE_023",
+        "live_judge_fail(score=3.0)"
+      ],
+      "live_judge": {
+        "verdict": "fail",
+        "score": 3.0,
+        "subject_present": true,
+        "is_real_footage": true,
+        "has_overlay": false,
+        "reason": "A spotted hyena is present, but it is alone, foraging or sniffing the ground in grass, with no den entrance, earth mounds, or communal resting scene visible.",
+        "sampled_offsets": [
+          1.39,
+          4.64,
+          7.89
+        ]
+      }
+    },
+    {
+      "scene_id": "SCENE_025",
+      "title": "Two Spotted Hyena cubs nursing in Kruger National Park",
+      "query": "\"spotted hyena\" hyena cubs suckling den",
+      "issues": [
+        "semantic_fail(score=3.0)",
+        "needs_review:semantic_below_threshold(score=3.0)",
+        "live_judge_fail(score=3.0)"
+      ],
+      "live_judge": {
+        "verdict": "fail",
+        "score": 3.0,
+        "subject_present": true,
+        "is_real_footage": true,
+        "has_overlay": false,
+        "reason": "An adult spotted hyena is resting and rolling on its back in dry grass; there are no cubs or nursing activity shown.",
+        "sampled_offsets": [
+          1.33,
+          4.44,
+          7.55
+        ]
+      }
+    },
+    {
+      "scene_id": "SCENE_026",
+      "title": "",
+      "query": "spotted hyena cub face close up",
+      "issues": [
+        "no_traceable_source(tier4_reuse?)",
+        "needs_review:tier4_reused_footage_from_SCENE_025",
+        "live_judge_fail(score=3.0)"
+      ],
+      "live_judge": {
+        "verdict": "fail",
+        "score": 3.0,
+        "subject_present": true,
+        "is_real_footage": true,
+        "has_overlay": false,
+        "reason": "The footage shows an adult or subadult hyena lying down and yawning/resting in grass, not a newborn/cub with sharp teeth emerging from a dark underground burrow.",
+        "sampled_offsets": [
+          1.16,
+          3.88,
+          6.6
+        ]
+      }
+    },
+    {
+      "scene_id": "SCENE_027",
+      "title": "",
+      "query": "young spotted hyena fur spots",
+      "issues": [
+        "no_traceable_source(tier4_reuse?)",
+        "needs_review:tier4_reused_footage_from_SCENE_026",
+        "live_judge_fail(score=3.0)"
+      ],
+      "live_judge": {
+        "verdict": "fail",
+        "score": 3.0,
+        "subject_present": true,
+        "is_real_footage": true,
+        "has_overlay": false,
+        "reason": "The clip shows an adult or subadult spotted hyena lying down, yawning, and rolling in grass. There is no young cub showing changing fur, no paws chew detail, and no bone.",
+        "sampled_offsets": [
+          1.22,
+          4.08,
+          6.94
+        ]
+      }
+    },
+    {
+      "scene_id": "SCENE_028",
+      "title": "",
+      "query": "spotted hyena walking carcass bones",
+      "issues": [
+        "no_traceable_source(tier4_reuse?)",
+        "needs_review:tier4_reused_footage_from_SCENE_027",
+        "live_judge_fail(score=3.0)"
+      ],
+      "live_judge": {
+        "verdict": "fail",
+        "score": 3.0,
+        "subject_present": true,
+        "is_real_footage": true,
+        "has_overlay": false,
+        "reason": "The spotted hyena is present, but it is just lying upside down and rolling in dry grass rather than walking past skeletal remains or demonstrating feeding/digestion as described.",
+        "sampled_offsets": [
+          1.28,
+          4.28,
+          7.28
+        ]
+      }
+    },
+    {
+      "scene_id": "SCENE_029",
+      "title": "",
+      "query": "spotted hyena eating rotting carcass",
+      "issues": [
+        "no_traceable_source(tier4_reuse?)",
+        "needs_review:tier4_reused_footage_from_SCENE_028",
+        "live_judge_fail(score=3.0)"
+      ],
+      "live_judge": {
+        "verdict": "fail",
+        "score": 3.0,
+        "subject_present": true,
+        "is_real_footage": true,
+        "has_overlay": false,
+        "reason": "The spotted hyena is present, but it is merely rolling around or lying in grass rather than dragging a ribcage or clearing a rotting carcass from muddy water.",
+        "sampled_offsets": [
+          1.27,
+          4.24,
+          7.21
+        ]
+      }
+    },
+    {
+      "scene_id": "SCENE_030",
+      "title": "",
+      "query": "spotted hyena face muddy water",
+      "issues": [
+        "no_traceable_source(tier4_reuse?)",
+        "needs_review:tier4_reused_footage_from_SCENE_029",
+        "live_judge_fail(score=3.0)"
+      ],
+      "live_judge": {
+        "verdict": "fail",
+        "score": 3.0,
+        "subject_present": true,
+        "is_real_footage": true,
+        "has_overlay": false,
+        "reason": "The spotted hyena is present, but it is rolling around or lying on its back in dry grass playing or resting, not lifting its head from feeding/muddy water as described.",
+        "sampled_offsets": [
+          1.12,
+          3.72,
+          6.32
+        ]
+      }
+    },
+    {
+      "scene_id": "SCENE_031",
+      "title": "",
+      "query": "white hyena droppings chalky feces",
+      "issues": [
+        "no_traceable_source(tier4_reuse?)",
+        "needs_review:tier4_reused_footage_from_SCENE_030",
+        "live_judge_fail(score=1.0)"
+      ],
+      "live_judge": {
+        "verdict": "fail",
+        "score": 1.0,
+        "subject_present": true,
+        "is_real_footage": true,
+        "has_overlay": false,
+        "reason": "The clip shows hyenas lying down/playing in grass; it does not show white hyena droppings or insects as requested in the narration and shot description.",
+        "sampled_offsets": [
+          1.14,
+          3.8,
+          6.46
+        ]
+      }
+    },
+    {
+      "scene_id": "SCENE_032",
+      "title": "",
+      "query": "spotted hyena fence human conflict",
+      "issues": [
+        "no_traceable_source(tier4_reuse?)",
+        "needs_review:tier4_reused_footage_from_SCENE_031",
+        "live_judge_fail(score=3.0)"
+      ],
+      "live_judge": {
+        "verdict": "fail",
+        "score": 3.0,
+        "subject_present": true,
+        "is_real_footage": true,
+        "has_overlay": false,
+        "reason": "The spotted hyena is present, but it is rolling/resting on its back in the grass. There is no wire fence, farmland barrier, or pacing behavior mentioned in the narration.",
+        "sampled_offsets": [
+          1.21,
+          4.04,
+          6.87
+        ]
+      }
+    },
+    {
+      "scene_id": "SCENE_033",
+      "title": "",
+      "query": "spotted hyena walking snare snare trap",
+      "issues": [
+        "no_traceable_source(tier4_reuse?)",
+        "needs_review:tier4_reused_footage_from_SCENE_032",
+        "live_judge_fail(score=3.0)"
+      ],
+      "live_judge": {
+        "verdict": "fail",
+        "score": 3.0,
+        "subject_present": true,
+        "is_real_footage": true,
+        "has_overlay": false,
+        "reason": "The clip shows a spotted hyena mother lying on its back playing or nursing cubs, which completely contradicts the narration about poison baits, snare traps, persecution by farmers, or limping along a fence line.",
+        "sampled_offsets": [
+          1.44,
+          4.8,
+          8.16
+        ]
+      }
+    },
+    {
+      "scene_id": "SCENE_034",
+      "title": "",
+      "query": "spotted hyena wound scar close up",
+      "issues": [
+        "no_traceable_source(tier4_reuse?)",
+        "needs_review:tier4_reused_footage_from_SCENE_033",
+        "live_judge_fail(score=3.0)"
+      ],
+      "live_judge": {
+        "verdict": "fail",
+        "score": 3.0,
+        "subject_present": true,
+        "is_real_footage": true,
+        "has_overlay": false,
+        "reason": "The spotted hyena is visible lying on its back yawning/resting in grass, but there is no closeup of a shoulder scar to match the narration about scars from human-wildlife conflict.",
+        "sampled_offsets": [
+          1.16,
+          3.88,
+          6.6
+        ]
+      }
+    },
+    {
+      "scene_id": "SCENE_035",
+      "title": "",
+      "query": "spotted hyena standing termite mound",
+      "issues": [
+        "no_traceable_source(tier4_reuse?)",
+        "needs_review:tier4_reused_footage_from_SCENE_034",
+        "live_judge_fail(score=3.0)"
+      ],
+      "live_judge": {
+        "verdict": "fail",
+        "score": 3.0,
+        "subject_present": true,
+        "is_real_footage": true,
+        "has_overlay": false,
+        "reason": "The spotted hyena is present, but it is lying upside down in grass yawning/sleeping rather than standing majestically atop a termite mound overlooking the plains as desired for this introductory narration.",
+        "sampled_offsets": [
+          1.25,
+          4.16,
+          7.07
+        ]
+      }
+    },
+    {
+      "scene_id": "SCENE_036",
+      "title": "",
+      "query": "spotted hyena clan silhouette sunset",
+      "issues": [
+        "no_traceable_source(tier4_reuse?)",
+        "needs_review:tier4_reused_footage_from_SCENE_035",
+        "live_judge_fail(score=3.0)"
+      ],
+      "live_judge": {
+        "verdict": "fail",
+        "score": 3.0,
+        "subject_present": true,
+        "is_real_footage": true,
+        "has_overlay": false,
+        "reason": "A spotted hyena is present, but it is lying upside down/resting on its back in dry grass rather than walking into the sunset as described.",
+        "sampled_offsets": [
+          1.31,
+          4.36,
+          7.41
+        ]
+      }
+    },
+    {
+      "scene_id": "SCENE_037",
+      "title": "",
+      "query": "spotted hyena eye reflection sunset",
+      "issues": [
+        "no_traceable_source(tier4_reuse?)",
+        "needs_review:tier4_reused_footage_from_SCENE_036",
+        "live_judge_fail(score=3.0)"
+      ],
+      "live_judge": {
+        "verdict": "fail",
+        "score": 3.0,
+        "subject_present": true,
+        "is_real_footage": true,
+        "has_overlay": false,
+        "reason": "The spotted hyena is present, but it is lying upside down on its back yawning/resting rather than showing an eye detail shot reflecting the sky, failing to match the philosophical/reflective tone and desired action.",
+        "sampled_offsets": [
+          1.18,
+          3.92,
+          6.66
+        ]
+      }
+    }
+  ]
+}

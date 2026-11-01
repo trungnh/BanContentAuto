@@ -42,6 +42,17 @@ class VisualQualityInspector:
     with zero hardcoded keyword blacklists.
     """
 
+    BLUR_THRESHOLD = 35.0  # median variance-of-Laplacian at 640px width (ADR-021)
+
+    @staticmethod
+    def laplacian_sharpness(img: np.ndarray) -> float:
+        """Variance of the Laplacian on a 640px-wide grayscale copy (higher = sharper)."""
+        g = cv2.cvtColor(img, cv2.COLOR_BGR2GRAY) if img.ndim == 3 else img
+        h, w = g.shape[:2]
+        if w > 0 and w != 640:
+            g = cv2.resize(g, (640, max(1, int(h * 640 / w))))
+        return float(cv2.Laplacian(g, cv2.CV_64F).var())
+
     @staticmethod
     def inspect_frame(img: np.ndarray) -> VisualInspectionResult:
         """
@@ -237,6 +248,13 @@ class VisualQualityInspector:
             is_black = True
             aggregated_defects.append("segment_exceeds_source")
 
+        # 0b. Out-of-focus / smeared footage (ADR-021). Calibrated on proj_cf3b1f52:
+        #     blurry close-up = 25, dark-but-sharp night shot = 52, normal daylight = 120-2200.
+        sharpness = [cls.laplacian_sharpness(f) for f in frames]
+        if sharpness and float(np.median(sharpness)) < cls.BLUR_THRESHOLD:
+            is_clean = False
+            aggregated_defects.append(f"blurry(sharpness={float(np.median(sharpness)):.0f})")
+
         # 1. Per-frame defect inspection
         for frame in frames:
             frame_res = cls.inspect_frame(frame)
@@ -252,28 +270,28 @@ class VisualQualityInspector:
                     if d not in aggregated_defects:
                         aggregated_defects.append(d)
 
-        # 2. Static corner watermark logo detection across sampled frames (station/channel logos in any corner)
+        # 2. Static corner watermark logo detection across sampled frames (broadcast TV / station logos in upper corners)
         if len(frames) >= 2:
             f1, f2 = frames[0], frames[-1]
             h, w, _ = f1.shape
             corners = {
                 "top_left": (slice(0, int(h * 0.16)), slice(0, int(w * 0.18))),
                 "top_right": (slice(0, int(h * 0.16)), slice(int(w * 0.82), w)),
-                "bottom_left": (slice(int(h * 0.84), h), slice(0, int(w * 0.18))),
-                "bottom_right": (slice(int(h * 0.84), h), slice(int(w * 0.82), w)),
             }
 
             for corner_name, (ys, xs) in corners.items():
                 c1 = f1[ys, xs]
                 c2 = f2[ys, xs]
                 diff = cv2.absdiff(c1, c2)
-                # If background is moving (mean diff > 8.0), check for static high-contrast edges
-                if float(diff.mean()) > 8.0:
+                diff_gray = cv2.cvtColor(diff, cv2.COLOR_BGR2GRAY)
+                # If background is moving (mean diff > 8.0), check for static high-contrast bright edges (station logos / bugs)
+                if float(diff_gray.mean()) > 8.0:
                     gray1 = cv2.cvtColor(c1, cv2.COLOR_BGR2GRAY)
                     edges = cv2.Canny(gray1, 60, 160)
-                    static_mask = cv2.cvtColor(diff, cv2.COLOR_BGR2GRAY) < 15
-                    static_edge_ratio = float((edges[static_mask] > 0).sum()) / float(edges.size + 1e-6)
-                    if static_edge_ratio >= 0.016:
+                    # Watermark logos are bright graphic elements (luminance > 195) with sharp edges that remain stationary (diff < 10)
+                    bright_static = (diff_gray < 10) & (gray1 > 195) & (edges > 0)
+                    bright_static_edge_ratio = float(bright_static.sum()) / float(gray1.size + 1e-6)
+                    if bright_static_edge_ratio >= 0.003:
                         has_watermark = True
                         is_clean = False
                         wm_defect = f"corner_watermark({corner_name})"

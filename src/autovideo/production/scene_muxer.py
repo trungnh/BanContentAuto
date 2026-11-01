@@ -194,7 +194,9 @@ class SceneMuxer:
         pre_crop = None
         if not is_image and not source_is_vertical and getattr(t_config, "detect_black_bars", True):
             try:
-                pre_crop = detect_crop_region(media_p, binary_manager=self._binary_manager)
+                pre_crop = detect_crop_region(
+                    media_p, binary_manager=self._binary_manager, start_sec=float(start_offset_sec or 0.0)
+                )
             except Exception as e:
                 logger.debug(f"detect_crop_region skipped: {e}")
 

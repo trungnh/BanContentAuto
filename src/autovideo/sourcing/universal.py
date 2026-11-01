@@ -76,6 +76,23 @@ class DurationFilteredError(UniversalDownloaderError):
     pass
 
 
+class YouTubeBlockedError(UniversalDownloaderError):
+    """YouTube refused access (anti-bot / sign-in wall). Callers must stop online sourcing, not retry."""
+    pass
+
+
+_BLOCK_MARKERS = ("confirm you", "not a bot", "sign in to confirm", "http error 429", "too many requests")
+
+
+def _raise_if_blocked(exc: BaseException) -> None:
+    msg = str(exc).lower()
+    if any(m in msg for m in _BLOCK_MARKERS):
+        raise YouTubeBlockedError(f"YouTube chặn truy cập (anti-bot/rate-limit): {str(exc)[:200]}") from exc
+
+# ADR-020: flat search + download only the best few candidates (was: full probe of every result)
+MAX_DOWNLOAD_ATTEMPTS = 3
+
+
 @dataclass
 class UniversalVideoInfo:
     """Metadata for a video downloaded via universal extractor."""
@@ -103,19 +120,29 @@ class UniversalDownloader:
         self.config = config or get_config()
         self.binary_manager = BinaryManager()
 
-    def get_video_info(self, url: str) -> Dict[str, Any]:
-        """Probe video metadata without downloading stream."""
-        ydl_opts = {
+    def get_video_info(self, url: str, flat: Optional[bool] = None) -> Dict[str, Any]:
+        """Probe video metadata without downloading stream.
+
+        For search URLs (ytsearchN:) a *flat* listing is used by default (ADR-020): only the
+        search page is requested instead of one watch-page request per result, which is far
+        cheaper and avoids triggering YouTube's anti-bot wall.
+        """
+        if flat is None:
+            flat = url.startswith("ytsearch")
+        ydl_opts: Dict[str, Any] = {
             "quiet": True,
             "no_warnings": True,
             "skip_download": True,
-            "ignoreerrors": True,
+            "ignoreerrors": not flat,
         }
+        if flat:
+            ydl_opts["extract_flat"] = "in_playlist"
         with yt_dlp.YoutubeDL(ydl_opts) as ydl:
             try:
                 info = ydl.extract_info(url, download=False)
                 return info or {}
             except Exception as e:
+                _raise_if_blocked(e)
                 raise UniversalDownloaderError(f"Failed to probe URL {url}: {e}") from e
 
     def _verify_video_file(self, file_path: Path) -> bool:
@@ -206,7 +233,15 @@ class UniversalDownloader:
         video_id: str,
         dest_dir: Path,
     ) -> Path:
-        """Download stream via yt-dlp with HD preference (>=720p/1080p) and verify file integrity."""
+        """Download stream via yt-dlp with HD preference (>=720p/1080p) and verify file integrity.
+
+        ADR-020: a previously downloaded, valid file is reused instead of re-downloading.
+        """
+        cached = dest_dir / f"universal_{video_id}.mp4"
+        if cached.exists() and self._verify_video_file(cached):
+            logger.info("Dùng lại footage đã tải trong cache: %s", cached.name)
+            return cached
+
         outtmpl = str(dest_dir / f"universal_{video_id}.%(ext)s")
         bm = BinaryManager(self.config)
         ffmpeg_bin, _ = bm.find_binary("ffmpeg")
@@ -229,7 +264,11 @@ class UniversalDownloader:
             ydl_opts["ffmpeg_location"] = str(ffmpeg_bin)
 
         with yt_dlp.YoutubeDL(ydl_opts) as ydl:
-            ydl.download([target_url])
+            try:
+                ydl.download([target_url])
+            except Exception as exc:
+                _raise_if_blocked(exc)
+                raise
 
         final_path = dest_dir / f"universal_{video_id}.mp4"
         if not final_path.exists():
@@ -472,7 +511,7 @@ class UniversalDownloader:
                     )
 
             last_dl_err: Optional[Exception] = None
-            for entry in candidates_to_try:
+            for entry in candidates_to_try[:MAX_DOWNLOAD_ATTEMPTS]:
                 try:
                     video_id = str(entry.get("id") or "asset")
                     title = str(entry.get("title") or video_id)
@@ -499,13 +538,15 @@ class UniversalDownloader:
                         categories=entry.get("categories"),
                         description=str(entry.get("description") or ""),
                     )
+                except YouTubeBlockedError:
+                    raise
                 except Exception as exc:
                     logger.warning("Thử tải candidate %s thất bại: %s. Thử ứng viên tiếp theo...", entry.get("id"), exc)
                     last_dl_err = exc
                     continue
 
             raise UniversalDownloaderError(
-                f"Đã thử {len(candidates_to_try)} ứng viên video cho '{url}' nhưng đều thất bại: {last_dl_err}"
+                f"Đã thử {min(len(candidates_to_try), MAX_DOWNLOAD_ATTEMPTS)} ứng viên video cho '{url}' nhưng đều thất bại: {last_dl_err}"
             )
         else:
             # Single video / Direct URL
