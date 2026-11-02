@@ -279,9 +279,13 @@ def test_master_pipeline_coordinator_run_sync_execution(mock_app_config: AppConf
         vault_source="universal",
     )
 
+    from autovideo.production.semantic_judge import SemanticJudgeResult
     with patch.object(coordinator.script_brain, "generate_screenplay", return_value=(mock_screenplay, script_seo)), \
          patch.object(coordinator.script_brain, "export_artifacts", return_value=(dummy_md, dummy_seo)), \
          patch.object(coordinator.voiceover_manager, "synthesize_scene", return_value=synth_res), \
+         patch.object(coordinator, "_ensure_library_coverage", return_value=None), \
+         patch.object(coordinator, "_prepare_footage_library", return_value=(None, None)), \
+         patch("autovideo.production.semantic_judge.SemanticFootageJudge.judge", return_value=SemanticJudgeResult(verdict="pass", score=9.0, subject_present=True, is_real_footage=True, has_overlay=False, reason="ok")), \
          patch.object(coordinator.sourcing_engine, "source_scene_asset", return_value=mock_sourced), \
          patch.object(coordinator.scene_muxer, "assemble_scene", return_value=SceneMuxResult(scene_id=1, project_id="test_sync_flow_001", output_path=dummy_file, duration_sec=5.0, width=1920, height=1080, fps=30.0, has_audio=True, timing_action="looped")), \
          patch("autovideo.coordinator.ProductionPipeline.run", return_value=prod_res), \

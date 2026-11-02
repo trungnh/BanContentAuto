@@ -72,8 +72,15 @@ class SceneEditor:
                 return idx, sc, rec
         raise SceneEditError(f"Không có scene {scene_id} trong kịch bản.")
 
+    def _subject(self, project: Any) -> Dict[str, Any]:
+        """ADR-023: same LLM-resolved subject as the pipeline (cached per topic)."""
+        try:
+            return self.coord._resolve_subject(project.topic, project.skill_id) or {}
+        except Exception:
+            return {"anchor": self.coord._extract_subject_anchor(project.topic, project.skill_id)}
+
     def _anchor(self, project: Any) -> str:
-        return self.coord._extract_subject_anchor(project.topic, project.skill_id) or ""
+        return (self._subject(project).get("anchor") or "").strip()
 
     def _library(self, project: Any) -> Tuple[Any, Any, Any]:
         anchor = self._anchor(project)
@@ -89,13 +96,15 @@ class SceneEditor:
         if matcher is None:
             raise SceneEditError("CLIP chưa được cài. Vào Cài đặt → Binaries để tải CLIP.")
         judge = SemanticFootageJudge.from_settings(settings)
-        conf_file = lib.index_dir / "confusers.json"
-        try:
-            import json
-            conf = json.loads(conf_file.read_text(encoding="utf-8")).get(anchor.lower(), []) if conf_file.exists() else []
-            matcher.set_confusers(conf)
-        except Exception:
-            pass
+        conf = list(self._subject(project).get("confusers") or [])
+        if not conf:
+            conf_file = lib.index_dir / "confusers.json"
+            try:
+                import json
+                conf = json.loads(conf_file.read_text(encoding="utf-8")).get(anchor.lower(), []) if conf_file.exists() else []
+            except Exception:
+                conf = []
+        matcher.set_confusers(conf)
         self._libs[anchor] = (lib, matcher, judge)
         return self._libs[anchor]
 
@@ -300,7 +309,17 @@ class SceneEditor:
         self.coord._save_project_state(project)
 
     def rerender(self, project_id: str) -> Dict[str, Any]:
-        project = self._assert_editable(project_id)
+        project = self._project(project_id)
+        stage = getattr(project.stage, "value", str(project.stage))
+        if self.coord._running_project_id == project_id and stage in RUNNING_STAGES:
+            raise SceneEditError("Dự án đang chạy pipeline, hãy đợi hoàn tất.")
+        job = self._jobs.get(project_id)
+        if job and job.get("state") == "running":
+            raise SceneEditError(f"Đang có thao tác khác chạy: {job.get('message')}")
+        render_dir = self.config.paths.get_project_render_dir(project_id)
+        has_screenplay = bool(project.screenplay) or (render_dir / "screenplay.json").exists()
+        if not has_screenplay and not project.completed_scenes:
+            raise SceneEditError("Dự án chưa có kịch bản hoặc phân cảnh nào để render lại.")
         stamp = time.strftime("%Y%m%d_%H%M%S")
         bk = self.config.paths.cache_dir / "backups" / f"_backup_{project_id}_{stamp}"
         (bk / "temp_scenes").mkdir(parents=True, exist_ok=True)
@@ -320,6 +339,24 @@ class SceneEditor:
             src = render_dir / name
             if src.exists():
                 shutil.copy2(str(src), str(bk / "render" / name))
+
+        # Reset project state so UI and coordinator recognise rerender in-progress
+        from autovideo.coordinator import PipelineStage
+        project.stage = PipelineStage.B2_SOURCING_TTS
+        project.progress = 25.0
+        project.current_step_text = "Đang bắt đầu render lại toàn bộ dự án (giữ nguyên kịch bản & giọng đọc)..."
+        project.final_video_path = None
+        project.completed_scenes = []
+        project.error = None
+        self.coord._save_project_state(project)
+        self.coord.emit_event(
+            project_id=project_id,
+            stage=PipelineStage.B2_SOURCING_TTS,
+            progress=25.0,
+            message=project.current_step_text,
+            details={"rerender": True},
+        )
+
         res = self.coord.enqueue_project(project_id=project_id, resume=True)
         return {"backup_dir": str(bk), "moved_scene_files": moved, "pipeline": res.get("status") if isinstance(res, dict) else res}
 

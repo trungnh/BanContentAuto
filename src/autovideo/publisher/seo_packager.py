@@ -60,6 +60,7 @@ class SEOPackage:
     target_keyword: str = ""
     thumbnail_badge: str = ""
     thumbnail_hook: str = ""
+    thumbnail_prompt: str = ""
 
     def get_primary_title(self) -> str:
         """Returns the first recommended title option."""
@@ -233,6 +234,11 @@ class SEOPackager:
         if not thumb_hook:
             thumb_hook = titles[0].split(":")[0][:25]
 
+        # 6. Extract thumbnail prompt (clean visual description without embedded title text)
+        thumb_prompt = getattr(seo_input, "thumbnail_prompt", None) or (seo_input.get("thumbnail_prompt") if isinstance(seo_input, dict) else None)
+        if not thumb_prompt:
+            thumb_prompt = f"Cinematic photorealistic documentary wide shot of {kw}, dramatic 8k atmospheric lighting, National Geographic style."
+
         # Resolve category ID: priority skill > arg > default
         resolved_category_id = getattr(skill, "category_id", None) or category_id or self.default_category_id
 
@@ -247,6 +253,7 @@ class SEOPackager:
             target_keyword=kw,
             thumbnail_badge=str(thumb_badge).strip(),
             thumbnail_hook=str(thumb_hook).strip(),
+            thumbnail_prompt=str(thumb_prompt).strip(),
         )
 
     def validate_package(self, package: SEOPackage) -> Dict[str, Any]:

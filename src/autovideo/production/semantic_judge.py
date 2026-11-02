@@ -64,7 +64,8 @@ def build_judge_prompt(narration: str, visual_prompt: str, subject_anchor: str) 
         "{\n"
         '  "subject_present": true/false,   // main subject clearly visible in at least 2 frames\n'
         '  "is_real_footage": true/false,   // false for cartoon, animation, video game, CGI, slideshow, talking-head studio\n'
-        '  "overlay_text_or_watermark": true/false, // burned-in captions, titles, channel/TV logos, watermarks\n'
+        '  "overlay_text_or_watermark": true/false, // LARGE burned-in captions/subtitles or title text over the image\n'
+        '  "small_corner_logo": true/false,  // only a small channel logo/watermark in a corner\n'
         '  "match_score": 0-10,             // how well the frames illustrate the narration/desired shot.\n'
         "                                   // 0-2 wrong subject/people/game/screen; 3-4 subject present but unrelated action;\n"
         "                                   // 5-6 subject in plausible related context; 7-8 clearly related action; 9-10 exact\n"
@@ -327,8 +328,9 @@ class SemanticFootageJudge:
             "Ignore cinematography details (time of day, lens, angle).\n"
             + confuser_rule +
             "A row is unusable if the main subject is absent or not clearly identifiable, the image is blurry, "
-            "it is not real footage (cartoon, game, CGI/AI-generated, slideshow, talking head), or it has burned-in "
-            "captions / channel logos / watermarks.\n"
+            "it is not real footage (cartoon, game, CGI/AI-generated, slideshow, talking head), or it has LARGE burned-in "
+            "captions/subtitles or title text over the image. A small channel logo/watermark in a corner is acceptable "
+            "(score it about 1 point lower), it does NOT make a row unusable.\n"
             "Return ONLY JSON:\n"
             '{"scores": {"A": 0-10, ...}, "unusable": ["B", ...], "ai_generated": ["C", ...], '
             '"best": "A" or "none", "reason": "short"}\n'
@@ -416,6 +418,9 @@ class SemanticFootageJudge:
         overlay = bool(data.get("overlay_text_or_watermark"))
         reason = str(data.get("reason") or "")[:300]
 
+        # ADR-023 F5: a small corner logo only costs 1 point; large captions/title text still reject
+        if bool(data.get("small_corner_logo")) and not overlay:
+            score = max(0.0, score - 1.0)
         passed = subject and real and score >= self.min_score and not (self.reject_overlays and overlay)
         return SemanticJudgeResult(
             verdict="pass" if passed else "fail",

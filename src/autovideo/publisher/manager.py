@@ -112,7 +112,7 @@ class PublisherManager:
         raw_thumb_path = project_dir / "thumbnail_raw.jpg"
         if not base_image:
             prompt_to_use = getattr(seo_pkg, "thumbnail_prompt", None) or (
-                f"Dramatic photorealistic documentary thumbnail of {topic}, cinematic 8k lighting, empty bottom-right safe zone"
+                f"Dramatic photorealistic documentary visual of {topic}, cinematic 8k lighting"
             )
             try:
                 from autovideo.core.settings import SettingsManager
@@ -145,11 +145,9 @@ class PublisherManager:
             strict_counterpoint=strict_counterpoint,
         )
 
-        # 3. Generate Diagnostic Safe-Zone Preview Overlay (for VAC-UI-04)
-        self.thumbnail_generator.render_safe_zone_overlay(
-            image_or_path=thumb_path,
-            output_path=preview_path,
-        )
+        # 3. Save clean thumbnail preview (never burn diagnostic safe zone placeholder overlay)
+        import shutil
+        shutil.copyfile(thumb_path, preview_path)
 
         # 4. Export seo.md
         self.seo_packager.export_markdown(seo_pkg, output_path=seo_path)

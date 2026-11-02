@@ -337,6 +337,7 @@ class ProductionPipeline:
         output_video_path: Optional[Path | str] = None,
         resume: bool = True,
         clean_intermediate_parts: Optional[bool] = None,
+        subtitle_ass_path: Optional[Path | str] = None,
     ) -> ProductionResult:
         """
         Executes the entire B3 production pipeline:
@@ -396,6 +397,32 @@ class ProductionPipeline:
             output_path=final_out,
             clean_intermediate_parts=clean_intermediate_parts,
         )
+
+        # Burn subtitles into final video if requested
+        if subtitle_ass_path and Path(subtitle_ass_path).is_file():
+            logger.info("ProductionPipeline: Burning subtitles into final video %s", final_out)
+            temp_raw = final_out.parent / f"{final_out.stem}_unsubbed.mp4"
+            if final_out.exists():
+                try:
+                    final_out.replace(temp_raw)
+                    from autovideo.production.subtitle_generator import SubtitleGenerator
+                    ffmpeg_bin = getattr(self._binary_manager, "ffmpeg_path", "ffmpeg") or "ffmpeg"
+                    SubtitleGenerator.burn_subtitles_to_video(
+                        input_video_path=temp_raw,
+                        subtitle_ass_path=Path(subtitle_ass_path),
+                        output_video_path=final_out,
+                        ffmpeg_bin=str(ffmpeg_bin),
+                    )
+                except Exception as sub_err:
+                    logger.warning("Subtitle burn failed: %s. Restoring unsubbed video.", sub_err)
+                    if temp_raw.exists() and not final_out.exists():
+                        temp_raw.replace(final_out)
+                finally:
+                    if temp_raw.exists():
+                        try:
+                            temp_raw.unlink()
+                        except Exception:
+                            pass
 
         # Finalize checkpoint state
         checkpoint.status = "completed"

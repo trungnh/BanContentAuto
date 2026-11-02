@@ -341,6 +341,7 @@ class ThumbnailGenerator:
         safe_zone = self.get_safe_zone()
 
         # 3. Draw Tension Badge (Top-Left Safe Quadrant)
+        badge_bottom_y = 90
         if tension_badge:
             badge_font = self._get_best_font(size=44)
             badge_text = tension_badge.upper()
@@ -354,6 +355,7 @@ class ThumbnailGenerator:
             by1 = 90
             bx2 = bx1 + text_w + (pad_x * 2)
             by2 = by1 + text_h + (pad_y * 2)
+            badge_bottom_y = by2
 
             # Assert badge does not intersect safe zone
             if not self.is_box_safe((bx1, by1, bx2, by2)):
@@ -380,7 +382,7 @@ class ThumbnailGenerator:
         # Word wrap hook text to avoid extending into the safe zone
         lines = self._wrap_text(hook_text, font, max_allowed_x - 90, draw)
 
-        start_y = 230 if tension_badge else 160
+        start_y = (badge_bottom_y + 35) if tension_badge else 160
         line_spacing = int(font_size * 1.25)
 
         # Verify full text block bounding box
@@ -393,7 +395,7 @@ class ThumbnailGenerator:
             font = self._get_best_font(size=font_size)
             line_spacing = int(font_size * 1.22)
             lines = self._wrap_text(hook_text, font, max_allowed_x - 90, draw)
-            start_y = 210 if tension_badge else 140
+            start_y = (badge_bottom_y + 25) if tension_badge else 140
 
         current_y = start_y
         for i, line in enumerate(lines):

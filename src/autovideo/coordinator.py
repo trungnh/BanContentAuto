@@ -238,6 +238,9 @@ class ProjectState:
     thumbnail_preview_path: Optional[str] = None
     seo_markdown_path: Optional[str] = None
     rolling_buffer_bytes: int = 0
+    subtitles_enabled: bool = True
+    subtitle_preset: str = "cinematic_white"
+    subtitle_path: Optional[str] = None
     logs: List[str] = field(default_factory=list)
     error: Optional[str] = None
     created_at: float = field(default_factory=time.time)
@@ -268,6 +271,9 @@ class ProjectState:
             "seo_markdown_path": self.seo_markdown_path,
             "rolling_buffer_bytes": self.rolling_buffer_bytes,
             "rolling_buffer_mb": round(self.rolling_buffer_bytes / (1024 * 1024), 2),
+            "subtitles_enabled": self.subtitles_enabled,
+            "subtitle_preset": self.subtitle_preset,
+            "subtitle_path": self.subtitle_path,
             "logs": self.logs[-50:],  # Return last 50 log lines
             "error": self.error,
             "created_at": self.created_at,
@@ -308,6 +314,9 @@ class ProjectState:
             thumbnail_preview_path=data.get("thumbnail_preview_path"),
             seo_markdown_path=data.get("seo_markdown_path"),
             rolling_buffer_bytes=int(data.get("rolling_buffer_bytes", 0)),
+            subtitles_enabled=bool(data.get("subtitles_enabled", True)),
+            subtitle_preset=str(data.get("subtitle_preset", "cinematic_white")),
+            subtitle_path=data.get("subtitle_path"),
             logs=list(data.get("logs", [])),
             error=data.get("error"),
             created_at=float(data.get("created_at", time.time())),
@@ -370,6 +379,7 @@ class MasterPipelineCoordinator:
         self._project_queue: List[str] = []
         self._running_project_id: Optional[str] = None
         self._cancel_requested: Set[str] = set()
+        self._loop: Optional[asyncio.AbstractEventLoop] = None
 
         # Reload persisted projects from disk
         self._load_persisted_projects()
@@ -582,12 +592,35 @@ class MasterPipelineCoordinator:
         if project_id in self._project_queue:
             self._project_queue.remove(project_id)
 
+        loop = None
         try:
             loop = asyncio.get_running_loop()
-            task = loop.create_task(self._execute_pipeline_and_advance(project_id, resume))
-            self._active_tasks[project_id] = task
+            self._loop = loop
         except RuntimeError:
-            pass
+            loop = self._loop
+
+        if loop and loop.is_running():
+            try:
+                task = loop.create_task(self._execute_pipeline_and_advance(project_id, resume))
+                self._active_tasks[project_id] = task
+            except RuntimeError:
+                # If called from a separate worker thread, dispatch onto loop threadsafe
+                fut = asyncio.run_coroutine_threadsafe(
+                    self._execute_pipeline_and_advance(project_id, resume),
+                    loop
+                )
+                self._active_tasks[project_id] = fut
+        else:
+            # Fallback for sync execution in CLI or tests without a running event loop
+            import threading
+            th = threading.Thread(
+                target=self._run_pipeline_sync,
+                args=(project_id, resume),
+                daemon=True,
+                name=f"pipeline-{project_id}",
+            )
+            th.start()
+            self._active_tasks[project_id] = th
 
         return {
             "status": "started",
@@ -738,11 +771,17 @@ class MasterPipelineCoordinator:
         skill_id: str = "warehouse-fails",
         target_duration_min: int = 15,
         project_id: Optional[str] = None,
+        subtitles_enabled: Optional[bool] = None,
+        subtitle_preset: Optional[str] = None,
     ) -> ProjectState:
         """Initializes and returns a new or existing ProjectState."""
         p_id = project_id or f"proj_{uuid.uuid4().hex[:8]}"
         if p_id in self.projects:
             return self.projects[p_id]
+
+        sub_cfg = getattr(self.config, "subtitles", None)
+        sub_on = subtitles_enabled if subtitles_enabled is not None else getattr(sub_cfg, "enabled", True)
+        sub_pre = subtitle_preset or getattr(sub_cfg, "preset", "cinematic_white")
 
         state = ProjectState(
             project_id=p_id,
@@ -752,6 +791,8 @@ class MasterPipelineCoordinator:
             stage=PipelineStage.IDLE,
             progress=0.0,
             current_step_text="Dự án đã sẵn sàng khởi chạy",
+            subtitles_enabled=sub_on,
+            subtitle_preset=sub_pre,
         )
         self.projects[p_id] = state
         self._subscribers[p_id] = set()
@@ -762,8 +803,77 @@ class MasterPipelineCoordinator:
         """Returns ProjectState if exists."""
         return self.projects.get(project_id)
 
+    def burn_project_subtitles(
+        self,
+        project_id: str,
+        preset: Optional[str] = None,
+        font_name: Optional[str] = None,
+        font_size: Optional[int] = None,
+        margin_v: Optional[int] = None,
+    ) -> Path:
+        """
+        Generates and burns styled subtitles into the project's final video on-demand.
+        Supports switching presets without rerunning the upstream B1-B3 pipeline.
+        """
+        project = self.projects.get(project_id)
+        if not project:
+            raise KeyError(f"Project not found: {project_id}")
+        if not project.final_video_path:
+            raise RuntimeError(f"Project {project_id} has no final video to burn subtitles.")
+
+        final_vid = Path(project.final_video_path)
+        if not final_vid.is_file():
+            raise FileNotFoundError(f"Final video file not found: {final_vid}")
+
+        project_dir = self.config.paths.get_project_render_dir(project_id)
+        preset_id = preset or getattr(project, "subtitle_preset", "cinematic_white")
+        project.subtitle_preset = preset_id
+        project.subtitles_enabled = True
+
+        from autovideo.production.subtitle_generator import SubtitleGenerator
+        sub_base = project_dir / f"{project_id}_subtitles"
+        ass_p, srt_p = SubtitleGenerator.generate_subtitles_for_scenes(
+            scenes=project.completed_scenes,
+            output_base_path=sub_base,
+            preset_id=preset_id,
+            custom_font=font_name or getattr(self.config.subtitles, "font_name", "Montserrat"),
+            custom_size=font_size or getattr(self.config.subtitles, "font_size", 22),
+            custom_margin_v=margin_v if margin_v is not None else getattr(self.config.subtitles, "margin_v", 55),
+        )
+        project.subtitle_path = str(srt_p)
+
+        temp_src = final_vid.parent / f"{final_vid.stem}_temp_burn_src.mp4"
+        final_vid.replace(temp_src)
+        try:
+            ffmpeg_bin = getattr(self.binary_manager, "ffmpeg_path", "ffmpeg") or "ffmpeg"
+            SubtitleGenerator.burn_subtitles_to_video(
+                input_video_path=temp_src,
+                subtitle_ass_path=ass_p,
+                output_video_path=final_vid,
+                ffmpeg_bin=str(ffmpeg_bin),
+            )
+        except Exception as e:
+            if temp_src.exists() and not final_vid.exists():
+                temp_src.replace(final_vid)
+            raise RuntimeError(f"Burn subtitles failed: {e}") from e
+        finally:
+            if temp_src.exists():
+                try:
+                    temp_src.unlink()
+                except Exception:
+                    pass
+
+        self._save_project_state(project)
+        logger.info("Burned subtitles for project %s with preset %s", project_id, preset_id)
+        return final_vid
+
     def subscribe_events(self, project_id: str) -> asyncio.Queue:
         """Registers an async queue subscriber for real-time SSE updates."""
+        try:
+            self._loop = asyncio.get_running_loop()
+        except RuntimeError:
+            pass
+
         queue: asyncio.Queue = asyncio.Queue()
         if project_id not in self._subscribers:
             self._subscribers[project_id] = set()
@@ -834,6 +944,28 @@ class MasterPipelineCoordinator:
             return "too_long"
         return "optimal"
 
+    def _resolve_subject(self, topic: str, skill_id: str) -> Dict[str, Any]:
+        """
+        ADR-023 F1: precise English visual subject for a topic (LLM, cached per topic; hardcoded map fallback).
+        Shared by the pipeline and the Scene Editor so both always search for the same subject.
+        Returns {"anchor", "aliases", "confusers", "source", ["generic"]}.
+        """
+        from autovideo.footage.subject_resolver import SubjectResolver
+
+        def _llm(prompt: str) -> str:
+            adapter = getattr(getattr(self, "script_brain", None), "adapter", None)
+            if adapter is None:
+                raise RuntimeError("no LLM adapter")
+            return adapter.generate(prompt)
+
+        cache = self.config.paths.cache_dir / "footage_index" / "subjects.json"
+        resolver = SubjectResolver(cache, llm_call=_llm, fallback=self._extract_subject_anchor)
+        try:
+            return resolver.resolve(topic, skill_id)
+        except Exception as exc:
+            logger.warning("Subject resolver lỗi: %s", exc)
+            return {"anchor": self._extract_subject_anchor(topic, skill_id), "aliases": [], "confusers": [], "source": "map"}
+
     def _extract_subject_anchor(self, topic: str, skill_id: str) -> str:
         """
         Extract primary subject entity anchor from topic and skill_id to prevent off-topic footage straying.
@@ -848,8 +980,19 @@ class MasterPipelineCoordinator:
             if len(cand) > 2 and not cand.isdigit() and not any(k in cand.lower() for k in ["p3", "p4", "tập", "phần"]):
                 return cand.lower()
 
-        # Common animals & wildlife mappings
+        # Common animals & wildlife mappings (fallback only — ADR-023 resolves the subject with an LLM first).
+        # Order matters: more specific names must come before names they contain ("cá voi" before "voi").
         animals_map = {
+            "cá nhà táng": "sperm whale",
+            "cá voi sát thủ": "orca killer whale",
+            "cá voi xanh": "blue whale",
+            "cá voi lưng gù": "humpback whale",
+            "cá voi": "whale",
+            "cá mập trắng": "great white shark",
+            "cá mập": "shark",
+            "mực khổng lồ": "giant squid",
+            "bạch tuộc": "octopus",
+            "cá heo": "dolphin",
             "lửng mật": "honey badger",
             "hổ tasmania": "tasmanian tiger thylacine",
             "sư tử": "african lion",
@@ -861,7 +1004,6 @@ class MasterPipelineCoordinator:
             "linh cẩu": "spotted hyena",
             "chó rừng": "black backed jackal",
             "rùa": "tortoise turtle",
-            "voi": "african elephant",
             "tê giác": "african rhino",
             "hà mã": "hippo",
             "cá sấu": "nile crocodile",
@@ -871,8 +1013,7 @@ class MasterPipelineCoordinator:
             "chuột chũi": "wild mole digging",
             "gấu": "wild bear",
             "sói": "wolf pack",
-            "cá mập": "shark ocean",
-            "cá voi": "whale ocean",
+            "voi": "african elephant",
         }
         for vi_name, en_name in animals_map.items():
             if vi_name in topic_lower:
@@ -1146,6 +1287,7 @@ class MasterPipelineCoordinator:
         used_intervals: Dict[str, List[Tuple[float, float]]],
         used_counts: Dict[str, int],
         weak_threshold: float = 0.29,
+        subject_confusers: Optional[List[str]] = None,
     ) -> Tuple[Dict[str, List[Any]], Dict[str, Dict[str, Any]]]:
         """
         ADR-021 (B1-B4):
@@ -1166,6 +1308,12 @@ class MasterPipelineCoordinator:
         except Exception:
             conf_map = {}
         key = (subject_anchor or "").lower()
+        if key and subject_confusers:
+            conf_map[key] = list(subject_confusers)  # ADR-023: confusers from the subject resolver (same LLM call)
+            try:
+                conf_file.write_text(json.dumps(conf_map, ensure_ascii=False, indent=1), encoding="utf-8")
+            except Exception:
+                pass
         if key and key not in conf_map and semantic_judge.active:
             conf_map[key] = semantic_judge.suggest_confusers(subject_anchor)
             try:
@@ -1223,6 +1371,63 @@ class MasterPipelineCoordinator:
             details={"planned": len(plan), "rewritten": len(rewrites)},
         )
         return plan, rewrites
+
+    def _ensure_library_coverage(
+        self,
+        project_id: str,
+        all_scenes: List[Any],
+        footage_library: Any,
+        footage_matcher: Any,
+        subject_anchor: str,
+        youtube_state: Dict[str, bool],
+        min_videos: int = 8,
+        max_new: int = 15,
+    ) -> int:
+        """
+        ADR-023 F2: if the local library has fewer than `min_videos` videos that are explicitly about the
+        subject, search YouTube with subject + script keywords and download new footage BEFORE planning.
+        Returns the number of videos added.
+        """
+        from autovideo.footage.online_augment import search_and_add
+
+        anchor_low = (subject_anchor or "").lower().strip()
+        if not anchor_low:
+            return 0
+        strong = [v for v in footage_matcher.eligible_videos() if anchor_low in v.entry.text().lower()]
+        if len(strong) >= min_videos:
+            logger.info("Footage library: %d video về '%s' — đủ độ phủ", len(strong), subject_anchor)
+            return 0
+
+        queries: List[str] = [f"{subject_anchor} documentary footage", f"{subject_anchor} 4k"]
+        for s in all_scenes:
+            for kw in list(getattr(getattr(s, "keywords", None), "en", None) or [])[:1]:
+                q = self._build_natural_query(str(kw), subject_anchor)
+                if q and q not in queries:
+                    queries.append(q)
+            if len(queries) >= 10:
+                break
+        self.emit_event(
+            project_id=project_id, stage=PipelineStage.B2_SOURCING_TTS, progress=25.0,
+            message=f"B2: Thư viện chỉ có {len(strong)} video về '{subject_anchor}' — đang tìm & tải footage mới trên YouTube...",
+            details={"library_coverage": len(strong), "subject": subject_anchor},
+        )
+
+        def _progress(msg: str) -> None:
+            self.emit_event(project_id=project_id, stage=PipelineStage.B2_SOURCING_TTS, progress=25.0,
+                            message=f"B2: {msg}", details={"library_augment": True})
+
+        need = max(min_videos - len(strong), 0) + 4
+        aug = search_and_add(footage_library, queries, subject_anchor, confusers=footage_matcher.confusers,
+                             max_new=min(max_new, need), per_query=8, progress=_progress)
+        if aug.blocked:
+            youtube_state["blocked"] = True
+        self.emit_event(
+            project_id=project_id, stage=PipelineStage.B2_SOURCING_TTS, progress=25.0,
+            message=(f"B2: Đã thêm {len(aug.added)} video '{subject_anchor}' mới vào thư viện"
+                     + (" (⚠ YouTube đang chặn — dừng tải)" if aug.blocked else "")),
+            details={"library_added": aug.added, "youtube_blocked": aug.blocked},
+        )
+        return len(aug.added)
 
     def refresh_settings(self) -> None:
         """Synchronizes dynamic settings for voiceover and scriptwriting pipeline."""
@@ -1427,7 +1632,16 @@ class MasterPipelineCoordinator:
         }
         retained_completed_scenes: List[CompletedSceneRecord] = []
         used_footage_counts: Dict[str, int] = {}
-        subject_anchor = self._extract_subject_anchor(project.topic, project.skill_id)
+        # ADR-023 F1: precise subject (LLM-resolved, cached) instead of the hardcoded map
+        subject_info = self._resolve_subject(project.topic, project.skill_id)
+        subject_anchor = subject_info.get("anchor") or self._extract_subject_anchor(project.topic, project.skill_id)
+        if subject_info.get("generic"):
+            self.emit_event(
+                project_id=project_id, stage=PipelineStage.B2_SOURCING_TTS, progress=25.0,
+                message=f"B2: ⚠ Không xác định được chủ thể cụ thể của chủ đề (đang dùng '{subject_anchor}'). "
+                        "Kiểm tra kết nối LLM — footage có thể lạc đề.",
+                details={"subject_generic": True},
+            )
         active_skill = None
         try:
             active_skill = self.skill_registry.get_skill(project.skill_id)
@@ -1469,6 +1683,24 @@ class MasterPipelineCoordinator:
             enabled=library_enabled,
         )
 
+        # ADR-023 F2: make sure the library really covers THIS subject before planning (else fetch online first)
+        online_augment_enabled = True
+        try:
+            from autovideo.core.settings import SettingsManager as _SM
+            online_augment_enabled = bool(getattr(_SM(config=self.config).load_settings(), "footage_online_augment", True))
+        except Exception:
+            pass
+        if footage_matcher is not None:
+            footage_matcher.set_confusers(subject_info.get("confusers") or [])
+            if online_augment_enabled:
+                try:
+                    self._ensure_library_coverage(project_id, all_scenes, footage_library, footage_matcher,
+                                                  subject_anchor or "", youtube_state)
+                except PipelineCancelledError:
+                    raise
+                except Exception as exc:
+                    logger.warning("Kiểm tra độ phủ thư viện lỗi: %s", exc)
+
         # ADR-021: global footage plan (confusers, TTS pre-pass, regret-greedy assignment, shot rewrite)
         library_plan: Dict[str, List[Any]] = {}
         shot_rewrites: Dict[str, Dict[str, Any]] = {}
@@ -1485,6 +1717,7 @@ class MasterPipelineCoordinator:
                 library_plan, shot_rewrites = self._build_library_plan(
                     project_id, all_scenes, resumed_ids, footage_library, footage_matcher, semantic_judge,
                     subject_anchor or "", plan_iv, plan_ct,
+                    subject_confusers=subject_info.get("confusers") or None,
                 )
             except PipelineCancelledError:
                 raise
@@ -1720,8 +1953,50 @@ class MasterPipelineCoordinator:
                 except Exception as exc:
                     logger.warning("Footage library lỗi cho %s: %s", scene.scene_id, exc)
 
-            # ADR-020 Step B: online search only if the library had nothing good and YouTube is not blocking us
-            online_allowed = accepted is None and not youtube_state["blocked"]
+            # ADR-023 F3: library had nothing good -> fetch NEW footage for this scene into the library, re-pick
+            if (accepted is None and footage_matcher is not None and online_augment_enabled
+                    and not youtube_state["blocked"]):
+                try:
+                    from autovideo.footage.online_augment import search_and_add
+                    _rw = shot_rewrites.get(scene.scene_id) or {}
+                    scene_queries: List[str] = []
+                    for _kw in list(_rw.get("keywords") or []) + en_kws:
+                        _q = self._build_natural_query(str(_kw), subject_anchor or "")
+                        if _q and _q not in scene_queries:
+                            scene_queries.append(_q)
+                    aug = search_and_add(
+                        footage_library, scene_queries[:3], subject_anchor or "",
+                        confusers=footage_matcher.confusers, max_new=2,
+                        progress=lambda m: logger.info("%s: %s", scene.scene_id, m),
+                    )
+                    if aug.blocked:
+                        youtube_state["blocked"] = True
+                        self.emit_event(
+                            project_id=project_id, stage=PipelineStage.B2_SOURCING_TTS, progress=scene_progress,
+                            message="B2: ⚠ YouTube đang chặn truy cập (anti-bot). Chỉ dùng thư viện footage cục bộ cho các scene còn lại.",
+                            details={"youtube_blocked": True},
+                        )
+                    if aug.added:
+                        acc2, fb2 = pick_library_window(
+                            lib=footage_library, matcher=footage_matcher, judge=semantic_judge,
+                            scene_id=scene.scene_id, duration=scene.duration_sec, narration=scene.text,
+                            visual_prompt=_rw.get("visual_prompt") or scene_visual_prompt,
+                            en_keywords=list(_rw.get("keywords") or []) + en_kws,
+                            subject_anchor=subject_anchor or "", used_intervals=used_footage_intervals,
+                            used_counts=used_video_counts, ffmpeg_bin=ff_bin,
+                        )
+                        if acc2 is not None:
+                            accepted = acc2
+                        elif fb2 is not None and (
+                            library_fallback is None
+                            or float(fb2["semantic"].get("score") or 0) > float(library_fallback["semantic"].get("score") or 0)
+                        ):
+                            library_fallback = fb2
+                except Exception as exc:
+                    logger.warning("Tìm footage mới online cho %s lỗi: %s", scene.scene_id, exc)
+
+            # Legacy per-scene online search: only when the CLIP library is unavailable (not installed / disabled)
+            online_allowed = accepted is None and not youtube_state["blocked"] and footage_matcher is None
             for candidate_kw in (kw_candidates if online_allowed else []):
                 if judge_budget["calls"] >= max_judge_calls_per_scene:
                     break
@@ -1780,11 +2055,15 @@ class MasterPipelineCoordinator:
                 try:
                     relaxed = footage_matcher.candidates(
                         SceneQuery(scene.scene_id, scene.duration_sec, [scene_visual_prompt] + en_kws),
-                        used_footage_intervals, used_video_counts, top_k=1,
-                    ) or footage_matcher.with_subject_min(0.22).candidates(
+                        used_footage_intervals, used_video_counts, top_k=5,
+                    ) or footage_matcher.with_subject_min(0.25).candidates(
                         SceneQuery(scene.scene_id, scene.duration_sec, [scene_visual_prompt] + en_kws),
-                        used_footage_intervals, used_video_counts, top_k=1,
+                        used_footage_intervals, used_video_counts, top_k=5,
                     )
+                    # ADR-023 F4: prefer footage from videos explicitly about the subject (title/description name it)
+                    _alow = (subject_anchor or "").lower()
+                    _strong = [c for c in relaxed if _alow and _alow in footage_library.videos[c.video_id].entry.text().lower()]
+                    relaxed = _strong or relaxed
                     if relaxed:
                         c = relaxed[0]
                         accepted = {
@@ -1990,12 +2269,34 @@ class MasterPipelineCoordinator:
 
         final_video_dest = project_dir / f"{project_id}_final.mp4"
         self._check_cancellation(project_id)
+
+        # Prepare subtitles if enabled
+        sub_ass_path = None
+        if getattr(project, "subtitles_enabled", True):
+            try:
+                from autovideo.production.subtitle_generator import SubtitleGenerator
+                sub_base = project_dir / f"{project_id}_subtitles"
+                ass_p, srt_p = SubtitleGenerator.generate_subtitles_for_scenes(
+                    scenes=project.completed_scenes,
+                    output_base_path=sub_base,
+                    preset_id=getattr(project, "subtitle_preset", "cinematic_white"),
+                    custom_font=getattr(self.config.subtitles, "font_name", "Montserrat"),
+                    custom_size=getattr(self.config.subtitles, "font_size", 22),
+                    custom_margin_v=getattr(self.config.subtitles, "margin_v", 55),
+                )
+                sub_ass_path = ass_p
+                project.subtitle_path = str(srt_p)
+                logger.info("Đã tạo file phụ đề cho %s: %s (preset=%s)", project_id, srt_p.name, project.subtitle_preset)
+            except Exception as sub_err:
+                logger.warning("Không thể tạo phụ đề cho %s: %s", project_id, sub_err)
+
         prod_result = prod_pipeline.run(
             project_id=project_id,
             screenplay=screenplay,
             asset_resolver=scene_assets_map,
             output_video_path=final_video_dest,
             resume=resume,
+            subtitle_ass_path=sub_ass_path,
         )
 
         project.final_video_path = str(prod_result.final_video_path)

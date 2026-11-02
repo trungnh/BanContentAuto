@@ -1328,6 +1328,40 @@
             </div>
           </div>
 
+          <!-- SUBTITLE OPTIONS IN QUICK LAUNCH WIZARD -->
+          <div class="form-group" style="background: rgba(255, 255, 255, 0.02); border: 1px solid var(--border-dark); border-radius: 8px; padding: 14px; margin-top: 12px; margin-bottom: 20px;">
+            <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 8px;">
+              <div>
+                <label class="form-label" style="margin-bottom: 2px; font-weight: 700; color: #fff; display: flex; align-items: center; gap: 6px;">
+                  <span>💬</span> Chèn Phụ Đề Vào Video Final (Burn-in Subtitles)
+                </label>
+                <div style="font-size: 12px; color: var(--text-secondary);">Tự động tạo phụ đề khớp theo lời thuyết minh và gắn thẳng vào video hoàn tất.</div>
+              </div>
+              <label style="display: flex; align-items: center; cursor: pointer; gap: 8px;">
+                <input type="checkbox" id="wizardEnableSubtitles" checked style="width: 18px; height: 18px; accent-color: var(--accent-cyan); cursor: pointer;">
+                <span id="wizardSubtitlesStatusLabel" style="font-size: 12px; font-weight: 700; color: var(--accent-cyan);">BẬT</span>
+              </label>
+            </div>
+
+            <div id="wizardSubtitlePresetGroup" style="margin-top: 10px;">
+              <label class="form-label" style="font-size: 11px; text-transform: uppercase; letter-spacing: 0.5px; color: var(--text-secondary);">Chọn Phong Cách Phụ Đề</label>
+              <div style="display: grid; grid-template-columns: repeat(3, 1fr); gap: 10px; margin-top: 6px;">
+                <div class="preset-pill selected" data-preset="cinematic_white" style="border: 1px solid var(--accent-cyan); background: rgba(0, 229, 255, 0.08); border-radius: 6px; padding: 10px; cursor: pointer; text-align: center; transition: all 0.2s;">
+                  <div style="font-size: 13px; font-weight: 700; color: #fff;">🎬 Phim Tài Liệu</div>
+                  <div style="font-size: 11px; color: var(--text-secondary); margin-top: 3px;">Chữ trắng · Viền & đổ bóng đen</div>
+                </div>
+                <div class="preset-pill" data-preset="yellow_spotlight" style="border: 1px solid var(--border-dark); background: var(--bg-card); border-radius: 6px; padding: 10px; cursor: pointer; text-align: center; transition: all 0.2s;">
+                  <div style="font-size: 13px; font-weight: 700; color: #ffd700;">🌟 Vàng Nổi Bật</div>
+                  <div style="font-size: 11px; color: var(--text-secondary); margin-top: 3px;">Chữ vàng · Viền đen đậm nét</div>
+                </div>
+                <div class="preset-pill" data-preset="boxed_translucent" style="border: 1px solid var(--border-dark); background: var(--bg-card); border-radius: 6px; padding: 10px; cursor: pointer; text-align: center; transition: all 0.2s;">
+                  <div style="font-size: 13px; font-weight: 700; color: #fff;">📦 Hộp Nền Mờ</div>
+                  <div style="font-size: 11px; color: var(--text-secondary); margin-top: 3px;">Chữ trắng · Nền đen mờ êm mắt</div>
+                </div>
+              </div>
+            </div>
+          </div>
+
           <button class="btn-primary" id="btnLaunchPipeline">
             <span>⚡</span> BẮT ĐẦU SẢN XUẤT TỰ ĐỘNG (FULL PIPELINE)
           </button>
@@ -1534,11 +1568,32 @@
                   Video hoàn chỉnh 1080p sẽ sẵn sàng sau Bước 3.
                 </div>
               </div>
+              <!-- SUBTITLE CONTROL BAR -->
+              <div id="finalVideoSubtitleBar" style="display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap; gap: 8px; background: rgba(0, 0, 0, 0.35); border: 1px solid var(--border-dark); border-radius: 6px; padding: 10px 14px; margin-top: 10px;">
+                <div style="display: flex; align-items: center; gap: 8px;">
+                  <span style="font-size: 14px;">💬</span>
+                  <span style="font-size: 12px; font-weight: 700; color: #fff;">Phụ Đề:</span>
+                  <span id="finalSubtitleStatusBadge" style="font-size: 11px; padding: 2px 8px; border-radius: 4px; background: rgba(0, 229, 255, 0.15); color: var(--accent-cyan); font-weight: 700; font-family: var(--font-mono);">CHƯA XÁC ĐỊNH</span>
+                </div>
+                <div style="display: flex; align-items: center; gap: 8px; flex-wrap: wrap;">
+                  <select id="selectReburnPreset" class="form-select" style="font-size: 12px; padding: 4px 8px; height: 30px; width: auto; background: var(--bg-card); color: #fff; border: 1px solid var(--border-dark); border-radius: 4px;">
+                    <option value="cinematic_white">🎬 Phim Tài Liệu (Trắng)</option>
+                    <option value="yellow_spotlight">🌟 Vàng Nổi Bật</option>
+                    <option value="boxed_translucent">📦 Hộp Nền Mờ</option>
+                  </select>
+                  <button class="btn btn-outline" id="btnReburnSubtitles" onclick="burnSubtitlesOnDemand()" style="padding: 4px 10px; font-size: 12px; display: inline-flex; align-items: center; gap: 4px; border-color: var(--accent-cyan); color: var(--accent-cyan);" title="Gắn lại phụ đề theo phong cách đã chọn">
+                    <span>🔥</span> Gắn Lại Phụ Đề
+                  </button>
+                  <button class="btn btn-outline" id="btnDownloadSrt" onclick="downloadProjectSrt()" style="padding: 4px 10px; font-size: 12px; display: inline-flex; align-items: center; gap: 4px;" title="Tải file SRT chuẩn UTF-8 để nạp lên YouTube CC">
+                    <span>📥</span> Tải File .SRT
+                  </button>
+                </div>
+              </div>
             </div>
 
             <div class="player-card">
               <div style="font-weight: 700; font-size: 14px; display: flex; justify-content: space-between; align-items: center;">
-                <span>Thumbnail Đối Nghịch & Safe Zone</span>
+                <span>Ảnh Bìa Thumbnail (16:9 Chuẩn YouTube)</span>
                 <div style="display: flex; gap: 8px; align-items: center;">
                   <span style="color: var(--success-mint); font-size: 12px;">Góc phải dưới sạch 100%</span>
                   <button class="btn btn-outline" id="btnRegenerateThumb" onclick="regenerateThumbnailAI()" style="padding: 4px 10px; font-size: 12px;" title="Vẽ lại ảnh bìa Thumbnail bằng AI (9Router)">
@@ -1547,10 +1602,9 @@
                 </div>
               </div>
               <div class="thumb-preview-box">
-                <img id="thumbPreviewImg" src="" alt="Thumbnail Safe-Zone Preview" style="display: none;">
-                <div class="safe-zone-guide-tag">YouTube 20% Safe Zone</div>
+                <img id="thumbPreviewImg" src="" alt="Thumbnail Preview" style="display: none;">
                 <div class="empty-video-placeholder" id="thumbEmptyNotice">
-                  Ảnh Thumbnail 16:9 sẽ hiển thị kèm lưới Safe-Zone ở Bước 4.
+                  Ảnh Thumbnail 16:9 sẽ hiển thị ở Bước 4.
                 </div>
               </div>
             </div>
@@ -1950,9 +2004,54 @@
               </button>
             </div>
           </div>
+
+          <!-- CARD 5: SUBTITLES & TYPOGRAPHY -->
+          <div class="settings-card">
+            <div class="settings-card-header">
+              <span class="settings-card-icon">💬</span>
+              <div>
+                <div class="settings-card-title">5. Phụ Đề Video Final & Typography (Subtitles)</div>
+                <div class="settings-card-subtitle">Định dạng font chữ, màu sắc, bóng đổ và vị trí hiển thị phụ đề tự động trên video 1080p</div>
+              </div>
+            </div>
+
+            <div class="form-group" style="margin-bottom: 14px;">
+              <label style="display: flex; align-items: center; gap: 8px; font-size: 13px; font-weight: 600; cursor: pointer;">
+                <input type="checkbox" id="settingSubtitlesEnabled" checked style="accent-color: var(--accent-cyan); width: 16px; height: 16px;">
+                <span>Mặc định tự động gắn phụ đề vào video final cho mọi dự án mới</span>
+              </label>
+            </div>
+
+            <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 12px;">
+              <div class="form-group">
+                <label class="form-label" for="settingSubtitlePreset">Phong cách phụ đề mặc định</label>
+                <select class="form-select" id="settingSubtitlePreset">
+                  <option value="cinematic_white" selected>🎬 Phim Tài Liệu Chuẩn (Chữ trắng · Viền & đổ bóng đen)</option>
+                  <option value="yellow_spotlight">🌟 Kênh Khám Phá Nổi Bật (Chữ vàng · Viền đen đậm nét)</option>
+                  <option value="boxed_translucent">📦 Hộp Nền Bán Trong Suốt (Chữ trắng · Nền đen mờ êm mắt)</option>
+                </select>
+              </div>
+              <div class="form-group">
+                <label class="form-label" for="settingSubtitleFont">Font chữ phụ đề</label>
+                <input class="form-input" id="settingSubtitleFont" type="text" value="Montserrat" placeholder="Montserrat, Arial, Be Vietnam Pro">
+              </div>
+            </div>
+
+            <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 12px; margin-top: 4px;">
+              <div class="form-group">
+                <label class="form-label" for="settingSubtitleFontSize">Cỡ chữ (Font size pt)</label>
+                <input class="form-input" id="settingSubtitleFontSize" type="number" min="14" max="36" value="22">
+              </div>
+              <div class="form-group">
+                <label class="form-label" for="settingSubtitleMarginV">Khoảng cách đáy an toàn (Safe Zone - px)</label>
+                <input class="form-input" id="settingSubtitleMarginV" type="number" min="10" max="300" value="55" placeholder="55">
+                <div style="font-size: 11px; color: var(--text-muted); margin-top: 4px;">Mặc định 55px (Khoảng cách từ mép dưới video lên phụ đề để tránh thanh timeline YouTube)</div>
+              </div>
+            </div>
+          </div>
         </div>
 
-        <!-- CARD 5: EXTERNAL BINARIES STATUS -->
+        <!-- CARD 6: EXTERNAL BINARIES STATUS -->
         <div class="settings-card" style="margin-top: 10px;">
           <div class="settings-card-header" style="justify-content: space-between;">
             <div style="display: flex; gap: 12px; align-items: center;">
@@ -2073,6 +2172,43 @@
       });
     });
 
+    // Wizard subtitle option & preset selection
+    let selectedSubtitleEnabled = true;
+    let selectedSubtitlePreset = 'cinematic_white';
+
+    const wizardSubCheck = document.getElementById('wizardEnableSubtitles');
+    const wizardSubLabel = document.getElementById('wizardSubtitlesStatusLabel');
+    const wizardPresetGroup = document.getElementById('wizardSubtitlePresetGroup');
+
+    if (wizardSubCheck) {
+      wizardSubCheck.addEventListener('change', () => {
+        selectedSubtitleEnabled = wizardSubCheck.checked;
+        if (wizardSubLabel) {
+          wizardSubLabel.textContent = selectedSubtitleEnabled ? 'BẬT' : 'TẮT';
+          wizardSubLabel.style.color = selectedSubtitleEnabled ? 'var(--accent-cyan)' : 'var(--text-muted)';
+        }
+        if (wizardPresetGroup) {
+          wizardPresetGroup.style.opacity = selectedSubtitleEnabled ? '1' : '0.4';
+          wizardPresetGroup.style.pointerEvents = selectedSubtitleEnabled ? 'auto' : 'none';
+        }
+      });
+    }
+
+    const wizardPresetPills = document.querySelectorAll('#wizardSubtitlePresetGroup .preset-pill');
+    wizardPresetPills.forEach(pill => {
+      pill.addEventListener('click', () => {
+        wizardPresetPills.forEach(p => {
+          p.classList.remove('selected');
+          p.style.borderColor = 'var(--border-dark)';
+          p.style.background = 'var(--bg-card)';
+        });
+        pill.classList.add('selected');
+        pill.style.borderColor = 'var(--accent-cyan)';
+        pill.style.background = 'rgba(0, 229, 255, 0.08)';
+        selectedSubtitlePreset = pill.getAttribute('data-preset') || 'cinematic_white';
+      });
+    });
+
     // Log terminal helper
     function appendLog(message, level = 'normal') {
       const logs = document.getElementById('terminalLogs');
@@ -2124,7 +2260,9 @@
           body: JSON.stringify({
             topic: topic,
             skill_id: skill,
-            target_duration_min: currentDuration
+            target_duration_min: currentDuration,
+            subtitles_enabled: selectedSubtitleEnabled,
+            subtitle_preset: selectedSubtitlePreset
           })
         });
 
@@ -2282,34 +2420,63 @@
         if (!res.ok) return;
         const project = await res.json();
 
-        // Build screenplay scenes lookup map
+        // Build screenplay scenes lookup map and ordered scenes list
         let screenplayScenesMap = {};
+        let allScreenplayScenes = [];
         if (project.screenplay && project.screenplay.chapters) {
           project.screenplay.chapters.forEach(ch => {
             if (ch.scenes) {
               ch.scenes.forEach(sc => {
                 screenplayScenesMap[sc.scene_id] = sc;
+                allScreenplayScenes.push(sc);
               });
             }
           });
         }
 
-        // Render scenes table
+        const completedMap = {};
         if (project.completed_scenes && project.completed_scenes.length > 0) {
-          const enrichedScenes = project.completed_scenes.map(sc => {
-            const spScene = screenplayScenesMap[sc.scene_id] || {};
-            return {
-              ...sc,
-              visual_prompt: spScene.visual_prompt || sc.visual_prompt || '',
-              camera_angle: spScene.camera_angle || sc.camera_angle || '',
-              sfx_cue: spScene.sfx_cue || sc.sfx_cue || '',
-              preferred_vault: sc.preferred_vault || spScene.preferred_vault || 'universal',
-              source_info: sc.source_info || spScene.source_info || null
-            };
+          project.completed_scenes.forEach(sc => {
+            completedMap[sc.scene_id] = sc;
           });
-          renderScenesTable(enrichedScenes, force);
+        }
 
-          // Update mini preview player with latest scene
+        // Always display full scenes list from screenplay when available
+        let scenesToRender = [];
+        if (allScreenplayScenes.length > 0) {
+          scenesToRender = allScreenplayScenes.map(spScene => {
+            const comp = completedMap[spScene.scene_id];
+            if (comp) {
+              return {
+                ...comp,
+                visual_prompt: spScene.visual_prompt || comp.visual_prompt || '',
+                camera_angle: spScene.camera_angle || comp.camera_angle || '',
+                sfx_cue: spScene.sfx_cue || comp.sfx_cue || '',
+                preferred_vault: comp.preferred_vault || spScene.preferred_vault || 'universal',
+                source_info: comp.source_info || spScene.source_info || null,
+                is_rendered: true,
+              };
+            } else {
+              const isCurrentProcessing = !!(project.current_step_text && project.current_step_text.includes(spScene.scene_id));
+              return {
+                ...spScene,
+                is_rendered: false,
+                is_processing: isCurrentProcessing,
+                status: isCurrentProcessing ? 'processing' : 'pending',
+                video_path: null,
+              };
+            }
+          });
+        } else if (project.completed_scenes && project.completed_scenes.length > 0) {
+          scenesToRender = project.completed_scenes.map(sc => ({ ...sc, is_rendered: true }));
+        }
+
+        if (scenesToRender.length > 0) {
+          renderScenesTable(scenesToRender, force);
+        }
+
+        // Update mini preview player with latest scene
+        if (project.completed_scenes && project.completed_scenes.length > 0) {
           const latestScene = project.completed_scenes[project.completed_scenes.length - 1];
           if (latestScene && latestScene.scene_id) {
             document.getElementById('currentSceneBadge').textContent = latestScene.scene_id;
@@ -2321,24 +2488,66 @@
               document.getElementById('videoEmptyNotice').style.display = 'none';
             }
           }
-        } else if (project.screenplay && project.screenplay.chapters) {
-          // Fallback to draft screenplay scenes if completed_scenes is empty
-          let draftScenes = [];
-          project.screenplay.chapters.forEach(ch => {
-            if (ch.scenes) draftScenes.push(...ch.scenes);
-          });
-          if (draftScenes.length > 0) {
-            renderScenesTable(draftScenes, force);
-          }
         }
 
         // Render final video & thumbnail when available
+        const finalVid = document.getElementById('finalVideoPlayer');
+        const finalNotice = document.getElementById('finalVideoNotice');
+
         if (project.final_video_path) {
-          const finalVid = document.getElementById('finalVideoPlayer');
           const finalVidUrl = '/api/projects/' + currentProjectId + '/preview/video';
-          if (!finalVid.src.includes(finalVidUrl)) {
+          if (!finalVid.src || !finalVid.src.includes(finalVidUrl)) {
             finalVid.src = finalVidUrl;
-            document.getElementById('finalVideoNotice').style.display = 'none';
+          }
+          finalVid.style.display = 'block';
+          if (finalNotice) finalNotice.style.display = 'none';
+
+          // Update Subtitle Status in Screen 4
+          const subBadge = document.getElementById('finalSubtitleStatusBadge');
+          const reburnSel = document.getElementById('selectReburnPreset');
+          if (subBadge) {
+            if (project.subtitles_enabled) {
+              const preLabel = (project.subtitle_preset === 'yellow_spotlight' ? 'VÀNG NỔI BẬT' :
+                               (project.subtitle_preset === 'boxed_translucent' ? 'HỘP NỀN MỜ' : 'PHIM TÀI LIỆU'));
+              subBadge.textContent = `ĐÃ GẮN (${preLabel})`;
+              subBadge.style.background = 'rgba(0, 229, 255, 0.15)';
+              subBadge.style.color = 'var(--accent-cyan)';
+            } else {
+              subBadge.textContent = 'CHƯA GẮN';
+              subBadge.style.background = 'rgba(255, 255, 255, 0.08)';
+              subBadge.style.color = 'var(--text-secondary)';
+            }
+          }
+          if (reburnSel && project.subtitle_preset) {
+            reburnSel.value = project.subtitle_preset;
+          }
+        } else {
+          // Final video not yet ready (currently rendering or pending)
+          if (finalVid) {
+            finalVid.pause();
+            finalVid.removeAttribute('src');
+            finalVid.load();
+            finalVid.style.display = 'none';
+          }
+          if (finalNotice) {
+            finalNotice.style.display = 'flex';
+            const isRendering = project.stage && project.stage !== 'COMPLETE';
+            finalNotice.innerHTML = `
+              <div style="text-align: center; padding: 24px; max-width: 520px; line-height: 1.6;">
+                <div style="font-size: 36px; margin-bottom: 12px;">${isRendering ? '⚡' : '🎬'}</div>
+                <div style="font-size: 16px; font-weight: 800; color: ${isRendering ? 'var(--accent-cyan)' : 'var(--text-secondary)'}; margin-bottom: 8px;">
+                  ${isRendering ? 'DỰ ÁN ĐANG ĐƯỢC RENDER LẠI TOÀN BỘ' : 'VIDEO CHƯA ĐƯỢC RENDER'}
+                </div>
+                <div style="font-size: 13px; color: var(--text-secondary); margin-bottom: 14px;">
+                  ${isRendering ? `Tiến độ: <strong style="color: var(--accent-cyan); font-size: 15px;">${Math.round(project.progress || 0)}%</strong> — <em>${escapeJsStr(project.current_step_text || 'Đang xử lý phân cảnh...')}</em><br><span style="color: var(--text-muted); font-size: 12px; margin-top: 6px; display: inline-block;">Video 1080p hoàn chỉnh được ghép nối ở Bước 3 sau khi render xong toàn bộ các cảnh. Hệ thống sẽ tự động hiển thị video tại đây ngay khi hoàn tất.</span>` : 'Vui lòng bắt đầu quy trình sản xuất để tạo video hoàn chỉnh.'}
+                </div>
+                <div id="backupVideoPrompt" style="margin-top: 14px; padding-top: 12px; border-top: 1px dashed var(--border-dark);">
+                  <button class="btn-scene-video" onclick="loadBackupFinalVideo('${currentProjectId}')" style="background: rgba(255, 255, 255, 0.08); border-color: var(--border-dark); color: var(--text-secondary); padding: 8px 16px; border-radius: 6px; font-size: 12px; cursor: pointer; display: inline-flex; align-items: center; gap: 6px;" title="Xem lại video của lần chạy trước trong khi chờ bản render mới hoàn tất">
+                    <span>📼</span> Xem video bản render trước (Bản sao lưu)
+                  </button>
+                </div>
+              </div>
+            `;
           }
         }
 
@@ -2380,22 +2589,56 @@
       if (isHidden) {
         detailRow.style.display = 'table-row';
         if (mainRow) mainRow.classList.add('expanded');
-        if (btnText) btnText.textContent = 'Đóng Clip';
+        if (btnText) btnText.textContent = btnText.getAttribute('data-close-text') || 'Đóng Clip';
         window._expandedSceneIds.add(sceneId);
         if (video) {
           const dataSrc = video.getAttribute('data-src');
-          if (!video.src || video.src === window.location.href || video.src.endsWith('/')) {
+          if (dataSrc && (!video.src || video.src === window.location.href || video.src.endsWith('/'))) {
             video.src = dataSrc;
           }
         }
       } else {
         detailRow.style.display = 'none';
         if (mainRow) mainRow.classList.remove('expanded');
-        if (btnText) btnText.textContent = 'Xem Clip';
+        if (btnText) btnText.textContent = btnText.getAttribute('data-open-text') || 'Xem Clip';
         window._expandedSceneIds.delete(sceneId);
         if (video) {
           video.pause();
         }
+      }
+    }
+
+    // Play backup video for a scene or final
+    function playSceneBackup(projectId, sceneId) {
+      const slot = document.getElementById(`scene-slot-${sceneId}`);
+      if (!slot) return;
+      slot.innerHTML = `
+        <div class="scene-video-wrapper">
+          <video controls playsinline autoplay src="/api/projects/${projectId}/preview/scene/${sceneId}?allow_backup=true" style="width: 100%; border-radius: 6px;">
+            Trình duyệt của bạn không hỗ trợ phát thẻ video HTML5.
+          </video>
+        </div>
+        <div style="font-size: 11px; color: var(--warning-amber); text-align: center; margin-top: 4px; font-weight: 600;">
+          ⚠️ Đang xem video clip của lần render trước (bản sao lưu).
+        </div>
+      `;
+    }
+
+    function loadBackupFinalVideo(projectId) {
+      const finalVid = document.getElementById('finalVideoPlayer');
+      const finalNotice = document.getElementById('finalVideoNotice');
+      if (finalVid) {
+        finalVid.src = `/api/projects/${projectId}/preview/video/backup`;
+        finalVid.style.display = 'block';
+        if (finalNotice) {
+          finalNotice.innerHTML = `
+            <div style="padding: 10px 16px; text-align: center; background: rgba(255, 179, 0, 0.12); border: 1px solid var(--warning-amber); border-radius: 8px; margin-bottom: 12px; font-size: 12px; color: var(--warning-amber); line-height: 1.5;">
+              ⚠️ <strong>Bản xem trước sao lưu:</strong> Bạn đang xem video hoàn chỉnh của lần render trước. Bản render mới đang tiếp tục chạy ngầm và sẽ tự động thay thế khi hoàn thành.
+            </div>
+          `;
+          finalNotice.style.display = 'block';
+        }
+        finalVid.play().catch(() => {});
       }
     }
 
@@ -2627,7 +2870,7 @@
             </div>
             ${cutBadgeHtml}
           `;
-        } else if (sc.status === 'completed' || sc.video_path) {
+        } else if (sc.is_rendered || sc.status === 'completed' || sc.video_path) {
           sourceCellHtml = `
             <div class="source-badge source-stock">
               <span>✔</span>
@@ -2635,11 +2878,18 @@
             </div>
             ${cutBadgeHtml}
           `;
+        } else if (sc.is_processing) {
+          sourceCellHtml = `
+            <div class="source-badge source-pending" style="background: rgba(0, 229, 255, 0.15); color: var(--accent-cyan); border-color: var(--accent-cyan);">
+              <span class="spin">⚡</span>
+              <span>Đang render...</span>
+            </div>
+          `;
         } else {
           sourceCellHtml = `
             <div class="source-badge source-pending">
               <span>⏳</span>
-              <span>Chờ tải (${platform})</span>
+              <span>Chờ render (${platform})</span>
             </div>
           `;
         }
@@ -2652,6 +2902,29 @@
           : `<div style="margin-top:4px;"><span title="${escapeJsStr(reviewReasons)}" style="font-size:10px; font-weight:700; color:#ffb300; background:rgba(255,179,0,0.12); border:1px solid rgba(255,179,0,0.4); border-radius:4px; padding:1px 6px;">⚠ CẦN KIỂM TRA</span></div>`);
         const editedBadge = scMeta.edited
           ? `<div style="margin-top:4px;"><span title="Đã chỉnh sửa lúc ${escapeJsStr(scMeta.edited.at || '')}" style="font-size:10px; font-weight:700; color:#00e676; background:rgba(0,230,118,0.10); border:1px solid rgba(0,230,118,0.35); border-radius:4px; padding:1px 6px;">✏️ ĐÃ SỬA</span></div>` : '';
+
+        const isRendered = !!(sc.is_rendered || sc.status === 'completed' || sc.video_path);
+        const isProcessing = !!sc.is_processing;
+        let actionBtnHtml = '';
+        if (isRendered) {
+          actionBtnHtml = `
+            <button class="btn-scene-video" id="btn-scene-${sc.scene_id}" onclick="event.stopPropagation(); toggleSceneRow('${sc.scene_id}')" title="Bấm để mở trình phát video cho cảnh này">
+              <span>🎬</span> <span id="btn-text-${sc.scene_id}" data-open-text="Xem Clip" data-close-text="Đóng Clip">${isExp ? 'Đóng Clip' : 'Xem Clip'}</span>
+            </button>
+          `;
+        } else if (isProcessing) {
+          actionBtnHtml = `
+            <button class="btn-scene-video" id="btn-scene-${sc.scene_id}" onclick="event.stopPropagation(); toggleSceneRow('${sc.scene_id}')" style="background: rgba(0, 229, 255, 0.12); border-color: rgba(0, 229, 255, 0.4); color: var(--accent-cyan);" title="Phân cảnh đang được cắt ghép tự động trong B2">
+              <span class="spin">⚡</span> <span id="btn-text-${sc.scene_id}" data-open-text="Đang render..." data-close-text="Đóng">${isExp ? 'Đóng' : 'Đang render...'}</span>
+            </button>
+          `;
+        } else {
+          actionBtnHtml = `
+            <button class="btn-scene-video" id="btn-scene-${sc.scene_id}" onclick="event.stopPropagation(); toggleSceneRow('${sc.scene_id}')" style="background: rgba(255, 255, 255, 0.04); border-color: var(--border-dark); color: var(--text-muted);" title="Phân cảnh đang chờ render theo tiến trình">
+              <span>⏳</span> <span id="btn-text-${sc.scene_id}" data-open-text="Chờ render" data-close-text="Đóng">${isExp ? 'Đóng' : 'Chờ render'}</span>
+            </button>
+          `;
+        }
 
         mainTr.innerHTML = `
           <td>
@@ -2667,9 +2940,7 @@
           <td>${kwHtml || '<span style="color:var(--text-muted)">--</span>'}</td>
           <td>${sourceCellHtml}</td>
           <td style="text-align: center;">
-            <button class="btn-scene-video" id="btn-scene-${sc.scene_id}" onclick="event.stopPropagation(); toggleSceneRow('${sc.scene_id}')" title="Bấm để mở trình phát video cho cảnh này">
-              <span>🎬</span> <span id="btn-text-${sc.scene_id}">${isExp ? 'Đóng Clip' : 'Xem Clip'}</span>
-            </button>
+            ${actionBtnHtml}
           </td>
         `;
         tbody.appendChild(mainTr);
@@ -2684,7 +2955,7 @@
         const safeText = escapeJsStr(sc.text);
         const safePrompt = escapeJsStr(sc.visual_prompt);
         const safeDur = sc.duration_sec ? sc.duration_sec.toFixed(1) + 's' : '--';
-        const videoSrcAttr = isExp ? `src="/api/projects/${currentProjectId}/preview/scene/${sc.scene_id}"` : '';
+        const videoSrcAttr = (isExp && isRendered) ? `src="/api/projects/${currentProjectId}/preview/scene/${sc.scene_id}"` : '';
 
         // Source details for expand row
         let sourceDetailHtml = '';
@@ -2729,40 +3000,66 @@
           `;
         }
 
+        let leftColHtml = '';
+        if (isRendered) {
+          leftColHtml = `
+            <div id="scene-slot-${sc.scene_id}" style="display: flex; flex-direction: column; gap: 10px;">
+              <div class="scene-video-wrapper">
+                <video id="video-player-${sc.scene_id}" controls playsinline preload="metadata" ${videoSrcAttr} data-src="/api/projects/${currentProjectId}/preview/scene/${sc.scene_id}">
+                  Trình duyệt của bạn không hỗ trợ phát thẻ video HTML5.
+                </video>
+              </div>
+              <div style="display: flex; gap: 8px; justify-content: space-between; align-items: center;">
+                <button class="btn-scene-video" onclick="openSceneModal('${currentProjectId}', '${sc.scene_id}', '${safeText}', '${safePrompt}', '${safeDur}', window._scenesMap['${sc.scene_id}'] ? window._scenesMap['${sc.scene_id}'].source_info : null)" title="Phóng to video ra cửa sổ popup modal">
+                  <span>🔍</span> Phóng To Modal
+                </button>
+                <a href="/api/projects/${currentProjectId}/preview/scene/${sc.scene_id}" target="_blank" download="${sc.scene_id}.mp4" class="btn-scene-video" style="text-decoration: none; background: var(--bg-card); color: var(--text-secondary); border-color: var(--border-dark);" title="Tải tệp MP4 của phân cảnh này về máy">
+                  <span>💾</span> Tải Clip MP4
+                </a>
+              </div>
+              <div style="display: flex; gap: 8px; justify-content: space-between; align-items: center;">
+                <button class="btn-scene-video" onclick="event.stopPropagation(); redoScene('${sc.scene_id}')" style="background: rgba(255,179,0,0.12); border-color: rgba(255,179,0,0.5); color: #ffb300;" title="Tự động tìm footage khác cho scene này (AI chọn), rồi ghép lại video cuối">
+                  <span>🔁</span> Làm lại scene
+                </button>
+                <button class="btn-scene-video" onclick="event.stopPropagation(); openAltModal('${sc.scene_id}')" style="background: rgba(170,102,255,0.12); border-color: rgba(170,102,255,0.5); color: #c79bff;" title="Xem các đoạn footage thay thế và tự chọn đoạn ưng ý">
+                  <span>🎞</span> Chọn footage khác
+                </button>
+              </div>
+              ${scMeta.needs_review ? `
+              <div style="display: flex; gap: 8px; align-items: center; justify-content: space-between; background: rgba(255,179,0,0.06); border: 1px dashed rgba(255,179,0,0.35); border-radius: 6px; padding: 6px 8px;">
+                <span style="font-size: 11px; color: var(--text-secondary); line-height: 1.4;">${escapeJsStr((scMeta.auto_redo && scMeta.auto_redo.reason) || ('Lý do gắn cờ: ' + (reviewReasons || '--')))}</span>
+                <button class="btn-scene-video" onclick="event.stopPropagation(); acceptScene('${sc.scene_id}')" style="background: rgba(0,230,118,0.12); border-color: rgba(0,230,118,0.5); color: #00e676; white-space: nowrap;" title="Footage hiện tại đã ổn: bỏ cờ cần kiểm tra cho scene này">
+                  <span>✔</span> Chấp nhận
+                </button>
+              </div>` : ''}
+            </div>
+          `;
+        } else {
+          leftColHtml = `
+            <div id="scene-slot-${sc.scene_id}" style="display: flex; flex-direction: column; gap: 10px;">
+              <div style="min-height: 160px; background: rgba(0,0,0,0.3); border: 1px dashed ${isProcessing ? 'var(--accent-cyan)' : 'var(--border-dark)'}; border-radius: 8px; padding: 24px; text-align: center; display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 8px;">
+                <div style="font-size: 28px;">${isProcessing ? '⚡' : '⏳'}</div>
+                <div style="font-weight: 700; color: ${isProcessing ? 'var(--accent-cyan)' : 'var(--text-muted)'}; font-size: 14px;">
+                  ${isProcessing ? 'Đang tự động render phân cảnh này trong B2...' : 'Phân cảnh đang chờ render (chờ đến lượt)'}
+                </div>
+                <div style="font-size: 12px; color: var(--text-secondary); max-width: 320px; line-height: 1.5;">
+                  ${isProcessing ? 'Hệ thống đang đối chiếu CLIP và cắt clip. Video sẽ tự động xuất hiện tại đây khi xử lý xong.' : 'Khi pipeline chạy đến phân cảnh này, hệ thống sẽ tự động ghép footage và hiển thị video clip tại đây.'}
+                </div>
+                <div style="margin-top: 6px;">
+                  <button class="btn-scene-video" onclick="event.stopPropagation(); playSceneBackup('${currentProjectId}', '${sc.scene_id}')" style="background: rgba(255,255,255,0.06); font-size: 11px; padding: 6px 12px; border-radius: 4px; color: var(--text-muted); border-color: var(--border-dark); cursor: pointer;" title="Thử phát clip đã sao lưu của lần render trước nếu có">
+                    <span>📼</span> Xem clip bản render trước (sao lưu)
+                  </button>
+                </div>
+              </div>
+            </div>
+          `;
+        }
+
         detailTr.innerHTML = `
           <td colspan="7" style="padding: 0;">
             <div class="scene-detail-content">
               <!-- Cột trái: Trình phát Video Cảnh -->
-              <div style="display: flex; flex-direction: column; gap: 10px;">
-                <div class="scene-video-wrapper">
-                  <video id="video-player-${sc.scene_id}" controls playsinline preload="metadata" ${videoSrcAttr} data-src="/api/projects/${currentProjectId}/preview/scene/${sc.scene_id}">
-                    Trình duyệt của bạn không hỗ trợ phát thẻ video HTML5.
-                  </video>
-                </div>
-                <div style="display: flex; gap: 8px; justify-content: space-between; align-items: center;">
-                  <button class="btn-scene-video" onclick="openSceneModal('${currentProjectId}', '${sc.scene_id}', '${safeText}', '${safePrompt}', '${safeDur}', window._scenesMap['${sc.scene_id}'] ? window._scenesMap['${sc.scene_id}'].source_info : null)" title="Phóng to video ra cửa sổ popup modal">
-                    <span>🔍</span> Phóng To Modal
-                  </button>
-                  <a href="/api/projects/${currentProjectId}/preview/scene/${sc.scene_id}" target="_blank" download="${sc.scene_id}.mp4" class="btn-scene-video" style="text-decoration: none; background: var(--bg-card); color: var(--text-secondary); border-color: var(--border-dark);" title="Tải tệp MP4 của phân cảnh này về máy">
-                    <span>💾</span> Tải Clip MP4
-                  </a>
-                </div>
-                <div style="display: flex; gap: 8px; justify-content: space-between; align-items: center;">
-                  <button class="btn-scene-video" onclick="event.stopPropagation(); redoScene('${sc.scene_id}')" style="background: rgba(255,179,0,0.12); border-color: rgba(255,179,0,0.5); color: #ffb300;" title="Tự động tìm footage khác cho scene này (AI chọn), rồi ghép lại video cuối">
-                    <span>🔁</span> Làm lại scene
-                  </button>
-                  <button class="btn-scene-video" onclick="event.stopPropagation(); openAltModal('${sc.scene_id}')" style="background: rgba(170,102,255,0.12); border-color: rgba(170,102,255,0.5); color: #c79bff;" title="Xem các đoạn footage thay thế và tự chọn đoạn ưng ý">
-                    <span>🎞</span> Chọn footage khác
-                  </button>
-                </div>
-                ${scMeta.needs_review ? `
-                <div style="display: flex; gap: 8px; align-items: center; justify-content: space-between; background: rgba(255,179,0,0.06); border: 1px dashed rgba(255,179,0,0.35); border-radius: 6px; padding: 6px 8px;">
-                  <span style="font-size: 11px; color: var(--text-secondary); line-height: 1.4;">${escapeJsStr((scMeta.auto_redo && scMeta.auto_redo.reason) || ('Lý do gắn cờ: ' + (reviewReasons || '--')))}</span>
-                  <button class="btn-scene-video" onclick="event.stopPropagation(); acceptScene('${sc.scene_id}')" style="background: rgba(0,230,118,0.12); border-color: rgba(0,230,118,0.5); color: #00e676; white-space: nowrap;" title="Footage hiện tại đã ổn: bỏ cờ cần kiểm tra cho scene này">
-                    <span>✔</span> Chấp nhận
-                  </button>
-                </div>` : ''}
-              </div>
+              ${leftColHtml}
 
               <!-- Cột phải: Thông tin kịch bản & QC Tracking -->
               <div class="scene-meta-box">
@@ -2839,6 +3136,88 @@
     // Load final completed assets
     async function loadCompletedProjectAssets() {
       await refreshProjectState();
+    }
+
+    // Burn or re-burn subtitles on demand for current project
+    async function burnSubtitlesOnDemand() {
+      if (!currentProjectId) {
+        alert('Vui lòng chọn hoặc hoàn tất một dự án trước!');
+        return;
+      }
+      const selectPreset = document.getElementById('selectReburnPreset');
+      const preset = selectPreset ? selectPreset.value : 'cinematic_white';
+      const btn = document.getElementById('btnReburnSubtitles');
+      const badge = document.getElementById('finalSubtitleStatusBadge');
+
+      if (!confirm(`Bạn có muốn gắn lại phụ đề với phong cách "${preset}" vào video thành phẩm không?`)) {
+        return;
+      }
+
+      if (btn) {
+        btn.disabled = true;
+        btn.innerHTML = '<span>⏳</span> Đang gắn phụ đề...';
+      }
+      if (badge) {
+        badge.textContent = 'ĐANG XỬ LÝ...';
+        badge.style.color = '#ffd700';
+      }
+
+      try {
+        const res = await fetch(`/api/projects/${currentProjectId}/subtitles/burn`, {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ preset: preset })
+        });
+        const data = await res.json();
+        if (!res.ok) {
+          throw new Error(data.detail || 'Lỗi khi gắn phụ đề');
+        }
+
+        alert('✅ ' + (data.message || 'Đã gắn phụ đề thành công!'));
+        // Reload video player with fresh cache-buster
+        const finalVid = document.getElementById('finalVideoPlayer');
+        if (finalVid) {
+          finalVid.src = `/api/projects/${currentProjectId}/preview/video?t=${Date.now()}`;
+          finalVid.load();
+        }
+        await refreshProjectState(true);
+      } catch (err) {
+        alert('❌ Lỗi gắn phụ đề: ' + (err.message || 'Mất kết nối máy chủ'));
+      } finally {
+        if (btn) {
+          btn.disabled = false;
+          btn.innerHTML = '<span>🔥</span> Gắn Lại Phụ Đề';
+        }
+      }
+    }
+
+    // Download SRT subtitle file
+    async function downloadProjectSrt() {
+      if (!currentProjectId) {
+        alert('Vui lòng chọn một dự án!');
+        return;
+      }
+      try {
+        const res = await fetch(`/api/projects/${currentProjectId}/subtitles`);
+        if (!res.ok) throw new Error('Không thể tải thông tin phụ đề');
+        const data = await res.json();
+        if (!data.srt_content) {
+          alert('Dự án này chưa có file phụ đề .SRT. Bạn có thể bấm "Gắn Lại Phụ Đề" để tạo tự động!');
+          return;
+        }
+
+        const blob = new Blob([data.srt_content], { type: 'text/plain;charset=utf-8' });
+        const url = URL.createObjectURL(blob);
+        const a = document.createElement('a');
+        a.href = url;
+        a.download = `${currentProjectId}_subtitles.srt`;
+        document.body.appendChild(a);
+        a.click();
+        document.body.removeChild(a);
+        URL.revokeObjectURL(url);
+      } catch (err) {
+        alert('❌ Lỗi tải phụ đề: ' + (err.message || 'Mất kết nối'));
+      }
     }
 
     // 1-Click Publish to YouTube
@@ -3451,7 +3830,16 @@
         const data = await res.json();
         if (!res.ok) { alert(data.detail || 'Không render lại được.'); return; }
         setSceneJobStatus('♻ Đã sao lưu bản cũ và bắt đầu render lại...', '#c79bff');
+
+        // Connect SSE so terminal logs & live progress stream directly
+        connectSSE(currentProjectId);
+
+        // Switch to Screen 3 (Pipeline Live Monitor) so the user clearly sees the live render status!
+        switchToScreen('monitor');
+        appendLog('♻ Đã sao lưu bản cũ và bắt đầu render lại toàn bộ dự án ' + currentProjectId + '...', 'cyan');
+
         refreshProjectState(true);
+        loadProjectsList();
       } catch (err) {
         alert('Lỗi kết nối: ' + err.message);
       }
@@ -4031,6 +4419,23 @@
         if (data.render_concurrency !== undefined) document.getElementById('settingRenderConcurrency').value = data.render_concurrency;
         if (data.clean_intermediate_parts !== undefined) document.getElementById('settingCleanParts').checked = data.clean_intermediate_parts;
 
+        // Subtitles configuration
+        if (document.getElementById('settingSubtitlesEnabled') && data.subtitles_enabled !== undefined) {
+          document.getElementById('settingSubtitlesEnabled').checked = data.subtitles_enabled;
+        }
+        if (document.getElementById('settingSubtitlePreset') && data.subtitle_preset) {
+          document.getElementById('settingSubtitlePreset').value = data.subtitle_preset;
+        }
+        if (document.getElementById('settingSubtitleFont') && data.subtitle_font) {
+          document.getElementById('settingSubtitleFont').value = data.subtitle_font;
+        }
+        if (document.getElementById('settingSubtitleFontSize') && data.subtitle_font_size) {
+          document.getElementById('settingSubtitleFontSize').value = data.subtitle_font_size;
+        }
+        if (document.getElementById('settingSubtitleMarginV') && data.subtitle_margin_v !== undefined) {
+          document.getElementById('settingSubtitleMarginV').value = data.subtitle_margin_v;
+        }
+
         // Cache breakdown
         if (data.cache_breakdown) {
           const cb = data.cache_breakdown;
@@ -4375,6 +4780,13 @@
           rolling_buffer_max_gb: getNum('settingBufferLimit', 5.0),
           render_concurrency: getInt('settingRenderConcurrency', 2),
           clean_intermediate_parts: getCheck('settingCleanParts', true),
+
+          // Subtitles configuration
+          subtitles_enabled: getCheck('settingSubtitlesEnabled', true),
+          subtitle_preset: getVal('settingSubtitlePreset', 'cinematic_white'),
+          subtitle_font: getVal('settingSubtitleFont', 'Montserrat').trim(),
+          subtitle_font_size: getInt('settingSubtitleFontSize', 22),
+          subtitle_margin_v: getInt('settingSubtitleMarginV', 55),
         };
 
         if (nrKeyVal && !nrKeyVal.includes('***')) {

@@ -9,6 +9,7 @@ from __future__ import annotations
 import base64
 import logging
 import os
+import re
 from pathlib import Path
 from typing import Any, Dict, Optional, Union
 
@@ -94,15 +95,27 @@ class NineRouterImageClient:
             "Authorization": f"Bearer {api_key}",
             "Content-Type": "application/json",
         }
+
+        # Sanitize prompt to ensure diffusion/multimodal models never render text or title graphics
+        clean_prompt = prompt.strip()
+        clean_prompt = re.sub(r"(?i)\b(youtube\s+)?thumbnail\s+of\s+", "cinematic photorealistic wide-angle visual of ", clean_prompt)
+        clean_prompt = re.sub(r"(?i)\b(youtube\s+)?thumbnail\b", "cinematic background image", clean_prompt)
+        if "no text" not in clean_prompt.lower():
+            clean_prompt += (
+                ". CRITICAL: Absolutely NO text, NO typography, NO words, NO letters, NO numbers, "
+                "NO titles, NO subtitles, NO captions, NO watermark, NO logo. "
+                "Clean pure background photography only."
+            )
+
         payload: Dict[str, Any] = {
-            "prompt": prompt,
+            "prompt": clean_prompt,
             "model": target_model,
             "n": 1,
             "size": size,
             "response_format": "b64_json",
         }
 
-        logger.info("Calling 9Router Image Generation with model '%s' for prompt: %.80s...", target_model, prompt)
+        logger.info("Calling 9Router Image Generation with model '%s' for prompt: %.80s...", target_model, clean_prompt)
 
         try:
             with httpx.Client(timeout=self.timeout_sec) as client:

@@ -1,0 +1,883 @@
+{
+  "project_id": "proj_e267802a",
+  "anchor": "sperm whale",
+  "total": 37,
+  "flagged": 37,
+  "scenes": [
+    {
+      "scene_id": "SCENE_001",
+      "title": "Wildebeest teaches hyenas a valuable lesson",
+      "query": "clip-library:wyZK6wGK18k",
+      "issues": [
+        "source_lacks_subject",
+        "source_lacks_scene_terms",
+        "semantic_fail(score=1.0)",
+        "needs_review:semantic_below_threshold(score=1.0)",
+        "live_judge_fail(score=0.0)"
+      ],
+      "live_judge": {
+        "verdict": "fail",
+        "score": 0.0,
+        "subject_present": false,
+        "is_real_footage": true,
+        "has_overlay": false,
+        "reason": "The clip features a wildebeest walking near a waterhole, completely unrelated to a sperm whale.",
+        "sampled_offsets": [
+          1.0,
+          3.32,
+          5.64
+        ]
+      }
+    },
+    {
+      "scene_id": "SCENE_002",
+      "title": "Wildebeest teaches hyenas a valuable lesson",
+      "query": "clip-library:wyZK6wGK18k",
+      "issues": [
+        "source_lacks_subject",
+        "source_lacks_scene_terms",
+        "semantic_fail(score=1.0)",
+        "needs_review:semantic_below_threshold(score=1.0)",
+        "live_judge_fail(score=0.0)"
+      ],
+      "live_judge": {
+        "verdict": "fail",
+        "score": 0.0,
+        "subject_present": false,
+        "is_real_footage": true,
+        "has_overlay": false,
+        "reason": "The clip shows a wildebeest wading in water instead of a sperm whale and a scuba diver.",
+        "sampled_offsets": [
+          1.08,
+          3.6,
+          6.12
+        ]
+      }
+    },
+    {
+      "scene_id": "SCENE_003",
+      "title": "L2 075 Meet the Animals 75 Spotted Hyena",
+      "query": "clip-library:D6UCu8KmENs",
+      "issues": [
+        "source_lacks_subject",
+        "source_lacks_scene_terms",
+        "needs_review:library_last_resort(clip=0.188)",
+        "live_judge_fail(score=0.0)"
+      ],
+      "live_judge": {
+        "verdict": "fail",
+        "score": 0.0,
+        "subject_present": false,
+        "is_real_footage": true,
+        "has_overlay": true,
+        "reason": "The clip features a spotted hyena with prominent title overlays instead of a sperm whale.",
+        "sampled_offsets": [
+          0.82,
+          2.72,
+          4.62
+        ]
+      }
+    },
+    {
+      "scene_id": "SCENE_004",
+      "title": "East Africa | The Savanna's Nepo Club",
+      "query": "clip-library:8Y1MCqL4adA",
+      "issues": [
+        "source_lacks_subject",
+        "source_lacks_scene_terms",
+        "needs_review:library_last_resort(clip=0.189)",
+        "live_judge_fail(score=0.0)"
+      ],
+      "live_judge": {
+        "verdict": "fail",
+        "score": 0.0,
+        "subject_present": false,
+        "is_real_footage": true,
+        "has_overlay": true,
+        "reason": "The clip shows spotted hyenas walking in an African savanna rather than a sperm whale in the ocean, and it includes burned-in subtitles.",
+        "sampled_offsets": [
+          0.73,
+          2.44,
+          4.15
+        ]
+      }
+    },
+    {
+      "scene_id": "SCENE_005",
+      "title": "First Time Ever: Sperm Whale Hunting in the Dark Abyss. Wild Animals #wildanimals #wildlens",
+      "query": "clip-library:i8dZCNjTmvg",
+      "issues": [
+        "source_lacks_scene_terms",
+        "needs_review:library_last_resort(clip=0.294)",
+        "live_judge_fail(score=7.0)"
+      ],
+      "live_judge": {
+        "verdict": "fail",
+        "score": 7.0,
+        "subject_present": true,
+        "is_real_footage": true,
+        "has_overlay": true,
+        "reason": "The sperm whale is clearly featured with a good view of its prominent head and forehead, which directly relates to the narration discussing its massive brain and biological sonar, though a watermark is present in the top-left corner.",
+        "sampled_offsets": [
+          1.09,
+          3.64,
+          6.19
+        ]
+      }
+    },
+    {
+      "scene_id": "SCENE_006",
+      "title": "Hyena mom and her cubs",
+      "query": "clip-library:cpn8r9BsENQ",
+      "issues": [
+        "source_lacks_subject",
+        "source_lacks_scene_terms",
+        "needs_review:library_last_resort(clip=0.167)",
+        "live_judge_fail(score=0.0)"
+      ],
+      "live_judge": {
+        "verdict": "fail",
+        "score": 0.0,
+        "subject_present": false,
+        "is_real_footage": true,
+        "has_overlay": false,
+        "reason": "The footage shows spotted hyenas resting on land, completely unrelated to a sperm whale.",
+        "sampled_offsets": [
+          1.03,
+          3.44,
+          5.85
+        ]
+      }
+    },
+    {
+      "scene_id": "SCENE_007",
+      "title": "IFAW \"Stop the Sellout\" Whale Campaign Video",
+      "query": "\"wildlife animal\" sperm whale deep dive tail",
+      "issues": [
+        "source_lacks_scene_terms",
+        "semantic_fail(score=3.0)",
+        "needs_review:semantic_below_threshold(score=3.0)",
+        "live_judge_fail(score=2.0)"
+      ],
+      "live_judge": {
+        "verdict": "fail",
+        "score": 2.0,
+        "subject_present": false,
+        "is_real_footage": true,
+        "has_overlay": false,
+        "reason": "The clip shows an unidentified whale tail diving next to a ship hull in polar pancake ice, not a sperm whale diving into a dark abyss.",
+        "sampled_offsets": [
+          0.77,
+          2.56,
+          4.35
+        ]
+      }
+    },
+    {
+      "scene_id": "SCENE_008",
+      "title": "IFAW \"Stop the Sellout\" Whale Campaign Video",
+      "query": "clip-library:AJ1vw_9PeCA",
+      "issues": [
+        "source_lacks_scene_terms",
+        "needs_review:library_last_resort(clip=0.241)",
+        "live_judge_fail(score=0.0)"
+      ],
+      "live_judge": {
+        "verdict": "fail",
+        "score": 0.0,
+        "subject_present": false,
+        "is_real_footage": true,
+        "has_overlay": false,
+        "reason": "The clip shows a captured whale hoisted against the hull of a ship in icy waters, completely unrelated to a live sperm whale diving into the deep ocean.",
+        "sampled_offsets": [
+          1.08,
+          3.6,
+          6.12
+        ]
+      }
+    },
+    {
+      "scene_id": "SCENE_009",
+      "title": "East Africa | The Savanna's Nepo Club",
+      "query": "clip-library:8Y1MCqL4adA",
+      "issues": [
+        "source_lacks_subject",
+        "source_lacks_scene_terms",
+        "needs_review:library_last_resort(clip=0.230)",
+        "live_judge_fail(score=0.0)"
+      ],
+      "live_judge": {
+        "verdict": "fail",
+        "score": 0.0,
+        "subject_present": false,
+        "is_real_footage": false,
+        "has_overlay": true,
+        "reason": "The footage shows a 3D CGI anatomical model of a hyena skull with text overlays and subtitles, completely unrelated to a sperm whale.",
+        "sampled_offsets": [
+          1.03,
+          3.44,
+          5.85
+        ]
+      }
+    },
+    {
+      "scene_id": "SCENE_010",
+      "title": "Baleen whale - whale baleen whales feeding animals",
+      "query": "clip-library:PV-qbv1m41I",
+      "issues": [
+        "source_lacks_scene_terms",
+        "needs_review:library_last_resort(clip=0.263)",
+        "live_judge_fail(score=0.0)"
+      ],
+      "live_judge": {
+        "verdict": "fail",
+        "score": 0.0,
+        "subject_present": false,
+        "is_real_footage": false,
+        "has_overlay": false,
+        "reason": "The clip features a humpback whale breaching presented inside a slideshow photo frame, completely missing the sperm whale subject, deep-sea context, and narration.",
+        "sampled_offsets": [
+          1.01,
+          3.36,
+          5.71
+        ]
+      }
+    },
+    {
+      "scene_id": "SCENE_011",
+      "title": "Baleen whale - whale baleen whales feeding animals",
+      "query": "clip-library:PV-qbv1m41I",
+      "issues": [
+        "source_lacks_scene_terms",
+        "needs_review:library_last_resort(clip=0.251)",
+        "live_judge_fail(score=0.0)"
+      ],
+      "live_judge": {
+        "verdict": "fail",
+        "score": 0.0,
+        "subject_present": false,
+        "is_real_footage": true,
+        "has_overlay": false,
+        "reason": "The clip shows a baleen whale surfacing inside a picture-in-picture graphic frame, completely missing the giant squid in the deep sea described in the narration.",
+        "sampled_offsets": [
+          0.84,
+          2.8,
+          4.76
+        ]
+      }
+    },
+    {
+      "scene_id": "SCENE_012",
+      "title": "No dump for this constipated Striped Hyena - too much meat? It may need Isabgol and laxatives!",
+      "query": "clip-library:rq5GpWlX9bc",
+      "issues": [
+        "source_lacks_subject",
+        "source_lacks_scene_terms",
+        "needs_review:library_last_resort(clip=0.221)",
+        "live_judge_fail(score=0.0)"
+      ],
+      "live_judge": {
+        "verdict": "fail",
+        "score": 0.0,
+        "subject_present": false,
+        "is_real_footage": true,
+        "has_overlay": true,
+        "reason": "The footage shows a fallen tree branch on dry land, completely unrelated to a sperm whale or an underwater battle.",
+        "sampled_offsets": [
+          0.91,
+          3.04,
+          5.17
+        ]
+      }
+    },
+    {
+      "scene_id": "SCENE_013",
+      "title": "Female Dominance Over Male Hyenas | Animals In Love | BBC Earth",
+      "query": "clip-library:MWpBe8EgNx4",
+      "issues": [
+        "source_lacks_subject",
+        "source_lacks_scene_terms",
+        "needs_review:library_last_resort(clip=0.222)",
+        "live_judge_fail(score=0.0)"
+      ],
+      "live_judge": {
+        "verdict": "fail",
+        "score": 0.0,
+        "subject_present": false,
+        "is_real_footage": true,
+        "has_overlay": true,
+        "reason": "The clip shows a hyena at night instead of a sperm whale.",
+        "sampled_offsets": [
+          0.85,
+          2.84,
+          4.83
+        ]
+      }
+    },
+    {
+      "scene_id": "SCENE_014",
+      "title": "Female Dominance Over Male Hyenas | Animals In Love | BBC Earth",
+      "query": "clip-library:MWpBe8EgNx4",
+      "issues": [
+        "source_lacks_subject",
+        "source_lacks_scene_terms",
+        "needs_review:library_last_resort(clip=0.204)",
+        "live_judge_fail(score=0.0)"
+      ],
+      "live_judge": {
+        "verdict": "fail",
+        "score": 0.0,
+        "subject_present": false,
+        "is_real_footage": true,
+        "has_overlay": true,
+        "reason": "The clip features a hyena in a dirt den instead of a sperm whale.",
+        "sampled_offsets": [
+          0.94,
+          3.12,
+          5.3
+        ]
+      }
+    },
+    {
+      "scene_id": "SCENE_015",
+      "title": "Savanna buffalo Clans’ Ruthless Hunting Strategy | Wild Africa Animal Documentary",
+      "query": "clip-library:qQ8qg2v5Md8",
+      "issues": [
+        "source_lacks_subject",
+        "source_lacks_scene_terms",
+        "needs_review:library_last_resort(clip=0.197)",
+        "live_judge_fail(score=0.0)"
+      ],
+      "live_judge": {
+        "verdict": "fail",
+        "score": 0.0,
+        "subject_present": false,
+        "is_real_footage": false,
+        "has_overlay": true,
+        "reason": "The footage is an illustration of a lion attacking a buffalo with heavy text overlays, completely unrelated to a sperm whale.",
+        "sampled_offsets": [
+          0.9,
+          3.0,
+          5.1
+        ]
+      }
+    },
+    {
+      "scene_id": "SCENE_016",
+      "title": "Wild Animals - Spotted Dangerous Hyena Short Documentary 2022 4K Ultra HD Video",
+      "query": "clip-library:gV3iklntddc",
+      "issues": [
+        "source_lacks_subject",
+        "source_lacks_scene_terms",
+        "needs_review:library_last_resort(clip=0.198)",
+        "live_judge_fail(score=0.0)"
+      ],
+      "live_judge": {
+        "verdict": "fail",
+        "score": 0.0,
+        "subject_present": false,
+        "is_real_footage": true,
+        "has_overlay": false,
+        "reason": "The clip features a spotted hyena drinking from a waterhole instead of sperm whales.",
+        "sampled_offsets": [
+          0.89,
+          2.96,
+          5.03
+        ]
+      }
+    },
+    {
+      "scene_id": "SCENE_017",
+      "title": "No dump for this constipated Striped Hyena - too much meat? It may need Isabgol and laxatives!",
+      "query": "clip-library:rq5GpWlX9bc",
+      "issues": [
+        "source_lacks_subject",
+        "needs_review:library_last_resort(clip=0.207)",
+        "live_judge_fail(score=0.0)"
+      ],
+      "live_judge": {
+        "verdict": "fail",
+        "score": 0.0,
+        "subject_present": false,
+        "is_real_footage": true,
+        "has_overlay": true,
+        "reason": "The footage shows a striped hyena in a forest rather than sperm whales, and contains a prominent watermark.",
+        "sampled_offsets": [
+          1.15,
+          3.84,
+          6.53
+        ]
+      }
+    },
+    {
+      "scene_id": "SCENE_018",
+      "title": "Savanna buffalo Clans’ Ruthless Hunting Strategy | Wild Africa Animal Documentary",
+      "query": "clip-library:qQ8qg2v5Md8",
+      "issues": [
+        "source_lacks_subject",
+        "source_lacks_scene_terms",
+        "needs_review:library_last_resort(clip=0.190)",
+        "live_judge_fail(score=0.0)"
+      ],
+      "live_judge": {
+        "verdict": "fail",
+        "score": 0.0,
+        "subject_present": false,
+        "is_real_footage": false,
+        "has_overlay": true,
+        "reason": "The clip displays an animated illustration of a cape buffalo instead of real footage of a sperm whale, and includes a countdown number graphic.",
+        "sampled_offsets": [
+          1.08,
+          3.6,
+          6.12
+        ]
+      }
+    },
+    {
+      "scene_id": "SCENE_019",
+      "title": "Hyena mom and her cubs",
+      "query": "clip-library:cpn8r9BsENQ",
+      "issues": [
+        "source_lacks_subject",
+        "source_lacks_scene_terms",
+        "needs_review:library_last_resort(clip=0.172)",
+        "live_judge_fail(score=0.0)"
+      ],
+      "live_judge": {
+        "verdict": "fail",
+        "score": 0.0,
+        "subject_present": false,
+        "is_real_footage": true,
+        "has_overlay": false,
+        "reason": "The clip shows hyenas on land, completely unrelated to sperm whales or 19th-century whaling ships.",
+        "sampled_offsets": [
+          1.15,
+          3.84,
+          6.53
+        ]
+      }
+    },
+    {
+      "scene_id": "SCENE_020",
+      "title": "Wild Animals - Spotted Dangerous Hyena Short Documentary 2022 4K Ultra HD Video",
+      "query": "clip-library:gV3iklntddc",
+      "issues": [
+        "source_lacks_subject",
+        "source_lacks_scene_terms",
+        "needs_review:library_last_resort(clip=0.173)",
+        "live_judge_fail(score=0.0)"
+      ],
+      "live_judge": {
+        "verdict": "fail",
+        "score": 0.0,
+        "subject_present": false,
+        "is_real_footage": true,
+        "has_overlay": false,
+        "reason": "The footage shows a striped hyena in an enclosure instead of a sperm whale.",
+        "sampled_offsets": [
+          1.22,
+          4.08,
+          6.94
+        ]
+      }
+    },
+    {
+      "scene_id": "SCENE_021",
+      "title": "Hyena Hazing | Africa's Deadliest",
+      "query": "clip-library:B0vYXl1Delk",
+      "issues": [
+        "source_lacks_subject",
+        "source_lacks_scene_terms",
+        "needs_review:library_last_resort(clip=0.178)",
+        "live_judge_fail(score=0.0)"
+      ],
+      "live_judge": {
+        "verdict": "fail",
+        "score": 0.0,
+        "subject_present": false,
+        "is_real_footage": true,
+        "has_overlay": true,
+        "reason": "The clip features a hyena in a savanna, not a sperm whale in the ocean.",
+        "sampled_offsets": [
+          0.96,
+          3.2,
+          5.44
+        ]
+      }
+    },
+    {
+      "scene_id": "SCENE_022",
+      "title": "Captive hyena social learning experiment",
+      "query": "clip-library:IdI_P_lOB-U",
+      "issues": [
+        "source_lacks_subject",
+        "source_lacks_scene_terms",
+        "needs_review:library_last_resort(clip=0.157)",
+        "live_judge_fail(score=0.0)"
+      ],
+      "live_judge": {
+        "verdict": "fail",
+        "score": 0.0,
+        "subject_present": false,
+        "is_real_footage": true,
+        "has_overlay": false,
+        "reason": "The clip shows a hyena in an enclosure, completely unrelated to sperm whales, stormy ocean waves, or the narration.",
+        "sampled_offsets": [
+          1.44,
+          4.8,
+          8.16
+        ]
+      }
+    },
+    {
+      "scene_id": "SCENE_023",
+      "title": "Hyenas ripping_apart feast Part 2 *sensitive viewing*",
+      "query": "clip-library:lH4QQB5D9Vc",
+      "issues": [
+        "source_lacks_subject",
+        "needs_review:library_last_resort(clip=0.178)",
+        "live_judge_fail(score=0.0)"
+      ],
+      "live_judge": {
+        "verdict": "fail",
+        "score": 0.0,
+        "subject_present": false,
+        "is_real_footage": true,
+        "has_overlay": false,
+        "reason": "The clip shows land scavengers feeding on a dead animal carcass at night; the sperm whale is completely absent.",
+        "sampled_offsets": [
+          1.03,
+          3.44,
+          5.85
+        ]
+      }
+    },
+    {
+      "scene_id": "SCENE_024",
+      "title": "Captive hyena social learning experiment",
+      "query": "clip-library:IdI_P_lOB-U",
+      "issues": [
+        "source_lacks_subject",
+        "needs_review:library_last_resort(clip=0.160)",
+        "live_judge_fail(score=0.0)"
+      ],
+      "live_judge": {
+        "verdict": "fail",
+        "score": 0.0,
+        "subject_present": false,
+        "is_real_footage": true,
+        "has_overlay": false,
+        "reason": "The clip shows a hyena in an indoor enclosure playing with a crate, entirely unrelated to a sperm whale or the deep ocean.",
+        "sampled_offsets": [
+          0.95,
+          3.16,
+          5.37
+        ]
+      }
+    },
+    {
+      "scene_id": "SCENE_025",
+      "title": "Watch how a female zebra saved her young from a lion",
+      "query": "clip-library:cnfvq3MAeb4",
+      "issues": [
+        "source_lacks_subject",
+        "needs_review:library_last_resort(clip=0.149)",
+        "live_judge_fail(score=0.0)"
+      ],
+      "live_judge": {
+        "verdict": "fail",
+        "score": 0.0,
+        "subject_present": false,
+        "is_real_footage": true,
+        "has_overlay": false,
+        "reason": "The clip shows a zebra and a lion in the savanna, completely unrelated to cargo ships or sperm whales.",
+        "sampled_offsets": [
+          0.95,
+          3.16,
+          5.37
+        ]
+      }
+    },
+    {
+      "scene_id": "SCENE_026",
+      "title": "Amazing Close Encounter with a Humpback Whale!",
+      "query": "clip-library:Qy0_xhVrmOI",
+      "issues": [
+        "source_lacks_scene_terms",
+        "needs_review:library_last_resort(clip=0.247)",
+        "live_judge_fail(score=0.0)"
+      ],
+      "live_judge": {
+        "verdict": "fail",
+        "score": 0.0,
+        "subject_present": false,
+        "is_real_footage": true,
+        "has_overlay": false,
+        "reason": "The clip shows fish swimming around sunken structures in an aquarium, with no sperm whale present.",
+        "sampled_offsets": [
+          1.0,
+          3.32,
+          5.64
+        ]
+      }
+    },
+    {
+      "scene_id": "SCENE_027",
+      "title": "IFAW MMRR stranded dolphin release",
+      "query": "clip-library:-DkRBSQKT50",
+      "issues": [
+        "source_lacks_subject",
+        "needs_review:library_last_resort(clip=0.233)",
+        "live_judge_fail(score=1.0)"
+      ],
+      "live_judge": {
+        "verdict": "fail",
+        "score": 1.0,
+        "subject_present": false,
+        "is_real_footage": true,
+        "has_overlay": false,
+        "reason": "The animals shown are small dolphins being rescued on stretchers, not a 50-ton sperm whale as described in the narration.",
+        "sampled_offsets": [
+          1.06,
+          3.52,
+          5.98
+        ]
+      }
+    },
+    {
+      "scene_id": "SCENE_028",
+      "title": "A Young Fennec Fox's Cub Eating In A Bed Of Hays! 4k #Animals",
+      "query": "clip-library:BP7-lEvE128",
+      "issues": [
+        "source_lacks_subject",
+        "source_lacks_scene_terms",
+        "needs_review:library_last_resort(clip=0.170)",
+        "live_judge_fail(score=0.0)"
+      ],
+      "live_judge": {
+        "verdict": "fail",
+        "score": 0.0,
+        "subject_present": false,
+        "is_real_footage": true,
+        "has_overlay": false,
+        "reason": "The clip shows a fennec fox lying on straw eating food, which is completely unrelated to sperm whales or plastic debris in the ocean.",
+        "sampled_offsets": [
+          0.94,
+          3.12,
+          5.3
+        ]
+      }
+    },
+    {
+      "scene_id": "SCENE_029",
+      "title": "Macho Hyena | Night Stalkers",
+      "query": "clip-library:TK4YxWSqxD0",
+      "issues": [
+        "source_lacks_subject",
+        "source_lacks_scene_terms",
+        "needs_review:library_last_resort(clip=0.143)",
+        "live_judge_fail(score=0.0)"
+      ],
+      "live_judge": {
+        "verdict": "fail",
+        "score": 0.0,
+        "subject_present": false,
+        "is_real_footage": true,
+        "has_overlay": true,
+        "reason": "The clip shows wildebeests in an African savanna instead of a sperm whale or free diver in the ocean, and it includes a Nat Geo Wild watermark.",
+        "sampled_offsets": [
+          1.16,
+          3.88,
+          6.6
+        ]
+      }
+    },
+    {
+      "scene_id": "SCENE_030",
+      "title": "Should This Indigenous Tribe Be Allowed To Resume Hunting Whales?",
+      "query": "clip-library:_tKeK8lyIgQ",
+      "issues": [
+        "source_lacks_scene_terms",
+        "needs_review:library_last_resort(clip=0.296)",
+        "live_judge_fail(score=1.0)"
+      ],
+      "live_judge": {
+        "verdict": "fail",
+        "score": 1.0,
+        "subject_present": false,
+        "is_real_footage": true,
+        "has_overlay": true,
+        "reason": "The footage shows a humpback whale tail above the surface rather than a sperm whale mother and calf underwater, and it contains prominent watermarks and audio overlays.",
+        "sampled_offsets": [
+          1.19,
+          3.96,
+          6.73
+        ]
+      }
+    },
+    {
+      "scene_id": "SCENE_031",
+      "title": "Should This Indigenous Tribe Be Allowed To Resume Hunting Whales?",
+      "query": "clip-library:_tKeK8lyIgQ",
+      "issues": [
+        "source_lacks_scene_terms",
+        "needs_review:library_last_resort(clip=0.286),duplicate_of_SCENE_030(dhash=1)",
+        "live_judge_fail(score=3.0)"
+      ],
+      "live_judge": {
+        "verdict": "fail",
+        "score": 3.0,
+        "subject_present": true,
+        "is_real_footage": true,
+        "has_overlay": true,
+        "reason": "The footage shows a whale's tail fluke above the surface rather than an underwater close-up of a sperm whale's eye observing, and contains heavy overlay graphics and watermarks.",
+        "sampled_offsets": [
+          0.9,
+          3.0,
+          5.1
+        ]
+      }
+    },
+    {
+      "scene_id": "SCENE_032",
+      "title": "Macho Hyena | Night Stalkers",
+      "query": "clip-library:TK4YxWSqxD0",
+      "issues": [
+        "source_lacks_subject",
+        "source_lacks_scene_terms",
+        "needs_review:library_last_resort(clip=0.166)",
+        "live_judge_fail(score=0.0)"
+      ],
+      "live_judge": {
+        "verdict": "fail",
+        "score": 0.0,
+        "subject_present": false,
+        "is_real_footage": true,
+        "has_overlay": true,
+        "reason": "The clip shows spotted hyenas on land instead of sperm whales underwater.",
+        "sampled_offsets": [
+          1.06,
+          3.52,
+          5.98
+        ]
+      }
+    },
+    {
+      "scene_id": "SCENE_033",
+      "title": "Top 10 Victories for Animals in 2022 | #3: Major shipping company agrees to help save blue whales",
+      "query": "\"wildlife animal\" hành vi cá voi",
+      "issues": [
+        "semantic_fail(score=2.0)",
+        "needs_review:semantic_below_threshold(score=2.0)",
+        "live_judge_fail(score=1.0)"
+      ],
+      "live_judge": {
+        "verdict": "fail",
+        "score": 1.0,
+        "subject_present": false,
+        "is_real_footage": true,
+        "has_overlay": true,
+        "reason": "The clip shows a single whale (likely a baleen whale) surfacing near a container ship, completely failing to match the desired shot of two sperm whales interacting underwater. There is also a persistent watermark.",
+        "sampled_offsets": [
+          0.9,
+          3.0,
+          5.1
+        ]
+      }
+    },
+    {
+      "scene_id": "SCENE_034",
+      "title": "Top 10 Victories for Animals in 2022 | #3: Major shipping company agrees to help save blue whales",
+      "query": "clip-library:LQsRouSJPWU",
+      "issues": [
+        "needs_review:library_last_resort(clip=0.294)",
+        "live_judge_fail(score=1.0)"
+      ],
+      "live_judge": {
+        "verdict": "fail",
+        "score": 1.0,
+        "subject_present": false,
+        "is_real_footage": true,
+        "has_overlay": true,
+        "reason": "The footage shows a baleen whale (such as a blue or fin whale) rolling near the surface rather than a sperm whale lifting its tail fluke to dive, and it contains a watermark.",
+        "sampled_offsets": [
+          0.98,
+          3.28,
+          5.58
+        ]
+      }
+    },
+    {
+      "scene_id": "SCENE_035",
+      "title": "Hyena Hazing | Africa's Deadliest",
+      "query": "clip-library:B0vYXl1Delk",
+      "issues": [
+        "source_lacks_subject",
+        "source_lacks_scene_terms",
+        "needs_review:library_last_resort(clip=0.163)",
+        "live_judge_fail(score=0.0)"
+      ],
+      "live_judge": {
+        "verdict": "fail",
+        "score": 0.0,
+        "subject_present": false,
+        "is_real_footage": true,
+        "has_overlay": true,
+        "reason": "The footage shows a hyena walking on land instead of a sperm whale diving underwater, and it has a visible channel logo.",
+        "sampled_offsets": [
+          1.04,
+          3.48,
+          5.92
+        ]
+      }
+    },
+    {
+      "scene_id": "SCENE_036",
+      "title": "Would You Feed A Hyena From Your Mouth?",
+      "query": "clip-library:WHt9vdV_77g",
+      "issues": [
+        "source_lacks_subject",
+        "source_lacks_scene_terms",
+        "needs_review:library_last_resort(clip=0.150)",
+        "live_judge_fail(score=0.0)"
+      ],
+      "live_judge": {
+        "verdict": "fail",
+        "score": 0.0,
+        "subject_present": false,
+        "is_real_footage": true,
+        "has_overlay": true,
+        "reason": "The clip shows a hyena on land at night with prominent burned-in text and watermarks, completely unrelated to sperm whales or the deep sea.",
+        "sampled_offsets": [
+          1.03,
+          3.44,
+          5.85
+        ]
+      }
+    },
+    {
+      "scene_id": "SCENE_037",
+      "title": "L2 075 Meet the Animals 75 Spotted Hyena",
+      "query": "clip-library:D6UCu8KmENs",
+      "issues": [
+        "source_lacks_subject",
+        "source_lacks_scene_terms",
+        "needs_review:library_last_resort(clip=0.143)",
+        "live_judge_fail(score=0.0)"
+      ],
+      "live_judge": {
+        "verdict": "fail",
+        "score": 0.0,
+        "subject_present": false,
+        "is_real_footage": false,
+        "has_overlay": true,
+        "reason": "The clip is a 2D cartoon animation of a hyena in a savanna with text speech bubbles, completely unrelated to sperm whales or ocean footage.",
+        "sampled_offsets": [
+          1.1,
+          3.68,
+          6.26
+        ]
+      }
+    }
+  ]
+}

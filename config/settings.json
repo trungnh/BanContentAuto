@@ -49,6 +49,7 @@
   "semantic_judge_reject_overlays": true,
   "footage_max_reuse": 2,
   "footage_library_enabled": true,
+  "footage_online_augment": true,
   "tts_primary_provider": "zerotts",
   "tts_enable_fallback": true,
   "zerotts_voice": "1UceY6IyPgxdnBPzsQbh",
@@ -69,5 +70,10 @@
   "target_lufs": -14.0,
   "rolling_buffer_max_gb": 5.0,
   "render_concurrency": 4,
-  "clean_intermediate_parts": true
+  "clean_intermediate_parts": true,
+  "subtitles_enabled": true,
+  "subtitle_preset": "cinematic_white",
+  "subtitle_font": "Montserrat",
+  "subtitle_font_size": 36,
+  "subtitle_margin_v": 55
 }

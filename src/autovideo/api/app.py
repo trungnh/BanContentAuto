@@ -54,6 +54,16 @@ class CreateProjectRequest(BaseModel):
     skill_id: str = Field("nature-wildlife-survival", description="Skill niche identifier")
     target_duration_min: int = Field(15, ge=1, le=120, description="Target duration in minutes")
     project_id: Optional[str] = Field(None, description="Optional custom project identifier")
+    subtitles_enabled: Optional[bool] = Field(True, description="Whether to burn subtitles into final video")
+    subtitle_preset: Optional[str] = Field("cinematic_white", description="Subtitle styling preset")
+
+
+class BurnSubtitlesRequest(BaseModel):
+    """Payload for on-demand subtitle burning."""
+    preset: Optional[str] = Field("cinematic_white", description="Subtitle styling preset")
+    font_name: Optional[str] = Field(None, description="Custom font name override")
+    font_size: Optional[int] = Field(None, description="Custom font size override")
+    margin_v: Optional[int] = Field(None, ge=10, le=300, description="Custom bottom margin (Safe Zone) override in px")
 
 
 class PublishRequest(BaseModel):
@@ -105,6 +115,13 @@ class SaveSettingsRequest(BaseModel):
     footage_library_enabled: Optional[bool] = Field(None, description="Use local CLIP footage library first")
     footage_online_augment: Optional[bool] = Field(None, description="Search YouTube for new footage when library has nothing better")
     footage_max_reuse: Optional[int] = Field(None, ge=1, le=5, description="Max scenes per source video")
+
+    # Subtitles & Typography
+    subtitles_enabled: Optional[bool] = Field(None, description="Global default for burning subtitles")
+    subtitle_preset: Optional[str] = Field(None, description="Default subtitle style preset")
+    subtitle_font: Optional[str] = Field(None, description="Subtitle font family name")
+    subtitle_font_size: Optional[int] = Field(None, ge=12, le=48, description="Subtitle font size in points")
+    subtitle_margin_v: Optional[int] = Field(None, ge=10, le=300, description="Subtitle bottom margin in px (Safe Zone)")
 
 
 class TestGeminiRequest(BaseModel):
@@ -400,8 +417,12 @@ def create_app(
         return _edit_call(_scene_editor().accept_scene, project_id, scene_id)
 
     @api.post("/api/projects/{project_id}/rerender")
-    def project_rerender_endpoint(project_id: str) -> Dict[str, Any]:
+    async def project_rerender_endpoint(project_id: str) -> Dict[str, Any]:
         """Back up current scenes/parts/final and run the whole pipeline again (script & voice reused)."""
+        try:
+            coord._loop = asyncio.get_running_loop()
+        except RuntimeError:
+            pass
         return _edit_call(_scene_editor().rerender, project_id)
 
     @api.get("/api/projects/{project_id}/scene-jobs")
@@ -442,8 +463,66 @@ def create_app(
             skill_id=req.skill_id,
             target_duration_min=req.target_duration_min,
             project_id=req.project_id,
+            subtitles_enabled=req.subtitles_enabled,
+            subtitle_preset=req.subtitle_preset,
         )
         return project.to_dict()
+
+    @api.get("/api/subtitles/presets")
+    async def list_subtitle_presets() -> Dict[str, Any]:
+        """Returns the dictionary of supported subtitle presets."""
+        from autovideo.production.subtitle_generator import SUBTITLE_PRESETS
+        return {"presets": SUBTITLE_PRESETS}
+
+    @api.post("/api/projects/{project_id}/subtitles/burn")
+    async def burn_subtitles_endpoint(project_id: str, req: BurnSubtitlesRequest) -> Dict[str, Any]:
+        """Burns or re-burns styled subtitles into the project's final video."""
+        project = coord.get_project(project_id)
+        if not project:
+            raise HTTPException(status_code=404, detail="Project not found")
+
+        try:
+            burned_path = coord.burn_project_subtitles(
+                project_id=project_id,
+                preset=req.preset,
+                font_name=req.font_name,
+                font_size=req.font_size,
+                margin_v=req.margin_v,
+            )
+            return {
+                "status": "success",
+                "message": f"Đã gắn phụ đề ({req.preset}) thành công vào video.",
+                "final_video_path": str(burned_path),
+                "subtitle_preset": req.preset,
+                "project": project.to_dict(),
+            }
+        except Exception as e:
+            logger.error("Burn subtitles endpoint failed: %s", e)
+            raise HTTPException(status_code=500, detail=str(e))
+
+    @api.get("/api/projects/{project_id}/subtitles")
+    async def get_project_subtitles(project_id: str) -> Dict[str, Any]:
+        """Returns details and content of the project's subtitle files."""
+        project = coord.get_project(project_id)
+        if not project:
+            raise HTTPException(status_code=404, detail="Project not found")
+
+        proj_dir = coord.config.paths.get_project_render_dir(project_id)
+        srt_path = proj_dir / f"{project_id}_subtitles.srt"
+        ass_path = proj_dir / f"{project_id}_subtitles.ass"
+
+        srt_content = srt_path.read_text(encoding="utf-8") if srt_path.is_file() else ""
+        ass_content = ass_path.read_text(encoding="utf-8") if ass_path.is_file() else ""
+
+        return {
+            "project_id": project_id,
+            "has_subtitles": bool(srt_path.is_file() or ass_path.is_file()),
+            "subtitles_enabled": getattr(project, "subtitles_enabled", True),
+            "subtitle_preset": getattr(project, "subtitle_preset", "cinematic_white"),
+            "srt_path": str(srt_path) if srt_path.is_file() else None,
+            "ass_path": str(ass_path) if ass_path.is_file() else None,
+            "srt_content": srt_content,
+        }
 
     @api.post("/api/projects/{project_id}/start")
     async def start_pipeline(project_id: str) -> Dict[str, Any]:
@@ -522,7 +601,7 @@ def create_app(
         )
 
     @api.get("/api/projects/{project_id}/preview/scene/{scene_id}")
-    async def preview_scene(project_id: str, scene_id: str) -> FileResponse:
+    async def preview_scene(project_id: str, scene_id: str, allow_backup: bool = False) -> FileResponse:
         """Streams atomic scene MP4 for the Mini Video Player (VAC-UI-03)."""
         project = coord.get_project(project_id)
         if not project:
@@ -532,14 +611,39 @@ def create_app(
             (s for s in project.completed_scenes if s.scene_id == scene_id),
             None,
         )
-        if not matching_scene or not matching_scene.video_path:
-            raise HTTPException(status_code=404, detail="Scene video not found")
+        if matching_scene and matching_scene.video_path:
+            scene_file = Path(matching_scene.video_path)
+            if scene_file.exists():
+                return FileResponse(scene_file, media_type="video/mp4")
 
-        scene_file = Path(matching_scene.video_path)
-        if not scene_file.exists():
-            raise HTTPException(status_code=404, detail="Scene video file missing on disk")
+        # Fallback 1: check cache_temp_scenes_dir
+        try:
+            s_idx = int(scene_id.replace("SCENE_", ""))
+            temp_file = coord.config.paths.cache_temp_scenes_dir / project_id / f"scene_{s_idx:03d}.mp4"
+            if temp_file.exists():
+                return FileResponse(temp_file, media_type="video/mp4")
+        except ValueError:
+            pass
 
-        return FileResponse(scene_file, media_type="video/mp4")
+        # Fallback 2: check backup if allow_backup is True
+        if allow_backup:
+            bk_dir = coord.config.paths.cache_dir / "backups"
+            if bk_dir.exists():
+                candidates = sorted(
+                    [d for d in bk_dir.iterdir() if d.is_dir() and project_id in d.name],
+                    key=lambda d: d.stat().st_mtime,
+                    reverse=True,
+                )
+                try:
+                    s_idx = int(scene_id.replace("SCENE_", ""))
+                    for cand in candidates:
+                        bf = cand / "temp_scenes" / f"scene_{s_idx:03d}.mp4"
+                        if bf.exists():
+                            return FileResponse(bf, media_type="video/mp4")
+                except ValueError:
+                    pass
+
+        raise HTTPException(status_code=404, detail="Scene video not found")
 
     @api.get("/api/projects/{project_id}/preview/video")
     async def preview_final_video(project_id: str) -> FileResponse:
@@ -557,6 +661,27 @@ def create_app(
 
         return FileResponse(video_file, media_type="video/mp4")
 
+    @api.get("/api/projects/{project_id}/preview/video/backup")
+    async def preview_backup_video(project_id: str) -> FileResponse:
+        """Streams the latest backup final video from cache/backups/ if available."""
+        project = coord.get_project(project_id)
+        if not project:
+            raise HTTPException(status_code=404, detail="Project not found")
+
+        bk_dir = coord.config.paths.cache_dir / "backups"
+        if bk_dir.exists():
+            candidates = sorted(
+                [d for d in bk_dir.iterdir() if d.is_dir() and project_id in d.name],
+                key=lambda d: d.stat().st_mtime,
+                reverse=True,
+            )
+            for cand in candidates:
+                bf = cand / "render" / f"{project_id}_final.mp4"
+                if bf.exists():
+                    return FileResponse(bf, media_type="video/mp4")
+
+        raise HTTPException(status_code=404, detail="No backup video found for this project")
+
     @api.get("/api/projects/{project_id}/preview/thumbnail")
     async def preview_thumbnail(project_id: str) -> FileResponse:
         """Returns counterpoint thumbnail with safe-zone overlay (VAC-UI-04)."""
@@ -564,11 +689,11 @@ def create_app(
         if not project:
             raise HTTPException(status_code=404, detail="Project not found")
 
-        # Prefer safe-zone overlay preview if generated
+        # Prioritize clean thumbnail, never diagnostic placeholder overlay
         thumb_path = (
-            Path(project.thumbnail_preview_path)
-            if project.thumbnail_preview_path
-            else (Path(project.thumbnail_path) if project.thumbnail_path else None)
+            Path(project.thumbnail_path)
+            if project.thumbnail_path and Path(project.thumbnail_path).exists()
+            else (Path(project.thumbnail_preview_path) if project.thumbnail_preview_path and Path(project.thumbnail_preview_path).exists() else None)
         )
 
         if not thumb_path or not thumb_path.exists():
@@ -615,7 +740,7 @@ def create_app(
         seo = project.seo_package or {}
         topic = project.topic or "Video"
         prompt_to_use = (req.prompt if req and req.prompt else None) or seo.get("thumbnail_prompt") or (
-            f"Dramatic photorealistic documentary thumbnail of {topic}, cinematic 8k lighting, empty bottom-right safe zone"
+            f"Dramatic photorealistic documentary visual of {topic}, cinematic 8k lighting"
         )
         hook_to_use = (req.hook if req and req.hook else None) or seo.get("thumbnail_hook") or "TIÊU ĐIỂM"
         badge_to_use = (req.badge if req and req.badge else None) or seo.get("thumbnail_badge") or "KHÁM PHÁ"
@@ -623,6 +748,7 @@ def create_app(
         from autovideo.core.settings import SettingsManager
         from autovideo.publisher.image_client import NineRouterImageClient
         from autovideo.publisher.thumbnail_generator import ThumbnailGenerator
+        import shutil
 
         sm = SettingsManager(config=config)
         stg = sm.get_settings()
@@ -643,13 +769,11 @@ def create_app(
             output_path=thumb_path,
             strict_counterpoint=False,
         )
-        thumb_gen.render_safe_zone_overlay(
-            image_or_path=thumb_path,
-            output_path=preview_path,
-        )
+        # Keep preview_path in sync with clean thumbnail (no placeholder badge overlay)
+        shutil.copyfile(thumb_path, preview_path)
 
         project.thumbnail_path = str(thumb_path)
-        project.thumbnail_preview_path = str(preview_path)
+        project.thumbnail_preview_path = str(thumb_path)
 
         now_ts = int(time.time())
         return {

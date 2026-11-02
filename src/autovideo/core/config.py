@@ -142,6 +142,17 @@ class PublishingConfig:
 
 
 @dataclass
+class SubtitleConfig:
+    """Subtitle generation and typography styling configuration."""
+
+    enabled: bool = True
+    preset: str = "cinematic_white"  # cinematic_white | yellow_spotlight | boxed_translucent
+    font_name: str = "Montserrat"
+    font_size: int = 22
+    margin_v: int = 55
+
+
+@dataclass
 class AppConfig:
     """Master application configuration aggregate."""
 
@@ -151,6 +162,7 @@ class AppConfig:
     sourcing: SourcingConfig = field(default_factory=SourcingConfig)
     script_budget: ScriptBudgetConfig = field(default_factory=ScriptBudgetConfig)
     publishing: PublishingConfig = field(default_factory=PublishingConfig)
+    subtitles: SubtitleConfig = field(default_factory=SubtitleConfig)
 
     @classmethod
     def from_base_dir(cls, base_dir: Path | str) -> AppConfig:

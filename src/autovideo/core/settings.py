@@ -89,6 +89,13 @@ class UserSettings:
     render_concurrency: int = 2
     clean_intermediate_parts: bool = True
 
+    # Subtitles & Typography (Option chèn phụ đề video final)
+    subtitles_enabled: bool = True
+    subtitle_preset: str = "cinematic_white"  # cinematic_white | yellow_spotlight | boxed_translucent
+    subtitle_font: str = "Montserrat"
+    subtitle_font_size: int = 22
+    subtitle_margin_v: int = 55  # Safe Zone: khoảng cách đáy (px) tránh che thanh timeline YouTube
+
     def to_dict(self) -> Dict[str, Any]:
         return asdict(self)
 
@@ -170,6 +177,11 @@ class SettingsManager:
         self.config.sourcing.jitter_min_sec = settings.jitter_min_sec
         self.config.sourcing.jitter_max_sec = settings.jitter_max_sec
         self.config.compliance.target_lufs = settings.target_lufs
+        self.config.subtitles.enabled = settings.subtitles_enabled
+        self.config.subtitles.preset = settings.subtitle_preset
+        self.config.subtitles.font_name = settings.subtitle_font
+        self.config.subtitles.font_size = settings.subtitle_font_size
+        self.config.subtitles.margin_v = settings.subtitle_margin_v
 
     def save_settings(self, updates: Dict[str, Any]) -> UserSettings:
         """

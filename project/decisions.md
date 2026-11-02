@@ -672,3 +672,115 @@ aise ValueError liên quan đến lint_res.banned_matches. Cổng kiểm định
     - Mỗi scene có thể tải tối đa 3 video (dung lượng đĩa và request YouTube).
     - Footage được nhận theo nhánh "CLIP tự tin" không qua LLM, có thể lọt phụ đề cứng (thấy ở frame cuối của 017).
 - **Related requirements**: `REQ-SRC-01`, `REQ-SRC-02`, `REQ-UI-*`, `NFR-REL-01`.
+
+---
+
+## ADR-023: Tùy Chọn Gắn Phụ Đề Video Final & Bộ Tạo Subtitle Đa Định Dạng (ASS/SRT)
+
+- **Status**: accepted
+- **Date**: 2026-11-01
+- **Context**:
+  - Người dùng yêu cầu bổ sung tùy chọn chèn phụ đề vào video thành phẩm (final video) trực tiếp trên giao diện app, đồng thời đề xuất các định dạng typography tối ưu cho video documentary dài.
+  - Video của hệ thống là video dài (5–30 phút, 37–110 scenes). Phụ đề cần đồng bộ chính xác với audio thuyết minh của từng scene, chống mỏi mắt khi xem lâu, không che khuất chủ thể ở trung tâm khung hình và tương phản tốt trên mọi phông nền tự nhiên (cát sa mạc, tuyết trắng, đêm đen).
+  - Cần hỗ trợ song song:
+    1. Gắn phụ đề cứng trực tiếp vào video (Burn-in subtitles qua FFmpeg libass filter).
+    2. Xuất file phụ đề rời `.srt` chuẩn UTF-8 phục vụ SEO YouTube CC (Closed Captions) quốc tế.
+    3. Gắn lại hoặc đổi phong cách phụ đề theo yêu cầu (on-demand re-burn) chỉ mất ~10–30s mà không cần render lại toàn bộ pipeline B1–B3.
+- **Decision**:
+  1. **Bộ Tạo & Khớp Thời Gian Phụ Đề (`production/subtitle_generator.py`)**:
+     - `SubtitleGenerator`: Tự động trích xuất lời thuyết minh và `duration_sec` của từng scene.
+     - Thuật toán `split_text_into_chunks`: Phân tách câu dài theo dấu câu tự nhiên (`,`, `.`, `;`, `:`) hoặc giới hạn từ (6–9 từ/chunk), phân bổ thời gian hiển thị tỷ lệ thuận theo số lượng từ của từng cụm.
+     - Hỗ trợ 3 Presets chuẩn YouTube & Phim Tài Liệu:
+       - `cinematic_white` (Phim Tài Liệu Chuẩn - Mặc định): Chữ trắng tuyết (`#FFFFFF`), viền đen mỏng 2.4px + bóng đổ mờ 1.2px, căn giữa cách đáy 55px (Safe Zone).
+       - `yellow_spotlight` (Kênh Khám Phá Nổi Bật): Chữ vàng nghệ rực rỡ (`#FFE600`), viền đen đậm nét 3.4px, tối ưu giữ chân người xem và xem trên điện thoại.
+       - `boxed_translucent` (Hộp Nền Bán Trong Suốt): Chữ trắng trên dải nền đen mờ 60% (`rgba(0,0,0,0.6)`), êm mắt tuyệt đối phong cách Vox / Bloomberg.
+     - Xuất đồng thời cả `.ass` (v4+ style chuẩn FFmpeg) và `.srt` (chuẩn SubRip UTF-8).
+  2. **Tích hợp Quy trình & Phục hồi Độc lập**:
+     - `ProductionPipeline.run`: Nhận tham số `subtitle_ass_path`, tự động gắn phụ đề vào file video sau khi Concat Demuxer hoàn thành.
+     - `Coordinator.burn_project_subtitles`: Cho phép người dùng gắn lại phụ đề hoặc đổi phong cách trực tiếp trên video đã hoàn tất.
+  3. **Giao Diện Ứng Dụng (UI)**:
+     - **Quick Launch Wizard (Screen 1)**: Thêm toggle Bật/Tắt phụ đề và thẻ chọn nhanh 3 Presets.
+     - **Publishing Hub (Screen 4)**: Hiển thị badge trạng thái phụ đề, dropdown chọn preset kèm nút "🔥 Gắn Lại Phụ Đề" và nút "📥 Tải File .SRT".
+     - **Settings Hub (Screen 5)**: Thêm Card cấu hình phụ đề mặc định, font chữ và cỡ chữ.
+  4. **API Endpoints**:
+     - `GET /api/subtitles/presets`
+     - `GET /api/projects/{id}/subtitles`
+     - `POST /api/projects/{id}/subtitles/burn`
+- **Consequences**:
+  - *Ưu điểm*:
+    - Video hoàn thiện có phụ đề chuẩn điện ảnh, đồng bộ mượt mà theo nhịp đọc.
+    - Cung cấp file `.srt` chuẩn cho người dùng nạp lên YouTube CC gia tăng chỉ số SEO.
+    - Cho phép thay đổi preset phụ đề trên video hoàn chỉnh chỉ trong ~30 giây mà không cần chạy lại B1-B3.
+    - Toàn bộ 337 bài test trong hệ thống vượt qua xuất sắc (100% pass rate).
+  - *Nhược điểm*:
+    - Bước burn-in phụ đề qua FFmpeg nén lại luồng video một lần cuối (mất ~20–35s cho video 5 phút).
+- **Related requirements**: `REQ-VD-01`, `REQ-VD-03`, `REQ-UI-*`, `NFR-PERF-01`.
+
+
+## ADR-023: Xác Định Chủ Thể Bằng LLM, Kiểm Tra Độ Phủ Thư Viện & Tìm Footage Online Ngay Trong Pipeline
+
+- **Status**: Implemented (người dùng sẽ tự render lại proj_e267802a trên dashboard)
+- **Date**: 2026-11-01
+- **Context**:
+  - proj_e267802a (chủ đề cá nhà táng): chỉ 1/37 scene đúng chủ thể; điểm trung bình 0.7 (tôi chấm) và 0.5 (AI chấm). 25/37 scene lấy từ kho linh cẩu/savanna cũ; 33/37 scene đi qua nhánh "last resort" chưa được xác minh.
+  - **Nguyên nhân gốc**: bảng ánh xạ cứng trong `_extract_subject_anchor` không có "cá nhà táng" → anchor rơi về mặc định của niche, `"wildlife animal"`. Hậu quả:
+    - Danh từ chính "animal" khiến mọi video linh cẩu trong kho đều qua bộ lọc.
+    - 151 lượt tìm online bị loại vì kết quả không chứa chữ "animal".
+    - Danh sách loài dễ nhầm vô nghĩa (gốc cây, hòn đá…).
+    - Scene Editor dùng cùng anchor sai.
+  - Không có bước kiểm tra độ phủ thư viện; bước tìm online "thêm vào kho" (ADR-022) mới chỉ có trong Scene Editor; phương án cuối nhận cả footage có CLIP 0.14; clip cá nhà táng đạt 7/10 bị loại chỉ vì có logo nhỏ.
+  - Bug phụ: bảng ánh xạ xét "voi" trước "cá voi", nên chủ đề cá voi ra "african elephant".
+- **Decision**:
+  1. **F1 `footage/subject_resolver.py`**:
+     - 1 lượt gọi LLM cho mỗi chủ đề (dùng adapter LLM chính), trả về anchor, aliases và confusers; cache ở `cache/footage_index/subjects.json`.
+     - Từ chối anchor chung chung (`GENERIC_ANCHORS`).
+     - Bảng ánh xạ cứng chỉ dùng dự phòng, đã bổ sung loài biển và sắp xếp từ cụ thể đến chung.
+     - Nếu dự phòng chỉ ra anchor chung chung thì phát event cảnh báo và không cache.
+     - `MasterPipelineCoordinator._resolve_subject` dùng chung cho pipeline và Scene Editor; confusers từ resolver được đưa thẳng vào matcher và plan.
+  2. **F2 `_ensure_library_coverage`**: trước khi lập kế hoạch shot, nếu kho có dưới 8 video mà title/description nhắc đúng anchor, tự `search_and_add` với query "{anchor} documentary footage", "{anchor} 4k" và từ khóa EN của kịch bản. Tải tối đa 15 video; YouTube chặn thì đánh dấu và dừng.
+  3. **F3**: trong pipeline, scene nào thư viện không có đoạn đạt thì `search_and_add` (tối đa 2 video, 3 query) rồi `pick_library_window` lại. Vòng tìm online cũ theo từng scene chỉ chạy khi không có CLIP.
+  4. **F4**: phương án cuối dùng ngưỡng chủ thể 0.25 (trước đây 0.22) với anchor đúng, và ưu tiên cửa sổ thuộc video nhắc tên chủ thể; vẫn gắn cờ `library_last_resort`.
+  5. **F5**: logo/watermark nhỏ ở góc chỉ trừ 1 điểm (`small_corner_logo`). Phụ đề hoặc chữ tiêu đề lớn vẫn bị loại. Cập nhật cả prompt của `judge` lẫn `choose_best`.
+  6. `scripts/audit_scene_relevance.py --anchor` để audit với chủ thể đúng.
+- **Consequences**:
+  - *Ưu điểm*:
+    - Kiểm tra live: "cá nhà táng" → `sperm whale` (aliases: cachalot, Physeter macrocephalus; confusers: humpback/blue/killer/fin/beluga whale); "linh cẩu" → `spotted hyena`; "cá voi sát thủ" → `killer whale`.
+    - Kho linh cẩu không còn lọt vào project về cá voi.
+    - Project về chủ đề mới tự xây kho footage trước khi chọn shot.
+  - *Nhược điểm*:
+    - Thêm 1 lượt gọi LLM cho mỗi chủ đề mới.
+    - Lần render đầu của chủ đề mới tải thêm khoảng 10–15 video (phụ thuộc YouTube có chặn không).
+    - Nếu LLM không khả dụng thì vẫn dùng bảng ánh xạ cứng, nhưng có cảnh báo.
+- **Related requirements**: `REQ-SRC-01`, `REQ-SRC-02`, `NFR-REL-01`.
+
+---
+
+## ADR-024: Khắc Phục Tiến Trình Render Lại Toàn Bộ (Async Threading, State Reset & Đồng Bộ UI SSE)
+
+- **Status**: accepted
+- **Date**: 2026-11-01
+- **Context**:
+  - Khi người dùng bấm nút "Render lại toàn bộ" trên giao diện Web UI (Screen 2 / Screen 4), project `proj_e267802a` không phản hồi tiến trình, không cập nhật log và trạng thái vẫn hiển thị "COMPLETE" (100%).
+  - Video cuối `proj_e267802a_final.mp4` đã bị chuyển vào thư mục backup nhưng không có tiến trình nào render lại video mới.
+  - **Phân tích nguyên nhân gốc rễ (Root Cause Analysis)**:
+    1. *Bất đồng bộ luồng FastAPI (Sync Worker Thread vs Event Loop)*: Endpoint `/api/projects/{id}/rerender` ban đầu khai báo dạng `def` đồng bộ, khiến FastAPI thực thi trong worker thread pool của AnyIO. Khi `coordinator.enqueue_project()` gọi `asyncio.get_running_loop()`, ngoại lệ `RuntimeError: no running event loop` xảy ra và bị nuốt chửng bởi `except RuntimeError: pass`, khiến tác vụ pipeline không bao giờ được lập lịch chạy.
+    2. *State không được reset*: `SceneEditor.rerender()` di chuyển các file render vào backup nhưng không cập nhật `project.stage` và `project.progress` trong bộ nhớ lẫn `project_state.json`. Dự án vẫn mang trạng thái COMPLETE (100%).
+    3. *Ràng buộc `_assert_editable` quá mức*: `_assert_editable` kiểm tra `completed_scenes` phải có dữ liệu. Nếu project đã được dọn cảnh hoặc lần render trước bị gián đoạn, lệnh bị trả mã 409 ("Dự án chưa có scene nào để chỉnh sửa") dù kịch bản `screenplay.json` vẫn đầy đủ.
+    4. *Thiếu hụt kết nối SSE & chuyển cảnh ở UI*: Hàm JavaScript `rerenderProject()` trong `index.html` chỉ gọi thăm dò `/scene-jobs` (luôn trả về idle vì pipeline là background task của coordinator) mà không bật kênh Server-Sent Events (`connectSSE`) và không tự chuyển người dùng sang Screen 3 (Live Monitor).
+- **Decision**:
+  1. **Đồng bộ điều phối Async/Thread (`coordinator.py`)**:
+     - `MasterPipelineCoordinator` lưu giữ tham chiếu `_loop`.
+     - Trong `enqueue_project`, nếu được gọi từ worker thread khác event loop chính, điều phối coroutine an toàn qua `asyncio.run_coroutine_threadsafe(..., loop)`. Nếu hoàn toàn không có event loop, khởi chạy worker thread đồng bộ độc lập.
+  2. **FastAPI Async Endpoint (`api/app.py`)**:
+     - Chuyển `project_rerender_endpoint` thành `async def` và gán running loop chính vào `coordinator._loop`.
+  3. **Tách biệt điều kiện & Reset State (`scene_editor.py`)**:
+     - Trong `rerender`, tách logic kiểm tra riêng: chỉ cần dự án có `screenplay` hoặc file `screenplay.json` là hợp lệ để render lại.
+     - Khởi tạo lại trạng thái sạch: `stage = PipelineStage.B2_SOURCING_TTS`, `progress = 25.0`, `final_video_path = None`, `completed_scenes = []`, xóa lỗi và lưu ngay vào `project_state.json`.
+     - Bắn sự kiện SSE thông báo bắt đầu re-render.
+  4. **Nâng cấp trải nghiệm người dùng (`ui/index.html`)**:
+     - Khi bấm "Render lại toàn bộ", giao diện tự động kết nối `connectSSE(currentProjectId)`, chuyển sang màn hình Live Monitor (`switchToScreen('monitor')`) và thông báo trạng thái cho người dùng.
+- **Consequences**:
+  - *Ưu điểm*: Bấm "Render lại toàn bộ" lập tức đưa người dùng đến màn hình giám sát tiến trình trực tiếp với log stream mượt mà; state chuyển thành công sang 25% và tiếp tục render tự động; 349/349 bài kiểm thử vượt qua (100% pass rate).
+  - *Nhược điểm*: Không có.
+- **Related requirements**: `REQ-UI-02`, `REQ-UI-03`, `REQ-VD-03`, `NFR-REL-01`.
+
